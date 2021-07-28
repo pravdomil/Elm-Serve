@@ -43,19 +43,19 @@ toString a =
             else
                 "False"
     in
-    [ "debug:      " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "optimize:   " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "output:     " ++ (a.output |> Maybe.withDefault "-")
-    , "report:     " ++ (a.report |> Maybe.withDefault "-")
-    , "docs:       " ++ (a.docs |> Maybe.withDefault "-")
-    , "host:       " ++ a.host
-    , "port:       " ++ String.fromInt a.port_
-    , "root:       " ++ (a.root |> Maybe.withDefault "-")
-    , "indexAs404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "open:       " ++ (a.open |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "sslCert:    " ++ (a.sslCert |> Maybe.withDefault "-")
-    , "sslKey:     " ++ (a.sslKey |> Maybe.withDefault "-")
-    , "elmPath:    " ++ (a.elmPath |> Maybe.withDefault "-")
+    [ "Debug:        " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "Optimize:     " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "Output:       " ++ (a.output |> Maybe.withDefault "-")
+    , "Report:       " ++ (a.report |> Maybe.withDefault "-")
+    , "Docs:         " ++ (a.docs |> Maybe.withDefault "-")
+    , "Host:         " ++ a.host
+    , "Port:         " ++ String.fromInt a.port_
+    , "Root:         " ++ (a.root |> Maybe.withDefault "-")
+    , "Index As 404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "Open:         " ++ (a.open |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "SSL Cert:     " ++ (a.sslCert |> Maybe.withDefault "-")
+    , "SSL Key:      " ++ (a.sslKey |> Maybe.withDefault "-")
+    , "Elm Path:     " ++ (a.elmPath |> Maybe.withDefault "-")
     ]
         |> String.join "\n"
 
