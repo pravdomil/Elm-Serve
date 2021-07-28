@@ -20,7 +20,6 @@ type alias Options =
     , open : Maybe Bool
 
     --
-    , ssl : Maybe Bool
     , sslCert : Maybe String
     , sslKey : Maybe String
 
@@ -54,7 +53,6 @@ toString a =
     , "root:       " ++ (a.root |> Maybe.withDefault "-")
     , "indexAs404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "-")
     , "open:       " ++ (a.open |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "ssl:        " ++ (a.ssl |> Maybe.map boolToString |> Maybe.withDefault "-")
     , "sslCert:    " ++ (a.sslCert |> Maybe.withDefault "-")
     , "sslKey:     " ++ (a.sslKey |> Maybe.withDefault "-")
     , "elmPath:    " ++ (a.elmPath |> Maybe.withDefault "-")
@@ -104,8 +102,6 @@ parser =
                     |= boolArg "open"
 
                 --
-                , P.succeed (\v -> P.Loop { acc | ssl = Just v })
-                    |= boolArg "ssl"
                 , P.succeed (\v -> P.Loop { acc | sslCert = Just v })
                     |= stringArg "ssl-cert"
                 , P.succeed (\v -> P.Loop { acc | sslKey = Just v })
@@ -159,7 +155,6 @@ parser =
     in
     P.loop
         (Options
-            Nothing
             Nothing
             Nothing
             Nothing
