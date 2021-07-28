@@ -79,6 +79,8 @@ parser =
                     |= stringArg "report"
                 , P.succeed (\v -> P.Loop { acc | docs = Just v })
                     |= stringArg "docs"
+
+                --
                 , P.succeed (P.Done acc)
                     |. P.end
                 ]
