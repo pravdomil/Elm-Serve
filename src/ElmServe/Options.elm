@@ -11,8 +11,8 @@ type alias Options =
     , docs : Maybe String
 
     --
-    , host : Maybe String
-    , port_ : Maybe Int
+    , host : String
+    , port_ : Int
 
     --
     , root : Maybe String
@@ -48,8 +48,8 @@ toString a =
     , "output:     " ++ (a.output |> Maybe.withDefault "-")
     , "report:     " ++ (a.report |> Maybe.withDefault "-")
     , "docs:       " ++ (a.docs |> Maybe.withDefault "-")
-    , "host:       " ++ (a.host |> Maybe.withDefault "-")
-    , "port:       " ++ (a.port_ |> Maybe.map String.fromInt |> Maybe.withDefault "-")
+    , "host:       " ++ a.host
+    , "port:       " ++ String.fromInt a.port_
     , "root:       " ++ (a.root |> Maybe.withDefault "-")
     , "indexAs404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "-")
     , "open:       " ++ (a.open |> Maybe.map boolToString |> Maybe.withDefault "-")
@@ -88,9 +88,9 @@ parser =
                     |= stringArg "docs"
 
                 --
-                , P.succeed (\v -> P.Loop { acc | host = Just v })
+                , P.succeed (\v -> P.Loop { acc | host = v })
                     |= stringArg "host"
-                , P.succeed (\v -> P.Loop { acc | port_ = Just v })
+                , P.succeed (\v -> P.Loop { acc | port_ = v })
                     |= intArg "port"
 
                 --
@@ -161,8 +161,8 @@ parser =
         , docs = Nothing
 
         --
-        , host = Nothing
-        , port_ = Nothing
+        , host = "localhost"
+        , port_ = 8000
 
         --
         , root = Nothing
