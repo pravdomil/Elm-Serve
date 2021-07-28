@@ -9,6 +9,23 @@ type alias Options =
     , output : Maybe String
     , report : Maybe String
     , docs : Maybe String
+
+    --
+    , host : Maybe String
+    , port_ : Maybe Int
+
+    --
+    , dir : Maybe String
+    , pushState : Maybe Bool
+    , open : Maybe Bool
+
+    --
+    , ssl : Maybe Bool
+    , sslCert : Maybe String
+    , sslKey : Maybe String
+
+    --
+    , elmPath : Maybe String
     }
 
 
