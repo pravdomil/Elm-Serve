@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# Stop if any command fails.
+set -e
+
+# Stop on unset variables.
+set -u
+
+# Be in project root.
+cd "${0%/*}/.."
+
+# Have dependencies from npm ready.
+npm i
+
+# Have clean distribution directory.
+rm -r dist || true
+
+# Compile our app.
+elm make src/Main.elm --output dist/elm.js --optimize
+elm-ffi dist/elm.js --run --shebang
