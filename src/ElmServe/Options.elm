@@ -87,6 +87,26 @@ parser =
                     |= intArg "port"
 
                 --
+                , P.succeed (\v -> P.Loop { acc | root = Just v })
+                    |= stringArg "root"
+                , P.succeed (\v -> P.Loop { acc | indexAs404 = Just v })
+                    |= boolArg "indexAs404"
+                , P.succeed (\v -> P.Loop { acc | open = Just v })
+                    |= boolArg "open"
+
+                --
+                , P.succeed (\v -> P.Loop { acc | ssl = Just v })
+                    |= boolArg "ssl"
+                , P.succeed (\v -> P.Loop { acc | sslCert = Just v })
+                    |= stringArg "sslCert"
+                , P.succeed (\v -> P.Loop { acc | sslKey = Just v })
+                    |= stringArg "sslKey"
+
+                --
+                , P.succeed (\v -> P.Loop { acc | elmPath = Just v })
+                    |= stringArg "elmPath"
+
+                --
                 , P.succeed (P.Done acc)
                     |. P.end
                 ]
