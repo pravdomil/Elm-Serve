@@ -75,6 +75,7 @@ update msg model =
                     ( { model | options = Just b }
                     , log ("Elm Serve\n\nGot following options:\n" ++ Options.toString b ++ "\n")
                         |> Task.andThen (\_ -> startServer b)
+                        |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl b ++ "\n\n"))
                         |> Task.attempt TaskDone
                     )
 
