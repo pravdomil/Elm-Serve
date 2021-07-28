@@ -15,7 +15,7 @@ type alias Options =
     , port_ : Maybe Int
 
     --
-    , dir : Maybe String
+    , root : Maybe String
     , pushState : Maybe Bool
     , open : Maybe Bool
 
