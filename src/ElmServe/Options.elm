@@ -16,7 +16,7 @@ type alias Options =
 
     --
     , root : Maybe String
-    , pushState : Maybe Bool
+    , indexAs404 : Maybe Bool
     , open : Maybe Bool
 
     --
