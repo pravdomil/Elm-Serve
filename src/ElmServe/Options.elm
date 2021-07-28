@@ -154,19 +154,18 @@ parser =
                     ]
     in
     P.loop
-        (Options
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-            Nothing
-        )
+        { debug = Nothing
+        , optimize = Nothing
+        , output = Nothing
+        , report = Nothing
+        , docs = Nothing
+        , host = Nothing
+        , port_ = Nothing
+        , root = Nothing
+        , indexAs404 = Nothing
+        , open = Nothing
+        , sslCert = Nothing
+        , sslKey = Nothing
+        , elmPath = Nothing
+        }
         loop
