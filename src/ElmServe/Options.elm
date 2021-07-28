@@ -120,6 +120,20 @@ parser =
                     , P.end
                     ]
 
+        intArg : String -> Parser Int
+        intArg name =
+            P.succeed identity
+                |. P.symbol ("--" ++ name)
+                |. P.oneOf
+                    [ P.symbol "="
+                    , P.symbol "\u{0000}"
+                    ]
+                |= P.int
+                |. P.oneOf
+                    [ P.symbol "\u{0000}"
+                    , P.end
+                    ]
+
         stringArg : String -> Parser String
         stringArg name =
             P.succeed identity
