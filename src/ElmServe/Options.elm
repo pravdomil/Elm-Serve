@@ -149,10 +149,20 @@ parser =
                     ]
     in
     P.loop
-        { debug = Nothing
-        , optimize = Nothing
-        , output = Nothing
-        , report = Nothing
-        , docs = Nothing
-        }
+        (Options
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+        )
         loop
