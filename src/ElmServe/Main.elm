@@ -73,7 +73,7 @@ update msg model =
             case a of
                 Ok b ->
                     ( { model | options = Just b }
-                    , log ("Got following options:\n" ++ Options.toString b)
+                    , log ("Elm Serve\n\nGot following options:\n" ++ Options.toString b ++ "\n")
                         |> Task.andThen (\_ -> startServer b)
                         |> Task.attempt TaskDone
                     )
