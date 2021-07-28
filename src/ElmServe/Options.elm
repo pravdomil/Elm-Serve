@@ -44,20 +44,20 @@ toString a =
             else
                 "False"
     in
-    [ "debug: " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "n/a")
-    , "optimize: " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "n/a")
-    , "output: " ++ (a.output |> Maybe.withDefault "n/a")
-    , "report: " ++ (a.report |> Maybe.withDefault "n/a")
-    , "docs: " ++ (a.docs |> Maybe.withDefault "n/a")
-    , "host: " ++ (a.host |> Maybe.withDefault "n/a")
-    , "port: " ++ (a.port_ |> Maybe.map String.fromInt |> Maybe.withDefault "n/a")
-    , "root: " ++ (a.root |> Maybe.withDefault "n/a")
-    , "indexAs404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "n/a")
-    , "open: " ++ (a.open |> Maybe.map boolToString |> Maybe.withDefault "n/a")
-    , "ssl: " ++ (a.ssl |> Maybe.map boolToString |> Maybe.withDefault "n/a")
-    , "sslCert: " ++ (a.sslCert |> Maybe.withDefault "n/a")
-    , "sslKey: " ++ (a.sslKey |> Maybe.withDefault "n/a")
-    , "elmPath: " ++ (a.elmPath |> Maybe.withDefault "n/a")
+    [ "debug:      " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "optimize:   " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "output:     " ++ (a.output |> Maybe.withDefault "-")
+    , "report:     " ++ (a.report |> Maybe.withDefault "-")
+    , "docs:       " ++ (a.docs |> Maybe.withDefault "-")
+    , "host:       " ++ (a.host |> Maybe.withDefault "-")
+    , "port:       " ++ (a.port_ |> Maybe.map String.fromInt |> Maybe.withDefault "-")
+    , "root:       " ++ (a.root |> Maybe.withDefault "-")
+    , "indexAs404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "open:       " ++ (a.open |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "ssl:        " ++ (a.ssl |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "sslCert:    " ++ (a.sslCert |> Maybe.withDefault "-")
+    , "sslKey:     " ++ (a.sslKey |> Maybe.withDefault "-")
+    , "elmPath:    " ++ (a.elmPath |> Maybe.withDefault "-")
     ]
         |> String.join "\n"
 
