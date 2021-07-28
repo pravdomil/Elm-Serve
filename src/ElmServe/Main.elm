@@ -132,6 +132,13 @@ log _ =
         |> Task.map (\_ -> ())
 
 
+open : String -> Task Error ()
+open _ =
+    JavaScript.run "await require('open')(_v0)"
+        |> Task.mapError JavaScriptError
+        |> Task.map (\_ -> ())
+
+
 exitWithMessageAndCode : String -> Int -> Task Error ()
 exitWithMessageAndCode _ _ =
     JavaScript.run "(() => { console.error(_v0); process.exit(_v1); })()"
