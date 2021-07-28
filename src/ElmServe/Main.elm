@@ -137,3 +137,20 @@ exitWithMessageAndCode _ _ =
     JavaScript.run "(() => { console.error(_v0); process.exit(_v1); })()"
         |> Task.mapError JavaScriptError
         |> Task.map (\_ -> ())
+
+
+
+--
+
+
+serverUrl : Options -> String
+serverUrl a =
+    (if a.sslCert == Nothing then
+        "http://"
+
+     else
+        "https://"
+    )
+        ++ a.host
+        ++ ":"
+        ++ String.fromInt a.port_
