@@ -1,10 +1,11 @@
-module ElmServe.Main exposing (..)
+port module ElmServe.Main exposing (..)
 
 import ElmServe.Options as Options exposing (Options)
 import Interop.JavaScript as JavaScript
 import Json.Decode as Decode
 import Parser
 import Parser.DeadEnd as DeadEnd
+import Process
 import Task exposing (Task)
 
 
@@ -57,6 +58,7 @@ init _ =
 
 type Msg
     = GotOptions (Result Error Options)
+    | GotRequest Decode.Value
     | TaskDone (Result Error ())
     | NothingHappened
 
@@ -74,6 +76,7 @@ update msg model =
                 Ok b ->
                     ( { model | options = Just b }
                     , log ("Elm Serve\n\nGot following options:\n" ++ Options.toString b ++ "\n")
+                        |> Task.andThen (\_ -> Process.sleep 1)
                         |> Task.andThen (\_ -> startServer b)
                         |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl b ++ "\n\n"))
                         |> Task.andThen
@@ -92,6 +95,12 @@ update msg model =
                     , Task.fail b
                         |> Task.attempt TaskDone
                     )
+
+        GotRequest _ ->
+            ( model
+            , log "GotRequest"
+                |> Task.attempt (always NothingHappened)
+            )
 
         TaskDone a ->
             case a of
@@ -126,9 +135,12 @@ errorToString a =
 --
 
 
+port gotRequest : (Decode.Value -> msg) -> Sub msg
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    gotRequest GotRequest
 
 
 
@@ -139,6 +151,12 @@ startServer : Options -> Task Error ()
 startServer a =
     let
         _ =
+            a.host
+
+        _ =
+            a.port_
+
+        _ =
             a.root
 
         _ =
@@ -146,18 +164,15 @@ startServer a =
 
         _ =
             a.sslKey
-
-        _ =
-            a.port_
-
-        _ =
-            a.host
     in
     JavaScript.run """
     (() => {
-        var a = (_v1.$ === 0 && _v2.$ === 0) ?  { cert: fs.readFileSync(_v1.a), key: fs.readFileSync(_v2.a) } : {};
-        var b = require('serve-static')(_v0.$ === 0 ? _v0.a : process.cwd());
-        require(_v1.$ === 0 ? 'https' : 'http').createServer(a, (req, res) => { b(req, res, require('finalhandler')(req, res)) }).listen(_v3, _v4)
+        var isJust = (a) => a.$ === 0
+        var opt = isJust(_v3) && isJust(_v4) ? { cert: fs.readFileSync(_v3.a), key: fs.readFileSync(_v4.a) } : {}
+        var callback = (req, res) => { scope.Elm.Main.init.ports.gotRequest.send({ req, res }) }
+
+        global.static = require('serve-static')(isJust(_v2) ? _v2.a : process.cwd())
+        global.server = require(isJust(_v3) ? 'https' : 'http').createServer(opt, callback).listen(_v1, _v0)
     })()
     """
         |> Task.mapError JavaScriptError
