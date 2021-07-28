@@ -30,8 +30,8 @@ type alias Model =
 init : () -> ( Model, Cmd Msg )
 init _ =
     let
-        getArgs : Cmd Msg
-        getArgs =
+        getOptions : Cmd Msg
+        getOptions =
             JavaScript.run "process.argv"
                 |> JavaScript.decode (Decode.list Decode.string)
                 |> Task.mapError JavaScriptError
@@ -48,7 +48,7 @@ init _ =
     in
     ( { options = Nothing
       }
-    , getArgs
+    , getOptions
     )
 
 
