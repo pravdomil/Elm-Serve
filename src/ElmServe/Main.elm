@@ -157,7 +157,7 @@ startServer a =
     (() => {
         var a = (_v1.$ === 0 && _v2.$ === 0) ?  { cert: fs.readFileSync(_v1.a), key: fs.readFileSync(_v2.a) } : {};
         var b = require('serve-static')(_v0.$ === 0 ? _v0.a : process.cwd());
-        require(_v1.$ === 0 ? 'https' : 'http').createServer(a, (req, res) => b(req, res, require('finalhandler')(req, res))).listen(_v3, _v4)
+        require(_v1.$ === 0 ? 'https' : 'http').createServer(a, (req, res) => { b(req, res, require('finalhandler')(req, res)) }).listen(_v3, _v4)
     })()
     """
         |> Task.mapError JavaScriptError
