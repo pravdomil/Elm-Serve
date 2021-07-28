@@ -1,8 +1,10 @@
 {
   "name": "elm-serve",
   "dependencies": {
-    "elm-ffi": "github:pravdomil/elm-ffi",
-    "elm-utils": "github:pravdomil/elm-utils",
     "serve-static": "^1.14.1"
+  },
+  "devDependencies": {
+    "elm-ffi": "github:pravdomil/elm-ffi",
+    "elm-utils": "github:pravdomil/elm-utils"
   }
 }
