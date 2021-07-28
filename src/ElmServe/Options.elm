@@ -81,6 +81,12 @@ parser =
                     |= stringArg "docs"
 
                 --
+                , P.succeed (\v -> P.Loop { acc | host = Just v })
+                    |= stringArg "host"
+                , P.succeed (\v -> P.Loop { acc | port_ = Just v })
+                    |= intArg "port"
+
+                --
                 , P.succeed (P.Done acc)
                     |. P.end
                 ]
