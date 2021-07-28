@@ -29,27 +29,27 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    let
-        getOptions : Cmd Msg
-        getOptions =
-            JavaScript.run "process.argv"
-                |> JavaScript.decode (Decode.list Decode.string)
-                |> Task.mapError JavaScriptError
-                |> Task.andThen
-                    (\v ->
-                        case Options.parse (List.drop 2 v) of
-                            Ok vv ->
-                                Task.succeed vv
-
-                            Err vv ->
-                                Task.fail (CannotParseOptions vv)
-                    )
-                |> Task.attempt GotOptions
-    in
     ( { options = Nothing
       }
     , getOptions
+        |> Task.attempt GotOptions
     )
+
+
+getOptions : Task Error Options
+getOptions =
+    JavaScript.run "process.argv"
+        |> JavaScript.decode (Decode.list Decode.string)
+        |> Task.mapError JavaScriptError
+        |> Task.andThen
+            (\v ->
+                case Options.parse (List.drop 2 v) of
+                    Ok vv ->
+                        Task.succeed vv
+
+                    Err vv ->
+                        Task.fail (CannotParseOptions vv)
+            )
 
 
 
