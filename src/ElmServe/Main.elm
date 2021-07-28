@@ -74,6 +74,7 @@ update msg model =
                 Ok b ->
                     ( { model | options = Just b }
                     , log ("Got following options:\n" ++ Options.toString b)
+                        |> Task.andThen (\_ -> startServer b)
                         |> Task.attempt TaskDone
                     )
 
@@ -119,6 +120,39 @@ errorToString a =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
+
+
+
+--
+
+
+startServer : Options -> Task Error ()
+startServer a =
+    let
+        _ =
+            a.root
+
+        _ =
+            a.sslCert
+
+        _ =
+            a.sslKey
+
+        _ =
+            a.port_
+
+        _ =
+            a.host
+    in
+    JavaScript.run """
+    (() => {
+        var a = (_v1.$ === 0 && _v2.$ === 0) ?  { cert: fs.readFileSync(_v1.a), key: fs.readFileSync(_v2.a) } : {};
+        var b = require('serve-static')(_v0.$ === 0 ? _v0.a : process.cwd(), { fallthrough: false });
+        require(_v1.$ === 0 ? 'https' : 'http').createServer(a, b).listen(_v3, _v4)
+    })()
+    """
+        |> Task.mapError JavaScriptError
+        |> Task.map (\_ -> ())
 
 
 
