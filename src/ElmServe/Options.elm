@@ -4,14 +4,7 @@ import Parser as P exposing ((|.), (|=), Parser)
 
 
 type alias Options =
-    { debug : Maybe Bool
-    , optimize : Maybe Bool
-    , output : Maybe String
-    , report : Maybe String
-    , docs : Maybe String
-
-    --
-    , host : String
+    { host : String
     , port_ : Int
 
     --
@@ -25,6 +18,11 @@ type alias Options =
 
     --
     , elmPath : Maybe String
+    , debug : Maybe Bool
+    , optimize : Maybe Bool
+    , output : Maybe String
+    , report : Maybe String
+    , docs : Maybe String
     }
 
 
@@ -43,12 +41,7 @@ toString a =
             else
                 "False"
     in
-    [ "Debug:        " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "Optimize:     " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "Output:       " ++ (a.output |> Maybe.withDefault "-")
-    , "Report:       " ++ (a.report |> Maybe.withDefault "-")
-    , "Docs:         " ++ (a.docs |> Maybe.withDefault "-")
-    , "Host:         " ++ a.host
+    [ "Host:         " ++ a.host
     , "Port:         " ++ String.fromInt a.port_
     , "Root:         " ++ (a.root |> Maybe.withDefault "-")
     , "Index As 404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "-")
@@ -56,6 +49,11 @@ toString a =
     , "SSL Cert:     " ++ (a.sslCert |> Maybe.withDefault "-")
     , "SSL Key:      " ++ (a.sslKey |> Maybe.withDefault "-")
     , "Elm Path:     " ++ (a.elmPath |> Maybe.withDefault "-")
+    , "Debug:        " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "Optimize:     " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "Output:       " ++ (a.output |> Maybe.withDefault "-")
+    , "Report:       " ++ (a.report |> Maybe.withDefault "-")
+    , "Docs:         " ++ (a.docs |> Maybe.withDefault "-")
     ]
         |> String.join "\n"
 
@@ -76,19 +74,7 @@ parser =
         loop : Options -> Parser (P.Step Options Options)
         loop acc =
             P.oneOf
-                [ P.succeed (\v -> P.Loop { acc | debug = Just v })
-                    |= boolArg "debug"
-                , P.succeed (\v -> P.Loop { acc | optimize = Just v })
-                    |= boolArg "optimize"
-                , P.succeed (\v -> P.Loop { acc | output = Just v })
-                    |= stringArg "output"
-                , P.succeed (\v -> P.Loop { acc | report = Just v })
-                    |= stringArg "report"
-                , P.succeed (\v -> P.Loop { acc | docs = Just v })
-                    |= stringArg "docs"
-
-                --
-                , P.succeed (\v -> P.Loop { acc | host = v })
+                [ P.succeed (\v -> P.Loop { acc | host = v })
                     |= stringArg "host"
                 , P.succeed (\v -> P.Loop { acc | port_ = v })
                     |= intArg "port"
@@ -110,6 +96,16 @@ parser =
                 --
                 , P.succeed (\v -> P.Loop { acc | elmPath = Just v })
                     |= stringArg "elm-path"
+                , P.succeed (\v -> P.Loop { acc | debug = Just v })
+                    |= boolArg "debug"
+                , P.succeed (\v -> P.Loop { acc | optimize = Just v })
+                    |= boolArg "optimize"
+                , P.succeed (\v -> P.Loop { acc | output = Just v })
+                    |= stringArg "output"
+                , P.succeed (\v -> P.Loop { acc | report = Just v })
+                    |= stringArg "report"
+                , P.succeed (\v -> P.Loop { acc | docs = Just v })
+                    |= stringArg "docs"
 
                 --
                 , P.succeed (P.Done acc)
