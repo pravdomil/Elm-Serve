@@ -200,10 +200,15 @@ open a =
 
 
 exitWithMessageAndCode : String -> Int -> Task Error ()
-exitWithMessageAndCode _ _ =
-    JavaScript.run "(() => { console.error(_v0); process.exit(_v1); })()"
+exitWithMessageAndCode msg code =
+    JavaScript.run "(() => { console.error(a.msg); process.exit(a.code); })()"
+        (Encode.object
+            [ ( "msg", Encode.string msg )
+            , ( "code", Encode.int code )
+            ]
+        )
+        (Decode.succeed ())
         |> Task.mapError JavaScriptError
-        |> Task.map (\_ -> ())
 
 
 
