@@ -149,34 +149,26 @@ subscriptions _ =
 
 startServer : Options -> Task Error ()
 startServer a =
-    let
-        _ =
-            a.host
-
-        _ =
-            a.port_
-
-        _ =
-            a.root
-
-        _ =
-            a.sslCert
-
-        _ =
-            a.sslKey
-    in
     JavaScript.run """
     (() => {
-        var isJust = (a) => a.$ === 0
-        var opt = isJust(_v3) && isJust(_v4) ? { cert: fs.readFileSync(_v3.a), key: fs.readFileSync(_v4.a) } : {}
+        var ssl = a.sslCert !== null && a.sslKey !== null
+        var opt = ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
         var callback = (req, res) => { scope.Elm.Main.init.ports.gotRequest.send({ req, res }) }
 
-        global.static = require('serve-static')(isJust(_v2) ? _v2.a : process.cwd())
-        global.server = require(isJust(_v3) ? 'https' : 'http').createServer(opt, callback).listen(_v1, _v0)
+        global.static = require('serve-static')(a.root !== null ? a.root : process.cwd())
+        global.server = require(ssl ? 'https' : 'http').createServer(opt, callback).listen(a.port, a.host)
     })()
     """
+        (Encode.object
+            [ ( "host", Encode.string a.host )
+            , ( "port", Encode.int a.port_ )
+            , ( "root", Encode_.maybe Encode.string a.root )
+            , ( "sslCert", Encode_.maybe Encode.string a.sslCert )
+            , ( "sslKey", Encode_.maybe Encode.string a.sslKey )
+            ]
+        )
+        (Decode.succeed ())
         |> Task.mapError JavaScriptError
-        |> Task.map (\_ -> ())
 
 
 
