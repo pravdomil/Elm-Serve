@@ -184,10 +184,11 @@ getArguments =
 
 
 log : String -> Task Error ()
-log _ =
-    JavaScript.run "console.log(_v0)"
+log a =
+    JavaScript.run "console.log(a)"
+        (Encode.string a)
+        (Decode.succeed ())
         |> Task.mapError JavaScriptError
-        |> Task.map (\_ -> ())
 
 
 open : String -> Task Error ()
