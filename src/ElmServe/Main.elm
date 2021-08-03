@@ -7,7 +7,9 @@ import Json.Encode as Encode
 import Parser
 import Parser.DeadEnd as DeadEnd
 import Process
+import Regex exposing (Regex)
 import Task exposing (Task)
+import Url exposing (Url)
 import Utils.Json.Encode_ as Encode_
 
 
@@ -98,7 +100,7 @@ update msg model =
 
         GotRequest a ->
             ( model
-            , serveStatic a
+            , sendResponse a
                 |> Task.attempt TaskDone
             )
 
@@ -171,10 +173,43 @@ startServer a =
         |> Task.mapError JavaScriptError
 
 
-serveStatic : Decode.Value -> Task Error ()
-serveStatic a =
-    JavaScript.run "serve(a.req, a.res, require('finalhandler')(a.req, a.res))"
-        a
+sendResponse : Decode.Value -> Task Error ()
+sendResponse a =
+    let
+        url : Maybe String
+        url =
+            Decode.decodeValue (Decode.at [ "req", "url" ] Decode.string) a
+                |> Result.map (\v -> "http://localhost" ++ v)
+                |> Result.toMaybe
+                |> Maybe.andThen Url.fromString
+                |> Maybe.map .path
+
+        parentFolderRegex : Regex
+        parentFolderRegex =
+            Regex.fromString "(^|/)\\.\\.(/|$)"
+                |> Maybe.withDefault Regex.never
+    in
+    case url of
+        Just b ->
+            if Regex.contains parentFolderRegex b then
+                send 403 "Forbidden - cannot go to parent folder." a
+
+            else
+                send 200 "Hello word." a
+
+        Nothing ->
+            send 400 "Bad request - cannot parse url." a
+
+
+send : Int -> String -> Decode.Value -> Task Error ()
+send status data a =
+    JavaScript.run "(() => { a.a.res.statusCode = a.status; a.a.res.end(a.data); })()"
+        (Encode.object
+            [ ( "status", Encode.int status )
+            , ( "data", Encode.string data )
+            , ( "a", a )
+            ]
+        )
         (Decode.succeed ())
         |> Task.mapError JavaScriptError
 
