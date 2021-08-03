@@ -38,9 +38,7 @@ init _ =
 
 getOptions : Task Error Options
 getOptions =
-    JavaScript.run "process.argv"
-        |> JavaScript.decode (Decode.list Decode.string)
-        |> Task.mapError JavaScriptError
+    getArguments
         |> Task.andThen
             (\v ->
                 case Options.parse (List.drop 2 v) of
@@ -181,6 +179,14 @@ startServer a =
 
 
 --
+
+
+getArguments : Task Error (List String)
+getArguments =
+    JavaScript.run "process.argv"
+        Encode.null
+        (Decode.list Decode.string)
+        |> Task.mapError JavaScriptError
 
 
 log : String -> Task Error ()
