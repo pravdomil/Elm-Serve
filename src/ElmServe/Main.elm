@@ -75,7 +75,7 @@ update msg model =
             case a of
                 Ok b ->
                     ( { model | options = Just b }
-                    , log ("Elm Serve\n\nGot following options:\n" ++ Options.toString b ++ "\n")
+                    , log ("Elm Serve\n\nI got following options:\n" ++ Options.toString b ++ "\n")
                         |> Task.andThen (\_ -> Process.sleep 1)
                         |> Task.andThen (\_ -> startServer b)
                         |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl b ++ "\n"))

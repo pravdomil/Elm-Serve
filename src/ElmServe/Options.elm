@@ -36,10 +36,10 @@ toString a =
         boolToString : Bool -> String
         boolToString b =
             if b then
-                "True"
+                "true"
 
             else
-                "False"
+                "false"
     in
     [ "Host:         " ++ a.host
     , "Port:         " ++ String.fromInt a.port_
