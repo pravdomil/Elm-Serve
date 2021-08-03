@@ -143,7 +143,11 @@ parser =
                     [ P.symbol "="
                     , P.symbol "\u{0000}"
                     ]
-                |= P.getChompedString (P.chompUntilEndOr "\u{0000}")
+                |= P.getChompedString
+                    (P.succeed identity
+                        |= P.chompIf ((/=) '\u{0000}')
+                        |. P.chompUntilEndOr "\u{0000}"
+                    )
                 |. P.oneOf
                     [ P.symbol "\u{0000}"
                     , P.end
