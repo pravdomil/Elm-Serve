@@ -96,10 +96,10 @@ update msg model =
                         |> Task.attempt TaskDone
                     )
 
-        GotRequest _ ->
+        GotRequest a ->
             ( model
-            , log "GotRequest"
-                |> Task.attempt (always NothingHappened)
+            , serveStatic a
+                |> Task.attempt TaskDone
             )
 
         TaskDone a ->
@@ -155,7 +155,7 @@ startServer a =
         var opt = ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
         var callback = (req, res) => { scope.Elm.Main.init.ports.gotRequest.send({ req, res }) }
 
-        global.static = require('serve-static')(a.root !== null ? a.root : process.cwd())
+        global.serve = require('serve-static')(a.root !== null ? a.root : process.cwd())
         global.server = require(ssl ? 'https' : 'http').createServer(opt, callback).listen(a.port, a.host)
     })()
     """
@@ -167,6 +167,14 @@ startServer a =
             , ( "sslKey", Encode_.maybe Encode.string a.sslKey )
             ]
         )
+        (Decode.succeed ())
+        |> Task.mapError JavaScriptError
+
+
+serveStatic : Decode.Value -> Task Error ()
+serveStatic a =
+    JavaScript.run "serve(a.req, a.res, require('finalhandler')(a.req, a.res))"
+        a
         (Decode.succeed ())
         |> Task.mapError JavaScriptError
 
