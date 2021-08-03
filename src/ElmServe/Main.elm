@@ -192,10 +192,11 @@ log a =
 
 
 open : String -> Task Error ()
-open _ =
-    JavaScript.run "await require('open')(_v0)"
+open a =
+    JavaScript.run "require('open')(a)"
+        (Encode.string a)
+        (Decode.succeed ())
         |> Task.mapError JavaScriptError
-        |> Task.map (\_ -> ())
 
 
 exitWithMessageAndCode : String -> Int -> Task Error ()
