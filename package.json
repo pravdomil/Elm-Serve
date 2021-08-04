@@ -1,6 +1,6 @@
 {
   "name": "elm-serve",
-  "bin": "dist/elm.js",
+  "bin": "bin/elm-serve",
   "dependencies": {
     "elm-hot": "^1.1.6",
     "finalhandler": "^1.1.2",
