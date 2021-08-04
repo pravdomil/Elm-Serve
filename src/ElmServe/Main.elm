@@ -100,7 +100,7 @@ update msg model =
 
         GotRequest a ->
             ( model
-            , sendResponse a
+            , sendResponse model.options a
                 |> Task.attempt TaskDone
             )
 
@@ -183,8 +183,8 @@ type RespondError
     | JavaScriptError_ JavaScript.Error
 
 
-sendResponse : Decode.Value -> Task Error ()
-sendResponse a =
+sendResponse : Options -> Decode.Value -> Task Error ()
+sendResponse opt a =
     let
         parseUrl : Decode.Value -> Task RespondError String
         parseUrl b =
