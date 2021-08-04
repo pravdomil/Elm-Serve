@@ -334,26 +334,29 @@ sendResponse opt a =
     let
         resolvePath : String -> Task RespondError ()
         resolvePath b =
-            fileStatus (opt.root ++ "/" ++ b)
-                |> Task.mapError JavaScriptError_
-                |> Task.andThen
-                    (\v ->
-                        case v of
-                            File ->
-                                sendFile opt b a
-                                    |> Task.mapError JavaScriptError_
+            if b |> String.endsWith ".html" then
+                sendPatchedHtml opt b a
 
-                            Directory ->
-                                redirect (b ++ "/")
-
-                            NotFound ->
-                                if opt.indexAs404 then
-                                    sendFile opt "index.html" a
+            else
+                fileStatus (opt.root ++ "/" ++ b)
+                    |> Task.mapError JavaScriptError_
+                    |> Task.andThen
+                        (\v ->
+                            case v of
+                                File ->
+                                    sendFile opt b a
                                         |> Task.mapError JavaScriptError_
 
-                                else
-                                    Task.fail NotFound_
-                    )
+                                Directory ->
+                                    redirect (b ++ "/")
+
+                                NotFound ->
+                                    if opt.indexAs404 then
+                                        sendPatchedHtml opt "index.html" a
+
+                                    else
+                                        Task.fail NotFound_
+                        )
 
         redirect : String -> Task RespondError ()
         redirect b =
