@@ -216,8 +216,8 @@ type RespondError
 sendResponse : Options -> Request -> Task Error ()
 sendResponse opt a =
     let
-        parseUrl : Request -> Task RespondError String
-        parseUrl { request } =
+        requestToPath : Request -> Task RespondError String
+        requestToPath { request } =
             Decode.decodeValue (Decode.field "url" Decode.string) request
                 |> Result.map (\v -> "http://localhost" ++ v)
                 |> Result.toMaybe
@@ -266,7 +266,7 @@ sendResponse opt a =
                             send 500 "Server error." a
                                 |> Task.andThen (\_ -> Task.fail (JavaScriptError d))
     in
-    parseUrl a
+    requestToPath a
         |> Task.andThen parentFolderPathCheck
         |> taskAndThenWithResult sendResponse_
 
