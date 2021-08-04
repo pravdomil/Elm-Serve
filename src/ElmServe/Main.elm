@@ -98,7 +98,7 @@ errorToString a =
 
         --
         CannotParseOptions b ->
-            "Cannot decoder options because:\n" ++ DeadEnd.toString b
+            "Cannot parse options because:\n" ++ DeadEnd.toString b
 
         CannotReadProject b ->
             case b of
