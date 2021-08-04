@@ -247,8 +247,8 @@ sendResponse opt a =
         redirect b =
             send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") a
 
-        sendErrorResponse : RespondError -> Task Error ()
-        sendErrorResponse b =
+        errorResponse : RespondError -> Task Error ()
+        errorResponse b =
             case b of
                 CannotParseUrl ->
                     send 400 Dict.empty "Bad request - cannot parse url." a
@@ -265,7 +265,7 @@ sendResponse opt a =
     in
     requestPath a
         |> Task.andThen sendByPath
-        |> Task.onError sendErrorResponse
+        |> Task.onError errorResponse
 
 
 requestPath : Request -> Task RespondError String
