@@ -324,11 +324,11 @@ exitWithMessageAndCode msg code =
 
 serverUrl : Options -> String
 serverUrl a =
-    (if a.sslCert == Nothing then
-        "http://"
+    (if Options.ssl a then
+        "https://"
 
      else
-        "https://"
+        "http://"
     )
         ++ a.host
         ++ ":"

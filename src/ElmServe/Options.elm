@@ -58,6 +58,11 @@ toString a =
         |> String.join "\n"
 
 
+ssl : Options -> Bool
+ssl a =
+    a.sslCert /= Nothing && a.sslKey /= Nothing
+
+
 
 --
 
