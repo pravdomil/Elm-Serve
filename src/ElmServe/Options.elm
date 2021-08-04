@@ -21,8 +21,6 @@ type alias Options =
     , debug : Maybe Bool
     , optimize : Maybe Bool
     , output : Maybe String
-    , report : Maybe String
-    , docs : Maybe String
     }
 
 
@@ -52,8 +50,6 @@ toString a =
     , "Debug:        " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "-")
     , "Optimize:     " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "-")
     , "Output:       " ++ (a.output |> Maybe.withDefault "-")
-    , "Report:       " ++ (a.report |> Maybe.withDefault "-")
-    , "Docs:         " ++ (a.docs |> Maybe.withDefault "-")
     ]
         |> String.join "\n"
 
@@ -107,10 +103,6 @@ parser =
                     |= boolArg "optimize"
                 , P.succeed (\v -> P.Loop { acc | output = Just v })
                     |= stringArg "output"
-                , P.succeed (\v -> P.Loop { acc | report = Just v })
-                    |= stringArg "report"
-                , P.succeed (\v -> P.Loop { acc | docs = Just v })
-                    |= stringArg "docs"
 
                 --
                 , P.succeed (P.Done acc)
@@ -176,7 +168,5 @@ parser =
         , debug = Nothing
         , optimize = Nothing
         , output = Nothing
-        , report = Nothing
-        , docs = Nothing
         }
         loop
