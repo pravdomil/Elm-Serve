@@ -17,10 +17,10 @@ type alias Options =
     , sslKey : Maybe String
 
     --
-    , elmPath : Maybe String
-    , debug : Maybe Bool
-    , optimize : Maybe Bool
-    , output : Maybe String
+    , elmPath : String
+    , debug : Bool
+    , optimize : Bool
+    , output : String
     }
 
 
@@ -46,10 +46,10 @@ toString a =
     , "Open:         " ++ (a.open |> boolToString)
     , "SSL Cert:     " ++ (a.sslCert |> Maybe.withDefault "-")
     , "SSL Key:      " ++ (a.sslKey |> Maybe.withDefault "-")
-    , "Elm Path:     " ++ (a.elmPath |> Maybe.withDefault "-")
-    , "Debug:        " ++ (a.debug |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "Optimize:     " ++ (a.optimize |> Maybe.map boolToString |> Maybe.withDefault "-")
-    , "Output:       " ++ (a.output |> Maybe.withDefault "-")
+    , "Elm Path:     " ++ a.elmPath
+    , "Debug:        " ++ (a.debug |> boolToString)
+    , "Optimize:     " ++ (a.optimize |> boolToString)
+    , "Output:       " ++ a.output
     ]
         |> String.join "\n"
 
@@ -95,13 +95,13 @@ parser =
                     |= stringArg "ssl-key"
 
                 --
-                , P.succeed (\v -> P.Loop { acc | elmPath = Just v })
+                , P.succeed (\v -> P.Loop { acc | elmPath = v })
                     |= stringArg "elm-path"
-                , P.succeed (\v -> P.Loop { acc | debug = Just v })
+                , P.succeed (\v -> P.Loop { acc | debug = v })
                     |= boolArg "debug"
-                , P.succeed (\v -> P.Loop { acc | optimize = Just v })
+                , P.succeed (\v -> P.Loop { acc | optimize = v })
                     |= boolArg "optimize"
-                , P.succeed (\v -> P.Loop { acc | output = Just v })
+                , P.succeed (\v -> P.Loop { acc | output = v })
                     |= stringArg "output"
 
                 --
@@ -164,9 +164,9 @@ parser =
         , sslKey = Nothing
 
         --
-        , elmPath = Nothing
-        , debug = Nothing
-        , optimize = Nothing
-        , output = Nothing
+        , elmPath = "elm"
+        , debug = False
+        , optimize = True
+        , output = "elm.js"
         }
         loop
