@@ -204,6 +204,18 @@ update msg model =
                     )
 
 
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    gotRequest
+        (\v ->
+            GotRequest
+                (Result.map2 Request
+                    (Decode.decodeValue (Decode.field "req" Decode.value) v)
+                    (Decode.decodeValue (Decode.field "res" Decode.value) v)
+                )
+        )
+
+
 
 --
 
@@ -244,18 +256,6 @@ type alias Request =
 
 
 port gotRequest : (Decode.Value -> msg) -> Sub msg
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    gotRequest
-        (\v ->
-            GotRequest
-                (Result.map2 Request
-                    (Decode.decodeValue (Decode.field "req" Decode.value) v)
-                    (Decode.decodeValue (Decode.field "res" Decode.value) v)
-                )
-        )
 
 
 
