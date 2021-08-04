@@ -149,18 +149,18 @@ startServer : Options -> Task Error ()
 startServer a =
     JavaScript.run """
     (() => {
-        var ssl = a.sslCert !== null && a.sslKey !== null
-        var opt = ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
+        var opt = a.ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
         var callback = (req, res) => { scope.Elm.Main.init.ports.gotRequest.send({ req, res }) }
 
         global.serve = require('serve-static')(a.root !== null ? a.root : process.cwd())
-        global.server = require(ssl ? 'https' : 'http').createServer(opt, callback).listen(a.port, a.host)
+        global.server = require(a.ssl ? 'https' : 'http').createServer(opt, callback).listen(a.port, a.host)
     })()
     """
         (Encode.object
             [ ( "host", Encode.string a.host )
             , ( "port", Encode.int a.port_ )
             , ( "root", Encode_.maybe Encode.string a.root )
+            , ( "ssl", Encode.bool (Options.ssl a) )
             , ( "sslCert", Encode_.maybe Encode.string a.sslCert )
             , ( "sslKey", Encode_.maybe Encode.string a.sslKey )
             ]
