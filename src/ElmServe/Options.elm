@@ -159,14 +159,7 @@ parser =
                     ]
     in
     P.loop
-        { debug = Nothing
-        , optimize = Nothing
-        , output = Nothing
-        , report = Nothing
-        , docs = Nothing
-
-        --
-        , host = "localhost"
+        { host = "localhost"
         , port_ = 8000
 
         --
@@ -180,5 +173,10 @@ parser =
 
         --
         , elmPath = Nothing
+        , debug = Nothing
+        , optimize = Nothing
+        , output = Nothing
+        , report = Nothing
+        , docs = Nothing
         }
         loop
