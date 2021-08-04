@@ -68,6 +68,7 @@ type Msg
 type Error
     = JavaScriptError JavaScript.Error
     | CannotParseOptions (List Parser.DeadEnd)
+    | GotRequestButOptionsAreNothing
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -100,7 +101,13 @@ update msg model =
 
         GotRequest a ->
             ( model
-            , sendResponse model.options a
+            , (case model.options of
+                Just b ->
+                    sendResponse b a
+
+                Nothing ->
+                    Task.fail GotRequestButOptionsAreNothing
+              )
                 |> Task.attempt TaskDone
             )
 
