@@ -488,6 +488,13 @@ open a =
         |> Task.mapError JavaScriptError
 
 
+readFile : String -> Task JavaScript.Error String
+readFile path =
+    JavaScript.run "require('fs/promises').readFile(a, 'utf-8')"
+        (Encode.string path)
+        Decode.string
+
+
 type FileStatus
     = File
     | Directory
