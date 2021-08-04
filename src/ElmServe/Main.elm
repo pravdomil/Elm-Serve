@@ -60,7 +60,7 @@ getOptions =
 
 type Msg
     = GotOptions (Result Error Options)
-    | GotRequest Decode.Value
+    | GotRequest Request
     | TaskDone (Result Error ())
     | NothingHappened
 
@@ -137,12 +137,28 @@ errorToString a =
 --
 
 
+type alias Request =
+    { request : Decode.Value
+    , response : Decode.Value
+    }
+
+
 port gotRequest : (Decode.Value -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    gotRequest GotRequest
+    gotRequest
+        (\v ->
+            GotRequest
+                { request =
+                    Decode.decodeValue (Decode.field "req" Decode.value) v
+                        |> Result.withDefault Encode.null
+                , response =
+                    Decode.decodeValue (Decode.field "res" Decode.value) v
+                        |> Result.withDefault Encode.null
+                }
+        )
 
 
 
@@ -183,7 +199,7 @@ type RespondError
     | JavaScriptError_ JavaScript.Error
 
 
-sendResponse : Options -> Decode.Value -> Task Error ()
+sendResponse : Options -> Request -> Task Error ()
 sendResponse opt a =
     let
         parseUrl : Decode.Value -> Task RespondError String
@@ -241,13 +257,13 @@ sendResponse opt a =
         |> taskAndThenWithResult sendResponse_
 
 
-send : Int -> String -> Decode.Value -> Task Error ()
-send status data a =
-    JavaScript.run "(() => { a.a.res.statusCode = a.status; a.a.res.end(a.data); })()"
+send : Int -> String -> Request -> Task Error ()
+send status data { response } =
+    JavaScript.run "(() => { a.res.statusCode = a.status; a.res.end(a.data); })()"
         (Encode.object
             [ ( "status", Encode.int status )
             , ( "data", Encode.string data )
-            , ( "a", a )
+            , ( "res", response )
             ]
         )
         (Decode.succeed ())
