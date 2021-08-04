@@ -65,6 +65,14 @@ getOptions =
             )
 
 
+readProject : Task Error Project
+readProject =
+    JavaScript.run "require('fs/promises').readFile('elm.json', 'utf-8')"
+        Encode.null
+        (Decode_.json Project.decoder)
+        |> Task.mapError JavaScriptError
+
+
 
 --
 
@@ -417,14 +425,6 @@ fileStatus path =
                 else
                     Task.fail v
             )
-
-
-readProject : Task Error Project
-readProject =
-    JavaScript.run "require('fs/promises').readFile('elm.json', 'utf-8')"
-        Encode.null
-        (Decode_.json Project.decoder)
-        |> Task.mapError JavaScriptError
 
 
 
