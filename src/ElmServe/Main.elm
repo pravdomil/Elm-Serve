@@ -206,9 +206,9 @@ type RespondError
 sendResponse : Options -> Request -> Task Error ()
 sendResponse opt a =
     let
-        parseUrl : Decode.Value -> Task RespondError String
-        parseUrl b =
-            Decode.decodeValue (Decode.at [ "req", "url" ] Decode.string) b
+        parseUrl : Request -> Task RespondError String
+        parseUrl { request } =
+            Decode.decodeValue (Decode.field "url" Decode.string) request
                 |> Result.map (\v -> "http://localhost" ++ v)
                 |> Result.toMaybe
                 |> Maybe.andThen Url.fromString
