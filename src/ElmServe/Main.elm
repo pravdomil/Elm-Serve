@@ -30,16 +30,24 @@ main =
 
 
 type alias Model =
-    { options : Maybe Options
-    }
+    Maybe
+        { options : Options
+        , project : Project
+        }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { options = Nothing
-      }
-    , getOptions
-        |> Task.attempt GotOptions
+    ( Nothing
+    , Task.map2
+        (\v1 v2 ->
+            { options = v1
+            , project = v2
+            }
+        )
+        getOptions
+        readProject
+        |> Task.attempt GotModel
     )
 
 
@@ -89,7 +97,7 @@ errorToString a =
 
 
 type Msg
-    = GotOptions (Result Error Options)
+    = GotModel (Result Error { options : Options, project : Project })
     | GotRequest (Result Decode.Error Request)
     | TaskDone (Result Error ())
 
@@ -97,18 +105,23 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotOptions a ->
+        GotModel a ->
             case a of
                 Ok b ->
-                    ( { model | options = Just b }
-                    , log ("Elm Serve\n\nI got following options:\n" ++ Options.toString b ++ "\n")
+                    let
+                        opt : Options
+                        opt =
+                            b.options
+                    in
+                    ( Just b
+                    , log ("Elm Serve\n\nI got following options:\n" ++ Options.toString opt ++ "\n")
                         |> Task.andThen (\_ -> Process.sleep 1)
-                        |> Task.andThen (\_ -> startServer b)
-                        |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl b ++ "\n"))
+                        |> Task.andThen (\_ -> startServer opt)
+                        |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
                         |> Task.andThen
                             (\_ ->
-                                if b.open then
-                                    open (serverUrl b)
+                                if opt.open then
+                                    open (serverUrl opt)
 
                                 else
                                     Task.succeed ()
@@ -126,9 +139,9 @@ update msg model =
             ( model
             , (case a of
                 Ok b ->
-                    case model.options of
+                    case model of
                         Just c ->
-                            sendResponse c b
+                            sendResponse c.options b
 
                         Nothing ->
                             Task.fail GotRequestButOptionsAreNothing
@@ -404,11 +417,12 @@ fileStatus path =
             )
 
 
-readProject : Task JavaScript.Error Project
+readProject : Task Error Project
 readProject =
     JavaScript.run "require('fs/promises').readFile('elm.json')"
         Encode.null
         (Decode_.json Project.decoder)
+        |> Task.mapError JavaScriptError
 
 
 
