@@ -62,7 +62,6 @@ type Msg
     = GotOptions (Result Error Options)
     | GotRequest Request
     | TaskDone (Result Error ())
-    | NothingHappened
 
 
 type Error
@@ -121,13 +120,8 @@ update msg model =
                 Err b ->
                     ( model
                     , exitWithMessageAndCode (errorToString b) 1
-                        |> Task.attempt (always NothingHappened)
+                        |> Task.attempt (\_ -> TaskDone (Ok ()))
                     )
-
-        NothingHappened ->
-            ( model
-            , Cmd.none
-            )
 
 
 errorToString : Error -> String
