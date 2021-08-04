@@ -309,3 +309,17 @@ serverUrl a =
         ++ a.host
         ++ ":"
         ++ String.fromInt a.port_
+
+
+
+--
+
+
+resultToTask : Result x a -> Task x a
+resultToTask a =
+    case a of
+        Ok b ->
+            Task.succeed b
+
+        Err b ->
+            Task.fail b
