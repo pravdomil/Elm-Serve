@@ -85,6 +85,9 @@ type Error
       --
     | CannotDecodeRequest
     | GotRequestButModelIsNothing
+      --
+    | CannotDecodeFileChange
+    | GotFileChangeButModelIsNothing
 
 
 errorToString : Error -> String
@@ -118,6 +121,13 @@ errorToString a =
 
         GotRequestButModelIsNothing ->
             "Internal error - got request but model is nothing."
+
+        --
+        CannotDecodeFileChange ->
+            "Internal error - cannot file change."
+
+        GotFileChangeButModelIsNothing ->
+            "Internal error - got file change but model is nothing."
 
 
 
