@@ -334,7 +334,10 @@ sendResponse opt a =
     let
         resolvePath : String -> Task RespondError ()
         resolvePath b =
-            if b |> String.endsWith ".html" then
+            if b == "/elm-server-client-lib.js" then
+                sendClientLib a
+
+            else if b |> String.endsWith ".html" then
                 sendPatchedHtml opt b a
 
             else
@@ -452,6 +455,17 @@ sendPatchedHtml opt path a =
                 send 200 Dict.empty body a
                     |> Task.mapError JavaScriptError_
             )
+
+
+sendClientLib : Request -> Task RespondError ()
+sendClientLib a =
+    let
+        body : String
+        body =
+            "console.log('Hello from Elm Serve.')"
+    in
+    send 200 Dict.empty body a
+        |> Task.mapError JavaScriptError_
 
 
 sendFile : Options -> String -> Request -> Task JavaScript.Error ()
