@@ -62,6 +62,7 @@ type Error
     = JavaScriptError JavaScript.Error
     | CannotParseOptions (List Parser.DeadEnd)
     | GotRequestButOptionsAreNothing
+    | GotRequestButWithNoRequestAndResponse
 
 
 errorToString : Error -> String
@@ -76,6 +77,9 @@ errorToString a =
         GotRequestButOptionsAreNothing ->
             "Internal error - got request but options are nothing."
 
+        GotRequestButWithNoRequestAndResponse ->
+            "Internal error - got request but with no request and response."
+
 
 
 --
@@ -83,7 +87,7 @@ errorToString a =
 
 type Msg
     = GotOptions (Result Error Options)
-    | GotRequest Request
+    | GotRequest (Result Decode.Error Request)
     | TaskDone (Result Error ())
 
 
@@ -117,12 +121,17 @@ update msg model =
 
         GotRequest a ->
             ( model
-            , (case model.options of
-                Just b ->
-                    sendResponse b a
+            , (case a of
+                Ok b ->
+                    case model.options of
+                        Just c ->
+                            sendResponse c b
 
-                Nothing ->
-                    Task.fail GotRequestButOptionsAreNothing
+                        Nothing ->
+                            Task.fail GotRequestButOptionsAreNothing
+
+                Err _ ->
+                    Task.fail GotRequestButWithNoRequestAndResponse
               )
                 |> Task.attempt TaskDone
             )
@@ -187,13 +196,10 @@ subscriptions _ =
     gotRequest
         (\v ->
             GotRequest
-                { request =
-                    Decode.decodeValue (Decode.field "req" Decode.value) v
-                        |> Result.withDefault Encode.null
-                , response =
-                    Decode.decodeValue (Decode.field "res" Decode.value) v
-                        |> Result.withDefault Encode.null
-                }
+                (Result.map2 Request
+                    (Decode.decodeValue (Decode.field "req" Decode.value) v)
+                    (Decode.decodeValue (Decode.field "res" Decode.value) v)
+                )
         )
 
 
