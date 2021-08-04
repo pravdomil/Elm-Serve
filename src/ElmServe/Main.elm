@@ -234,12 +234,12 @@ sendResponse opt a =
                             send 500 "Server error." a
                                 |> Task.andThen (\_ -> Task.fail (JavaScriptError d))
     in
-    requestFilePath opt a
+    requestPath a
         |> taskAndThenWithResult sendResponse_
 
 
-requestFilePath : Options -> Request -> Task RespondError String
-requestFilePath opt { request } =
+requestPath : Request -> Task RespondError String
+requestPath { request } =
     let
         parentFolderRegex : Regex
         parentFolderRegex =
@@ -267,10 +267,6 @@ requestFilePath opt { request } =
 
                 else
                     v
-            )
-        |> Result.map
-            (\v ->
-                opt.root ++ "/" ++ v
             )
         |> resultToTask
 
