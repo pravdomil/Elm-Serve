@@ -70,7 +70,7 @@ readProject =
     JavaScript.run "require('fs/promises').readFile('elm.json', 'utf-8')"
         Encode.null
         (Decode_.json Project.decoder)
-        |> Task.mapError JavaScriptError
+        |> Task.mapError CannotReadProject
 
 
 
@@ -81,6 +81,7 @@ type Error
     = JavaScriptError JavaScript.Error
       --
     | CannotParseOptions (List Parser.DeadEnd)
+    | CannotReadProject JavaScript.Error
       --
     | CannotDecodeRequest
     | GotRequestButModelIsNothing
@@ -95,6 +96,21 @@ errorToString a =
         --
         CannotParseOptions b ->
             "Cannot decoder options because:\n" ++ DeadEnd.toString b
+
+        CannotReadProject b ->
+            case b of
+                JavaScript.FileNotPatched ->
+                    JavaScript.errorToString b
+
+                JavaScript.Exception _ ->
+                    if JavaScript.errorCode b == Just "ENOENT" then
+                        "Cannot find elm.json."
+
+                    else
+                        JavaScript.errorToString b
+
+                JavaScript.DecodeError _ ->
+                    "Cannot decode elm.json."
 
         --
         CannotDecodeRequest ->
