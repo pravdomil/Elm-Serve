@@ -184,8 +184,8 @@ update msg model =
                         Nothing ->
                             Task.fail GotRequestButModelIsNothing
 
-                Err _ ->
-                    Task.fail CannotDecodeRequest
+                Err b ->
+                    Task.fail (CannotDecodeRequest b)
               )
                 |> Task.attempt TaskDone
             )
