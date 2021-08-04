@@ -246,8 +246,9 @@ sendResponse opt a =
         redirect : String -> Task RespondError ()
         redirect b =
             send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") a
+                |> Task.mapError JavaScriptError_
 
-        errorResponse : RespondError -> Task Error ()
+        errorResponse : RespondError -> Task JavaScript.Error ()
         errorResponse b =
             case b of
                 CannotParseUrl ->
@@ -261,11 +262,12 @@ sendResponse opt a =
 
                 JavaScriptError_ c ->
                     send 500 Dict.empty "Server error." a
-                        |> Task.andThen (\_ -> Task.fail (JavaScriptError c))
+                        |> Task.andThen (\_ -> Task.fail c)
     in
     requestPath a
         |> Task.andThen resolvePath
         |> Task.onError errorResponse
+        |> Task.mapError JavaScriptError
 
 
 requestPath : Request -> Task RespondError String
@@ -301,7 +303,7 @@ requestPath { request } =
         |> resultToTask
 
 
-send : Int -> Dict String String -> String -> Request -> Task Error ()
+send : Int -> Dict String String -> String -> Request -> Task JavaScript.Error ()
 send status headers data { response } =
     JavaScript.run "a.res.writeHead(a.status, a.headers).end(a.data)"
         (Encode.object
@@ -312,7 +314,6 @@ send status headers data { response } =
             ]
         )
         (Decode.succeed ())
-        |> Task.mapError JavaScriptError
 
 
 
