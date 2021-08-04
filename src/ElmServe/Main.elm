@@ -1,5 +1,6 @@
 port module ElmServe.Main exposing (..)
 
+import Dict exposing (Dict)
 import ElmServe.Options as Options exposing (Options)
 import Interop.JavaScript as JavaScript
 import Json.Decode as Decode
@@ -250,16 +251,16 @@ sendResponse opt a =
         sendErrorResponse b =
             case b of
                 CannotParseUrl ->
-                    send 400 "Bad request - cannot parse url." a
+                    send 400 Dict.empty "Bad request - cannot parse url." a
 
                 ParentFolderPath ->
-                    send 403 "Forbidden - cannot go to parent folder." a
+                    send 403 Dict.empty "Forbidden - cannot go to parent folder." a
 
                 NotFound_ ->
-                    send 404 "Not found." a
+                    send 404 Dict.empty "Not found." a
 
                 JavaScriptError_ c ->
-                    send 500 "Server error." a
+                    send 500 Dict.empty "Server error." a
                         |> Task.andThen (\_ -> Task.fail (JavaScriptError c))
     in
     requestPath a
@@ -300,11 +301,12 @@ requestPath { request } =
         |> resultToTask
 
 
-send : Int -> String -> Request -> Task Error ()
-send status data { response } =
-    JavaScript.run "(() => { a.res.statusCode = a.status; a.res.end(a.data); })()"
+send : Int -> Dict String String -> String -> Request -> Task Error ()
+send status headers data { response } =
+    JavaScript.run "a.res.writeHead(a.status, a.headers).end(a.data)"
         (Encode.object
             [ ( "status", Encode.int status )
+            , ( "headers", Encode.dict identity Encode.string headers )
             , ( "data", Encode.string data )
             , ( "res", response )
             ]
