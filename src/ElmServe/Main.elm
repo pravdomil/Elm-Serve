@@ -268,6 +268,15 @@ requestFilePath opt { request } =
                 else
                     v
             )
+        |> Result.map
+            (\v ->
+                case opt.root of
+                    Just b ->
+                        b ++ "/" ++ v
+
+                    Nothing ->
+                        v
+            )
         |> resultToTask
 
 
