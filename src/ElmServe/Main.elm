@@ -322,6 +322,37 @@ open a =
         |> Task.mapError JavaScriptError
 
 
+type FileStatus
+    = File
+    | Directory
+    | NotFound
+
+
+fileStatus : String -> Task Error FileStatus
+fileStatus path =
+    JavaScript.run "require('fs/promises').stat(a).then(a => a.isDirectory())"
+        (Encode.string path)
+        (Decode.bool
+            |> Decode.andThen
+                (\v ->
+                    if v then
+                        Decode.succeed Directory
+
+                    else
+                        Decode.succeed File
+                )
+        )
+        |> Task.onError
+            (\v ->
+                if JavaScript.errorCode v == Just "ENOENT" then
+                    Task.succeed NotFound
+
+                else
+                    Task.fail v
+            )
+        |> Task.mapError JavaScriptError
+
+
 
 --
 
