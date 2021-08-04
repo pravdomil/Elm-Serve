@@ -227,22 +227,20 @@ sendResponse opt a =
                     (\v ->
                         case v of
                             File ->
-                                sendFile (opt.root ++ "/" ++ b)
+                                sendFile opt b a
+                                    |> Task.mapError JavaScriptError_
 
                             Directory ->
                                 redirect (b ++ "/")
 
                             NotFound ->
                                 if opt.indexAs404 then
-                                    sendFile (opt.root ++ "/index.html")
+                                    sendFile opt "index.html" a
+                                        |> Task.mapError JavaScriptError_
 
                                 else
                                     Task.fail NotFound_
                     )
-
-        sendFile : String -> Task RespondError ()
-        sendFile b =
-            Debug.todo ""
 
         redirect : String -> Task RespondError ()
         redirect b =
@@ -311,6 +309,19 @@ send status headers data { response } =
             [ ( "status", Encode.int status )
             , ( "headers", Encode.dict identity Encode.string headers )
             , ( "data", Encode.string data )
+            , ( "res", response )
+            ]
+        )
+        (Decode.succeed ())
+
+
+sendFile : Options -> String -> Request -> Task JavaScript.Error ()
+sendFile opt path { request, response } =
+    JavaScript.run "require('send')(a.req, a.path, { root: a.root }).pipe(a.res)"
+        (Encode.object
+            [ ( "root", Encode.string opt.root )
+            , ( "path", Encode.string path )
+            , ( "req", request )
             , ( "res", response )
             ]
         )
