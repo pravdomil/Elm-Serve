@@ -251,14 +251,6 @@ requestFilePath opt { request } =
         |> Result.toMaybe
         |> Maybe.andThen Url.fromString
         |> Maybe.map .path
-        |> Maybe.map
-            (\v ->
-                if v |> String.endsWith "/" then
-                    v ++ "index.html"
-
-                else
-                    v
-            )
         |> Result.fromMaybe CannotParseUrl
         |> Result.andThen
             (\v ->
@@ -267,6 +259,14 @@ requestFilePath opt { request } =
 
                 else
                     Ok v
+            )
+        |> Result.map
+            (\v ->
+                if v |> String.endsWith "/" then
+                    v ++ "index.html"
+
+                else
+                    v
             )
         |> resultToTask
 
