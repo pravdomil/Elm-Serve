@@ -162,8 +162,9 @@ startServer a =
         var opt = a.ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
         var callback = (req, res) => { scope.Elm.Main.init.ports.gotRequest.send({ req, res }) }
 
-        global.serve = require('serve-static')(a.root !== null ? a.root : process.cwd())
-        global.server = require(a.ssl ? 'https' : 'http').createServer(opt, callback).listen(a.port, a.host)
+        require(a.ssl ? 'https' : 'http')
+          .createServer(opt, callback)
+          .listen(a.port, a.host)
     })()
     """
         (Encode.object
