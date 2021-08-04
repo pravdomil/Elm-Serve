@@ -338,7 +338,7 @@ type FileStatus
     | NotFound
 
 
-fileStatus : String -> Task Error FileStatus
+fileStatus : String -> Task JavaScript.Error FileStatus
 fileStatus path =
     JavaScript.run "require('fs/promises').stat(a).then(a => a.isDirectory())"
         (Encode.string path)
@@ -360,7 +360,6 @@ fileStatus path =
                 else
                     Task.fail v
             )
-        |> Task.mapError JavaScriptError
 
 
 
