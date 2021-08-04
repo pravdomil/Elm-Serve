@@ -245,7 +245,7 @@ sendResponse opt a =
 
         redirect : String -> Task RespondError ()
         redirect b =
-            Debug.todo ""
+            send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") a
 
         sendErrorResponse : RespondError -> Task Error ()
         sendErrorResponse b =
