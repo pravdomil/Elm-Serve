@@ -216,38 +216,6 @@ type RespondError
 sendResponse : Options -> Request -> Task Error ()
 sendResponse opt a =
     let
-        requestToPath : Request -> Task RespondError String
-        requestToPath { request } =
-            let
-                parentFolderRegex : Regex
-                parentFolderRegex =
-                    Regex.fromString "(^|/)\\.\\.(/|$)"
-                        |> Maybe.withDefault Regex.never
-            in
-            Decode.decodeValue (Decode.field "url" Decode.string) request
-                |> Result.map (\v -> "http://localhost" ++ v)
-                |> Result.toMaybe
-                |> Maybe.andThen Url.fromString
-                |> Maybe.map .path
-                |> Maybe.map
-                    (\v ->
-                        if v |> String.endsWith "/" then
-                            v ++ "index.html"
-
-                        else
-                            v
-                    )
-                |> Result.fromMaybe CannotParseUrl
-                |> Result.andThen
-                    (\v ->
-                        if Regex.contains parentFolderRegex v then
-                            Err ParentFolderPath
-
-                        else
-                            Ok v
-                    )
-                |> resultToTask
-
         sendResponse_ : Result RespondError () -> Task Error ()
         sendResponse_ b =
             case b of
@@ -268,6 +236,39 @@ sendResponse opt a =
     in
     requestToPath a
         |> taskAndThenWithResult sendResponse_
+
+
+requestToPath : Request -> Task RespondError String
+requestToPath { request } =
+    let
+        parentFolderRegex : Regex
+        parentFolderRegex =
+            Regex.fromString "(^|/)\\.\\.(/|$)"
+                |> Maybe.withDefault Regex.never
+    in
+    Decode.decodeValue (Decode.field "url" Decode.string) request
+        |> Result.map (\v -> "http://localhost" ++ v)
+        |> Result.toMaybe
+        |> Maybe.andThen Url.fromString
+        |> Maybe.map .path
+        |> Maybe.map
+            (\v ->
+                if v |> String.endsWith "/" then
+                    v ++ "index.html"
+
+                else
+                    v
+            )
+        |> Result.fromMaybe CannotParseUrl
+        |> Result.andThen
+            (\v ->
+                if Regex.contains parentFolderRegex v then
+                    Err ParentFolderPath
+
+                else
+                    Ok v
+            )
+        |> resultToTask
 
 
 send : Int -> String -> Request -> Task Error ()
