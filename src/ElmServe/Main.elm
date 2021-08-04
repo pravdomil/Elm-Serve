@@ -419,7 +419,7 @@ fileStatus path =
 
 readProject : Task Error Project
 readProject =
-    JavaScript.run "require('fs/promises').readFile('elm.json')"
+    JavaScript.run "require('fs/promises').readFile('elm.json', 'utf-8')"
         Encode.null
         (Decode_.json Project.decoder)
         |> Task.mapError JavaScriptError
