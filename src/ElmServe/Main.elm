@@ -218,6 +218,12 @@ sendResponse opt a =
     let
         requestToPath : Request -> Task RespondError String
         requestToPath { request } =
+            let
+                parentFolderRegex : Regex
+                parentFolderRegex =
+                    Regex.fromString "(^|/)\\.\\.(/|$)"
+                        |> Maybe.withDefault Regex.never
+            in
             Decode.decodeValue (Decode.field "url" Decode.string) request
                 |> Result.map (\v -> "http://localhost" ++ v)
                 |> Result.toMaybe
@@ -232,21 +238,15 @@ sendResponse opt a =
                             v
                     )
                 |> Result.fromMaybe CannotParseUrl
+                |> Result.andThen
+                    (\v ->
+                        if Regex.contains parentFolderRegex v then
+                            Err ParentFolderPath
+
+                        else
+                            Ok v
+                    )
                 |> resultToTask
-
-        parentFolderPathCheck : String -> Task RespondError String
-        parentFolderPathCheck b =
-            let
-                parentFolderRegex : Regex
-                parentFolderRegex =
-                    Regex.fromString "(^|/)\\.\\.(/|$)"
-                        |> Maybe.withDefault Regex.never
-            in
-            if Regex.contains parentFolderRegex b then
-                Task.fail ParentFolderPath
-
-            else
-                Task.succeed b
 
         sendResponse_ : Result RespondError () -> Task Error ()
         sendResponse_ b =
@@ -267,7 +267,6 @@ sendResponse opt a =
                                 |> Task.andThen (\_ -> Task.fail (JavaScriptError d))
     in
     requestToPath a
-        |> Task.andThen parentFolderPathCheck
         |> taskAndThenWithResult sendResponse_
 
 
