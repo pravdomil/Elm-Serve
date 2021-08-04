@@ -234,12 +234,12 @@ sendResponse opt a =
                             send 500 "Server error." a
                                 |> Task.andThen (\_ -> Task.fail (JavaScriptError d))
     in
-    requestToPath a
+    requestFilePath a
         |> taskAndThenWithResult sendResponse_
 
 
-requestToPath : Request -> Task RespondError String
-requestToPath { request } =
+requestFilePath : Request -> Task RespondError String
+requestFilePath { request } =
     let
         parentFolderRegex : Regex
         parentFolderRegex =
