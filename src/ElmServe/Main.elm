@@ -72,8 +72,8 @@ getOptions =
 type Error
     = JavaScriptError JavaScript.Error
     | CannotParseOptions (List Parser.DeadEnd)
-    | GotRequestButOptionsAreNothing
-    | GotRequestButWithNoRequestAndResponse
+    | GotRequestButModelIsNothing
+    | CannotDecodeRequest
 
 
 errorToString : Error -> String
@@ -85,11 +85,11 @@ errorToString a =
         CannotParseOptions b ->
             "Cannot decoder options because:\n" ++ DeadEnd.toString b
 
-        GotRequestButOptionsAreNothing ->
-            "Internal error - got request but options are nothing."
+        GotRequestButModelIsNothing ->
+            "Internal error - got request but model is nothing."
 
-        GotRequestButWithNoRequestAndResponse ->
-            "Internal error - got request but with no request and response."
+        CannotDecodeRequest ->
+            "Internal error - cannot decode request."
 
 
 
@@ -144,10 +144,10 @@ update msg model =
                             sendResponse c.options b
 
                         Nothing ->
-                            Task.fail GotRequestButOptionsAreNothing
+                            Task.fail GotRequestButModelIsNothing
 
                 Err _ ->
-                    Task.fail GotRequestButWithNoRequestAndResponse
+                    Task.fail CannotDecodeRequest
               )
                 |> Task.attempt TaskDone
             )
