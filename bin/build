@@ -12,9 +12,7 @@ cd "${0%/*}/.."
 # Have dependencies from npm ready.
 npm i
 
-# Have clean distribution directory.
-rm -r dist || true
-
 # Compile our app.
-elm make src/Main.elm --output dist/elm.js --optimize
-elm-ffi dist/elm.js --run --shebang
+elm make src/Main.elm --output bin/elm-serve.js --optimize
+elm-ffi bin/elm-serve.js --run --shebang
+mv bin/elm-serve.js bin/elm-serve
