@@ -218,8 +218,8 @@ type RespondError
 sendResponse : Options -> Request -> Task Error ()
 sendResponse opt a =
     let
-        sendByPath : String -> Task RespondError ()
-        sendByPath b =
+        resolvePath : String -> Task RespondError ()
+        resolvePath b =
             fileStatus (opt.root ++ "/" ++ b)
                 |> Task.mapError JavaScriptError_
                 |> Task.andThen
@@ -264,7 +264,7 @@ sendResponse opt a =
                         |> Task.andThen (\_ -> Task.fail (JavaScriptError c))
     in
     requestPath a
-        |> Task.andThen sendByPath
+        |> Task.andThen resolvePath
         |> Task.onError errorResponse
 
 
