@@ -83,10 +83,10 @@ type Error
     | CannotParseOptions (List Parser.DeadEnd)
     | CannotReadProject JavaScript.Error
       --
-    | CannotDecodeRequest
+    | CannotDecodeRequest Decode.Error
     | GotRequestButModelIsNothing
       --
-    | CannotDecodeFileChange
+    | CannotDecodeFileChange Decode.Error
     | GotFileChangeButModelIsNothing
 
 
@@ -116,14 +116,14 @@ errorToString a =
                     "Cannot decode elm.json."
 
         --
-        CannotDecodeRequest ->
+        CannotDecodeRequest _ ->
             "Internal error - cannot decode request."
 
         GotRequestButModelIsNothing ->
             "Internal error - got request but model is nothing."
 
         --
-        CannotDecodeFileChange ->
+        CannotDecodeFileChange _ ->
             "Internal error - cannot file change."
 
         GotFileChangeButModelIsNothing ->
