@@ -72,8 +72,8 @@ getOptions =
 type Error
     = JavaScriptError JavaScript.Error
     | CannotParseOptions (List Parser.DeadEnd)
-    | GotRequestButModelIsNothing
     | CannotDecodeRequest
+    | GotRequestButModelIsNothing
 
 
 errorToString : Error -> String
@@ -85,11 +85,11 @@ errorToString a =
         CannotParseOptions b ->
             "Cannot decoder options because:\n" ++ DeadEnd.toString b
 
-        GotRequestButModelIsNothing ->
-            "Internal error - got request but model is nothing."
-
         CannotDecodeRequest ->
             "Internal error - cannot decode request."
+
+        GotRequestButModelIsNothing ->
+            "Internal error - got request but model is nothing."
 
 
 
