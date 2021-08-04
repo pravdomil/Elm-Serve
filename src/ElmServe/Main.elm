@@ -92,9 +92,11 @@ errorToString a =
         JavaScriptError b ->
             JavaScript.errorToString b
 
+        --
         CannotParseOptions b ->
             "Cannot decoder options because:\n" ++ DeadEnd.toString b
 
+        --
         CannotDecodeRequest ->
             "Internal error - cannot decode request."
 
