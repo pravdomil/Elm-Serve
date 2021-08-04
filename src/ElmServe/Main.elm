@@ -58,16 +58,33 @@ getOptions =
 --
 
 
-type Msg
-    = GotOptions (Result Error Options)
-    | GotRequest Request
-    | TaskDone (Result Error ())
-
-
 type Error
     = JavaScriptError JavaScript.Error
     | CannotParseOptions (List Parser.DeadEnd)
     | GotRequestButOptionsAreNothing
+
+
+errorToString : Error -> String
+errorToString a =
+    case a of
+        JavaScriptError b ->
+            JavaScript.errorToString b
+
+        CannotParseOptions b ->
+            "Cannot decoder options because:\n" ++ DeadEnd.toString b
+
+        GotRequestButOptionsAreNothing ->
+            "Internal error - got request but options are nothing."
+
+
+
+--
+
+
+type Msg
+    = GotOptions (Result Error Options)
+    | GotRequest Request
+    | TaskDone (Result Error ())
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -122,19 +139,6 @@ update msg model =
                     , exitWithMessageAndCode (errorToString b) 1
                         |> Task.attempt (\_ -> TaskDone (Ok ()))
                     )
-
-
-errorToString : Error -> String
-errorToString a =
-    case a of
-        JavaScriptError b ->
-            JavaScript.errorToString b
-
-        CannotParseOptions b ->
-            "Cannot decoder options because:\n" ++ DeadEnd.toString b
-
-        GotRequestButOptionsAreNothing ->
-            "Internal error - got request but options are nothing."
 
 
 
