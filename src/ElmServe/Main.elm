@@ -431,6 +431,29 @@ send status headers data { response } =
         (Decode.succeed ())
 
 
+sendPatchedHtml : Options -> String -> Request -> Task RespondError ()
+sendPatchedHtml opt path a =
+    readFile (opt.root ++ "/" ++ path)
+        |> Task.onError
+            (\v ->
+                if JavaScript.errorCode v == Just "ENOENT" then
+                    Task.fail NotFound_
+
+                else
+                    Task.fail (JavaScriptError_ v)
+            )
+        |> Task.andThen
+            (\v ->
+                let
+                    body : String
+                    body =
+                        String.replace "<head>" "<head><script src=\"/elm-server-client-lib.js\"></script>" v
+                in
+                send 200 Dict.empty body a
+                    |> Task.mapError JavaScriptError_
+            )
+
+
 sendFile : Options -> String -> Request -> Task JavaScript.Error ()
 sendFile opt path { request, response } =
     JavaScript.run "require('send')(a.req, a.path, { root: a.root }).pipe(a.res)"
