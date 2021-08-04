@@ -298,14 +298,6 @@ log a =
         |> Task.mapError JavaScriptError
 
 
-open : String -> Task Error ()
-open a =
-    JavaScript.run "require('open')(a)"
-        (Encode.string a)
-        (Decode.succeed ())
-        |> Task.mapError JavaScriptError
-
-
 exitWithMessageAndCode : String -> Int -> Task Error ()
 exitWithMessageAndCode msg code =
     JavaScript.run "(() => { console.error(a.msg); process.exit(a.code); })()"
@@ -314,6 +306,18 @@ exitWithMessageAndCode msg code =
             , ( "code", Encode.int code )
             ]
         )
+        (Decode.succeed ())
+        |> Task.mapError JavaScriptError
+
+
+
+--
+
+
+open : String -> Task Error ()
+open a =
+    JavaScript.run "require('open')(a)"
+        (Encode.string a)
         (Decode.succeed ())
         |> Task.mapError JavaScriptError
 
