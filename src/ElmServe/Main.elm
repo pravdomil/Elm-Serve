@@ -210,12 +210,42 @@ subscriptions _ =
 type RespondError
     = CannotParseUrl
     | ParentFolderPath
+    | NotFound_
     | JavaScriptError_ JavaScript.Error
 
 
 sendResponse : Options -> Request -> Task Error ()
 sendResponse opt a =
     let
+        sendByPath : String -> Task RespondError ()
+        sendByPath b =
+            fileStatus (opt.root ++ "/" ++ b)
+                |> Task.mapError JavaScriptError_
+                |> Task.andThen
+                    (\v ->
+                        case v of
+                            File ->
+                                sendFile (opt.root ++ "/" ++ b)
+
+                            Directory ->
+                                redirect (b ++ "/")
+
+                            NotFound ->
+                                if opt.indexAs404 then
+                                    sendFile (opt.root ++ "/index.html")
+
+                                else
+                                    Task.fail NotFound_
+                    )
+
+        sendFile : String -> Task RespondError ()
+        sendFile b =
+            Debug.todo ""
+
+        redirect : String -> Task RespondError ()
+        redirect b =
+            Debug.todo ""
+
         sendErrorResponse : RespondError -> Task Error ()
         sendErrorResponse b =
             case b of
@@ -225,11 +255,15 @@ sendResponse opt a =
                 ParentFolderPath ->
                     send 403 "Forbidden - cannot go to parent folder." a
 
+                NotFound_ ->
+                    send 404 "Not found." a
+
                 JavaScriptError_ c ->
                     send 500 "Server error." a
                         |> Task.andThen (\_ -> Task.fail (JavaScriptError c))
     in
     requestPath a
+        |> Task.andThen sendByPath
         |> Task.onError sendErrorResponse
 
 
