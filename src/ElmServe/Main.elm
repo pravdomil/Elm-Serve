@@ -173,32 +173,72 @@ startServer a =
         |> Task.mapError JavaScriptError
 
 
+
+--
+
+
+type RespondError
+    = CannotParseUrl
+    | ParentFolderPath
+    | JavaScriptError_ JavaScript.Error
+
+
 sendResponse : Decode.Value -> Task Error ()
 sendResponse a =
     let
-        url : Maybe String
-        url =
-            Decode.decodeValue (Decode.at [ "req", "url" ] Decode.string) a
+        parseUrl : Decode.Value -> Task RespondError String
+        parseUrl b =
+            Decode.decodeValue (Decode.at [ "req", "url" ] Decode.string) b
                 |> Result.map (\v -> "http://localhost" ++ v)
                 |> Result.toMaybe
                 |> Maybe.andThen Url.fromString
                 |> Maybe.map .path
+                |> Maybe.map
+                    (\v ->
+                        if v |> String.endsWith "/" then
+                            v ++ "index.html"
 
-        parentFolderRegex : Regex
-        parentFolderRegex =
-            Regex.fromString "(^|/)\\.\\.(/|$)"
-                |> Maybe.withDefault Regex.never
-    in
-    case url of
-        Just b ->
+                        else
+                            v
+                    )
+                |> Result.fromMaybe CannotParseUrl
+                |> resultToTask
+
+        parentFolderPathCheck : String -> Task RespondError ()
+        parentFolderPathCheck b =
+            let
+                parentFolderRegex : Regex
+                parentFolderRegex =
+                    Regex.fromString "(^|/)\\.\\.(/|$)"
+                        |> Maybe.withDefault Regex.never
+            in
             if Regex.contains parentFolderRegex b then
-                send 403 "Forbidden - cannot go to parent folder." a
+                Task.fail ParentFolderPath
 
             else
-                send 200 "Hello word." a
+                Task.succeed ()
 
-        Nothing ->
-            send 400 "Bad request - cannot parse url." a
+        sendResponse_ : Result RespondError () -> Task Error ()
+        sendResponse_ b =
+            case b of
+                Ok _ ->
+                    send 200 "Hello word." a
+
+                Err c ->
+                    case c of
+                        CannotParseUrl ->
+                            send 400 "Bad request - cannot parse url." a
+
+                        ParentFolderPath ->
+                            send 403 "Forbidden - cannot go to parent folder." a
+
+                        JavaScriptError_ d ->
+                            send 500 "Server error." a
+                                |> Task.andThen (\_ -> Task.fail (JavaScriptError d))
+    in
+    parseUrl a
+        |> Task.andThen parentFolderPathCheck
+        |> taskAndThenWithResult sendResponse_
 
 
 send : Int -> String -> Decode.Value -> Task Error ()
