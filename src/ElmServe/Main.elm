@@ -1,6 +1,7 @@
 port module ElmServe.Main exposing (..)
 
 import Dict exposing (Dict)
+import Elm.Project as Project exposing (Project)
 import ElmServe.Options as Options exposing (Options)
 import Interop.JavaScript as JavaScript
 import Json.Decode as Decode
@@ -11,6 +12,7 @@ import Process
 import Regex exposing (Regex)
 import Task exposing (Task)
 import Url exposing (Url)
+import Utils.Json.Decode_ as Decode_
 import Utils.Json.Encode_ as Encode_
 
 
@@ -400,6 +402,13 @@ fileStatus path =
                 else
                     Task.fail v
             )
+
+
+readProject : Task JavaScript.Error Project
+readProject =
+    JavaScript.run "require('fs/promises').readFile('elm.json')"
+        Encode.null
+        (Decode_.json Project.decoder)
 
 
 
