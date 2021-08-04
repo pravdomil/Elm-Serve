@@ -133,6 +133,9 @@ errorToString a =
         CannotParseOptions b ->
             "Cannot decoder options because:\n" ++ DeadEnd.toString b
 
+        GotRequestButOptionsAreNothing ->
+            "Internal error - got request but options are nothing."
+
 
 
 --
