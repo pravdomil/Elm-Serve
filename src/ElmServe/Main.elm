@@ -141,34 +141,6 @@ errorToString a =
 --
 
 
-type alias Request =
-    { request : Decode.Value
-    , response : Decode.Value
-    }
-
-
-port gotRequest : (Decode.Value -> msg) -> Sub msg
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    gotRequest
-        (\v ->
-            GotRequest
-                { request =
-                    Decode.decodeValue (Decode.field "req" Decode.value) v
-                        |> Result.withDefault Encode.null
-                , response =
-                    Decode.decodeValue (Decode.field "res" Decode.value) v
-                        |> Result.withDefault Encode.null
-                }
-        )
-
-
-
---
-
-
 startServer : Options -> Task Error ()
 startServer a =
     JavaScript.run """
@@ -191,6 +163,34 @@ startServer a =
         )
         (Decode.succeed ())
         |> Task.mapError JavaScriptError
+
+
+
+--
+
+
+type alias Request =
+    { request : Decode.Value
+    , response : Decode.Value
+    }
+
+
+port gotRequest : (Decode.Value -> msg) -> Sub msg
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    gotRequest
+        (\v ->
+            GotRequest
+                { request =
+                    Decode.decodeValue (Decode.field "req" Decode.value) v
+                        |> Result.withDefault Encode.null
+                , response =
+                    Decode.decodeValue (Decode.field "res" Decode.value) v
+                        |> Result.withDefault Encode.null
+                }
+        )
 
 
 
