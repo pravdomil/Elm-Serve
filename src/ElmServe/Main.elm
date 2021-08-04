@@ -168,7 +168,7 @@ startServer a =
         (Encode.object
             [ ( "host", Encode.string a.host )
             , ( "port", Encode.int a.port_ )
-            , ( "root", Encode_.maybe Encode.string a.root )
+            , ( "root", Encode.string a.root )
             , ( "ssl", Encode.bool (Options.ssl a) )
             , ( "sslCert", Encode_.maybe Encode.string a.sslCert )
             , ( "sslKey", Encode_.maybe Encode.string a.sslKey )
@@ -270,12 +270,7 @@ requestFilePath opt { request } =
             )
         |> Result.map
             (\v ->
-                case opt.root of
-                    Just b ->
-                        b ++ "/" ++ v
-
-                    Nothing ->
-                        v
+                opt.root ++ "/" ++ v
             )
         |> resultToTask
 
