@@ -206,17 +206,19 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    gotRequest
-        (\v ->
-            GotRequest
-                (Decode.decodeValue
-                    (Decode.map2 Request
-                        (Decode.field "req" Decode.value)
-                        (Decode.field "res" Decode.value)
+    Sub.batch
+        [ gotRequest
+            (\v ->
+                GotRequest
+                    (Decode.decodeValue
+                        (Decode.map2 Request
+                            (Decode.field "req" Decode.value)
+                            (Decode.field "res" Decode.value)
+                        )
+                        v
                     )
-                    v
-                )
-        )
+            )
+        ]
 
 
 
