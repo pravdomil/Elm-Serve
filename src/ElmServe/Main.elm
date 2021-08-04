@@ -209,9 +209,12 @@ subscriptions _ =
     gotRequest
         (\v ->
             GotRequest
-                (Result.map2 Request
-                    (Decode.decodeValue (Decode.field "req" Decode.value) v)
-                    (Decode.decodeValue (Decode.field "res" Decode.value) v)
+                (Decode.decodeValue
+                    (Decode.map2 Request
+                        (Decode.field "req" Decode.value)
+                        (Decode.field "res" Decode.value)
+                    )
+                    v
                 )
         )
 
