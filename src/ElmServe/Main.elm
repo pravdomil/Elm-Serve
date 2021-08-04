@@ -136,6 +136,7 @@ errorToString a =
 
 type Msg
     = GotModel (Result Error { options : Options, project : Project })
+    | GotFileChange (Result Decode.Error String)
     | GotRequest (Result Decode.Error Request)
     | TaskDone (Result Error ())
 
@@ -154,6 +155,7 @@ update msg model =
                     ( Just b
                     , log ("Elm Serve\n\nI got following options:\n" ++ Options.toString opt ++ "\n")
                         |> Task.andThen (\_ -> Process.sleep 1)
+                        |> Task.andThen (\_ -> startWatching b.project)
                         |> Task.andThen (\_ -> startServer opt)
                         |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
                         |> Task.andThen
@@ -172,6 +174,23 @@ update msg model =
                     , Task.fail b
                         |> Task.attempt TaskDone
                     )
+
+        GotFileChange a ->
+            ( model
+            , (case a of
+                Ok b ->
+                    case model of
+                        Just _ ->
+                            log ("File " ++ b ++ " changed.")
+
+                        Nothing ->
+                            Task.fail GotFileChangeButModelIsNothing
+
+                Err b ->
+                    Task.fail (CannotDecodeFileChange b)
+              )
+                |> Task.attempt TaskDone
+            )
 
         GotRequest a ->
             ( model
@@ -207,7 +226,11 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ gotRequest
+        [ gotFileChange
+            (\v ->
+                GotFileChange (Decode.decodeValue Decode.string v)
+            )
+        , gotRequest
             (\v ->
                 GotRequest
                     (Decode.decodeValue
@@ -219,6 +242,38 @@ subscriptions _ =
                     )
             )
         ]
+
+
+
+--
+
+
+startWatching : Project -> Task Error ()
+startWatching a =
+    let
+        dirs : List String
+        dirs =
+            case a of
+                Project.Application b ->
+                    b.dirs
+
+                Project.Package _ ->
+                    [ "src" ]
+
+        watch : String -> Task JavaScript.Error ()
+        watch b =
+            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, file) => scope.Elm.Main.init.ports.gotFileChange.send(file))"
+                (Encode.string b)
+                (Decode.succeed ())
+    in
+    dirs
+        |> List.map watch
+        |> Task.sequence
+        |> Task.map (\_ -> ())
+        |> Task.mapError JavaScriptError
+
+
+port gotFileChange : (Decode.Value -> msg) -> Sub msg
 
 
 
