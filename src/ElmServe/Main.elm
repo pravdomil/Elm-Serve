@@ -216,26 +216,21 @@ type RespondError
 sendResponse : Options -> Request -> Task Error ()
 sendResponse opt a =
     let
-        sendResponse_ : Result RespondError () -> Task Error ()
-        sendResponse_ b =
+        sendErrorResponse : RespondError -> Task Error ()
+        sendErrorResponse b =
             case b of
-                Ok _ ->
-                    send 200 "Hello word." a
+                CannotParseUrl ->
+                    send 400 "Bad request - cannot parse url." a
 
-                Err c ->
-                    case c of
-                        CannotParseUrl ->
-                            send 400 "Bad request - cannot parse url." a
+                ParentFolderPath ->
+                    send 403 "Forbidden - cannot go to parent folder." a
 
-                        ParentFolderPath ->
-                            send 403 "Forbidden - cannot go to parent folder." a
-
-                        JavaScriptError_ d ->
-                            send 500 "Server error." a
-                                |> Task.andThen (\_ -> Task.fail (JavaScriptError d))
+                JavaScriptError_ c ->
+                    send 500 "Server error." a
+                        |> Task.andThen (\_ -> Task.fail (JavaScriptError c))
     in
     requestPath a
-        |> taskAndThenWithResult sendResponse_
+        |> Task.onError sendErrorResponse
 
 
 requestPath : Request -> Task RespondError String
