@@ -334,7 +334,7 @@ sendResponse opt a =
     let
         resolvePath : String -> Task RespondError ()
         resolvePath b =
-            if b == "/elm-server-client-lib.js" then
+            if b == "/elm-serve-client-lib.js" then
                 sendClientLib a
 
             else if b |> String.endsWith ".html" then
@@ -450,7 +450,7 @@ sendPatchedHtml opt path a =
                 let
                     body : String
                     body =
-                        String.replace "<head>" "<head><script src=\"/elm-server-client-lib.js\"></script>" v
+                        String.replace "<head>" "<head><script src=\"/elm-serve-client-lib.js\"></script>" v
                 in
                 send 200 Dict.empty body a
                     |> Task.mapError JavaScriptError_
