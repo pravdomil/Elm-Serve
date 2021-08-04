@@ -71,7 +71,9 @@ getOptions =
 
 type Error
     = JavaScriptError JavaScript.Error
+      --
     | CannotParseOptions (List Parser.DeadEnd)
+      --
     | CannotDecodeRequest
     | GotRequestButModelIsNothing
 
