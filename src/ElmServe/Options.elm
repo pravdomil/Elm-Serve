@@ -41,11 +41,17 @@ toString a =
     in
     [ "Host:         " ++ a.host
     , "Port:         " ++ String.fromInt a.port_
+
+    --
     , "Root:         " ++ a.root
     , "Index As 404: " ++ (a.indexAs404 |> boolToString)
     , "Open:         " ++ (a.open |> boolToString)
+
+    --
     , "SSL Cert:     " ++ (a.sslCert |> Maybe.withDefault "-")
     , "SSL Key:      " ++ (a.sslKey |> Maybe.withDefault "-")
+
+    --
     , "Elm Path:     " ++ a.elmPath
     , "Debug:        " ++ (a.debug |> boolToString)
     , "Optimize:     " ++ (a.optimize |> boolToString)
