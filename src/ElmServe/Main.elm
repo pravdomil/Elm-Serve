@@ -234,7 +234,7 @@ sendResponse opt a =
                 |> Result.fromMaybe CannotParseUrl
                 |> resultToTask
 
-        parentFolderPathCheck : String -> Task RespondError ()
+        parentFolderPathCheck : String -> Task RespondError String
         parentFolderPathCheck b =
             let
                 parentFolderRegex : Regex
@@ -246,7 +246,7 @@ sendResponse opt a =
                 Task.fail ParentFolderPath
 
             else
-                Task.succeed ()
+                Task.succeed b
 
         sendResponse_ : Result RespondError () -> Task Error ()
         sendResponse_ b =
