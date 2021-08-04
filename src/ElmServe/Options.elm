@@ -9,7 +9,7 @@ type alias Options =
 
     --
     , root : Maybe String
-    , indexAs404 : Maybe Bool
+    , indexAs404 : Bool
     , open : Bool
 
     --
@@ -44,7 +44,7 @@ toString a =
     [ "Host:         " ++ a.host
     , "Port:         " ++ String.fromInt a.port_
     , "Root:         " ++ (a.root |> Maybe.withDefault "-")
-    , "Index As 404: " ++ (a.indexAs404 |> Maybe.map boolToString |> Maybe.withDefault "-")
+    , "Index As 404: " ++ (a.indexAs404 |> boolToString)
     , "Open:         " ++ (a.open |> boolToString)
     , "SSL Cert:     " ++ (a.sslCert |> Maybe.withDefault "-")
     , "SSL Key:      " ++ (a.sslKey |> Maybe.withDefault "-")
@@ -87,7 +87,7 @@ parser =
                 --
                 , P.succeed (\v -> P.Loop { acc | root = Just v })
                     |= stringArg "root"
-                , P.succeed (\v -> P.Loop { acc | indexAs404 = Just v })
+                , P.succeed (\v -> P.Loop { acc | indexAs404 = v })
                     |= boolArg "index-as-404"
                 , P.succeed (\v -> P.Loop { acc | open = v })
                     |= boolArg "open"
@@ -171,7 +171,7 @@ parser =
 
         --
         , root = Nothing
-        , indexAs404 = Nothing
+        , indexAs404 = False
         , open = False
 
         --
