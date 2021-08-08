@@ -8,6 +8,7 @@ import Json.Decode as Decode
 import Json.Encode as Encode
 import Parser
 import Parser.DeadEnd as DeadEnd
+import Process
 import Regex exposing (Regex)
 import Task exposing (Task)
 import Time
@@ -142,6 +143,7 @@ errorToString a =
 type Msg
     = GotModel (Result Error { options : Options, project : Project, lastChange : Maybe Time.Posix })
     | GotFileChange (Result Decode.Error { path : String, time : Time.Posix })
+    | MaybeRecompile (Result Error Time.Posix)
     | GotRequest (Result Decode.Error Request)
     | TaskDone (Result Error ())
 
@@ -185,18 +187,37 @@ update msg model =
 
         GotFileChange a ->
             let
-                task : Task Error ()
+                task : Task Error Time.Posix
                 task =
                     Task_.fromResult (Result.mapError CannotDecodeFileChange a)
                         |> Task.andThen
                             (\b ->
-                                Task_.fromResult (Result.fromMaybe GotFileChangeButModelIsNothing model)
-                                    |> Task.andThen (\c -> log ("File " ++ b.path ++ " changed."))
+                                Process.sleep 10
+                                    |> Task.map (\_ -> b.time)
                             )
+
+                nextModel : Model
+                nextModel =
+                    Maybe.map2 (\v1 v2 -> { v1 | lastChange = Just v2.time })
+                        model
+                        (Result.toMaybe a)
+            in
+            ( nextModel
+            , task
+                |> Task.attempt MaybeRecompile
+            )
+
+        MaybeRecompile a ->
+            let
+                shouldRecompile : Bool
+                shouldRecompile =
+                    Maybe.map2 (\v1 v2 -> v1.lastChange == Just v2)
+                        model
+                        (Result.toMaybe a)
+                        |> Maybe.withDefault False
             in
             ( model
-            , task
-                |> Task.attempt TaskDone
+            , Cmd.none
             )
 
         GotRequest a ->
