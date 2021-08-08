@@ -582,11 +582,3 @@ resultToTask a =
 
         Err b ->
             Task.fail b
-
-
-taskAndThenWithResult : (Result x a -> Task y b) -> Task x a -> Task y b
-taskAndThenWithResult next a =
-    a
-        |> Task.map Ok
-        |> Task.onError (Err >> Task.succeed)
-        |> Task.andThen next
