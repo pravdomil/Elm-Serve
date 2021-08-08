@@ -114,11 +114,7 @@ parser =
 
                 --
                 , P.succeed (\v -> P.Loop { acc | input = v :: acc.input })
-                    |= P.getChompedString
-                        (P.succeed ()
-                            |. P.chompIf ((/=) '-')
-                            |. P.chompUntilEndOr "\u{0000}"
-                        )
+                    |= argument
 
                 --
                 , P.succeed (P.Done acc)
@@ -150,11 +146,15 @@ parser =
                     [ P.symbol "="
                     , P.symbol "\u{0000}"
                     ]
-                |= P.getChompedString
-                    (P.succeed ()
-                        |. P.chompIf ((/=) '\u{0000}')
-                        |. P.chompUntilEndOr "\u{0000}"
-                    )
+                |= argument
+
+        argument : Parser String
+        argument =
+            P.getChompedString
+                (P.succeed ()
+                    |. P.chompIf (\v -> v /= '-' && v /= '\u{0000}')
+                    |. P.chompUntilEndOr "\u{0000}"
+                )
                 |. argEnd
 
         argEnd : Parser ()
