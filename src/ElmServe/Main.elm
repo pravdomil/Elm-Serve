@@ -78,9 +78,7 @@ readProject =
 
 
 type Error
-    = InternalError JavaScript.Error
-      --
-    | CannotParseOptions (List Parser.DeadEnd)
+    = CannotParseOptions (List Parser.DeadEnd)
     | CannotReadProject JavaScript.Error
       --
     | CannotDecodeRequest Decode.Error
@@ -88,15 +86,13 @@ type Error
       --
     | CannotDecodeFileChange Decode.Error
     | GotFileChangeButModelIsNothing
+      --
+    | InternalError JavaScript.Error
 
 
 errorToString : Error -> String
 errorToString a =
     case a of
-        InternalError b ->
-            JavaScript.errorToString b
-
-        --
         CannotParseOptions b ->
             "Cannot parse options because:\n" ++ DeadEnd.toString b
 
@@ -128,6 +124,10 @@ errorToString a =
 
         GotFileChangeButModelIsNothing ->
             "Internal error - got file change but model is nothing."
+
+        --
+        InternalError b ->
+            JavaScript.errorToString b
 
 
 
