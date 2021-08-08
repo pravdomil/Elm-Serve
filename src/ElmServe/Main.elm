@@ -198,17 +198,12 @@ update msg model =
             let
                 task : Task Error ()
                 task =
-                    case a of
-                        Ok b ->
-                            case model of
-                                Just c ->
-                                    sendResponse c.options b
-
-                                Nothing ->
-                                    Task.fail GotRequestButModelIsNothing
-
-                        Err b ->
-                            Task.fail (CannotDecodeRequest b)
+                    Task_.fromResult (Result.mapError CannotDecodeRequest a)
+                        |> Task.andThen
+                            (\b ->
+                                Task_.fromResult (Result.fromMaybe GotRequestButModelIsNothing model)
+                                    |> Task.andThen (\c -> sendResponse c.options b)
+                            )
             in
             ( model
             , task
