@@ -113,21 +113,21 @@ errorToString a =
 
         --
         CannotDecodeRequest _ ->
-            "Internal error - cannot decode request."
+            "Internal error. Cannot decode request."
 
         GotRequestButModelIsNothing ->
-            "Internal error - got request but model is nothing."
+            "Internal error. Got request but model is nothing."
 
         --
         CannotDecodeFileChange _ ->
-            "Internal error - cannot file change."
+            "Internal error. Cannot file change."
 
         GotFileChangeButModelIsNothing ->
-            "Internal error - got file change but model is nothing."
+            "Internal error. Got file change but model is nothing."
 
         --
         InternalError b ->
-            JavaScript.errorToString b
+            "Internal error. " ++ JavaScript.errorToString b
 
 
 
