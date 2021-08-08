@@ -129,10 +129,7 @@ parser =
         boolArg name =
             P.succeed True
                 |. P.symbol ("--" ++ name)
-                |. P.oneOf
-                    [ P.symbol "\u{0000}"
-                    , P.end
-                    ]
+                |. argEnd
 
         intArg : String -> Parser Int
         intArg name =
@@ -143,10 +140,7 @@ parser =
                     , P.symbol "\u{0000}"
                     ]
                 |= P.int
-                |. P.oneOf
-                    [ P.symbol "\u{0000}"
-                    , P.end
-                    ]
+                |. argEnd
 
         stringArg : String -> Parser String
         stringArg name =
@@ -161,10 +155,14 @@ parser =
                         |. P.chompIf ((/=) '\u{0000}')
                         |. P.chompUntilEndOr "\u{0000}"
                     )
-                |. P.oneOf
-                    [ P.symbol "\u{0000}"
-                    , P.end
-                    ]
+                |. argEnd
+
+        argEnd : Parser ()
+        argEnd =
+            P.oneOf
+                [ P.symbol "\u{0000}"
+                , P.end
+                ]
     in
     P.loop
         { host = "localhost"
