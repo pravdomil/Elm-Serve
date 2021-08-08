@@ -103,19 +103,11 @@ errorToString a =
 
         CannotReadProject b ->
             case b of
-                JavaScript.FileNotPatched ->
-                    JavaScript.errorToString b
+                JavaScript.Exception "ENOENT" _ ->
+                    "Cannot find elm.json."
 
-                JavaScript.Exception code _ ->
-                    case code of
-                        "ENOENT" ->
-                            "Cannot find elm.json."
-
-                        _ ->
-                            JavaScript.errorToString b
-
-                JavaScript.DecodeError _ ->
-                    "Cannot decode elm.json."
+                _ ->
+                    "Cannot read elm.json. " ++ JavaScript.errorToString b
 
         --
         CannotCompileElm b ->
