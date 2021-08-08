@@ -159,20 +159,21 @@ update msg model =
                                 opt : Options
                                 opt =
                                     b.options
+
+                                openServerUrl : Task Error ()
+                                openServerUrl =
+                                    if opt.open then
+                                        open (serverUrl opt)
+
+                                    else
+                                        Task.succeed ()
                             in
                             log ("Elm Serve\n\nI got following options:\n" ++ Options.toString opt ++ "\n")
                                 |> Task.andThen (\_ -> makeOutputFile opt)
                                 |> Task.andThen (\_ -> startWatching b.project)
                                 |> Task.andThen (\_ -> startServer opt)
                                 |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
-                                |> Task.andThen
-                                    (\_ ->
-                                        if opt.open then
-                                            open (serverUrl opt)
-
-                                        else
-                                            Task.succeed ()
-                                    )
+                                |> Task.andThen (\_ -> openServerUrl)
 
                         Err b ->
                             Task.fail b
