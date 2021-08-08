@@ -213,17 +213,20 @@ update msg model =
             )
 
         TaskDone a ->
-            case a of
-                Ok _ ->
-                    ( model
-                    , Cmd.none
-                    )
+            let
+                cmd : Cmd Msg
+                cmd =
+                    case a of
+                        Ok _ ->
+                            Cmd.none
 
-                Err b ->
-                    ( model
-                    , exitWithMessageAndCode (errorToString b) 1
-                        |> Task.attempt (\_ -> TaskDone (Ok ()))
-                    )
+                        Err b ->
+                            exitWithMessageAndCode (errorToString b) 1
+                                |> Task.attempt (\_ -> TaskDone (Ok ()))
+            in
+            ( model
+            , cmd
+            )
 
 
 subscriptions : Model -> Sub Msg
