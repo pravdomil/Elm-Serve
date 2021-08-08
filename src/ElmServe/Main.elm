@@ -141,7 +141,7 @@ errorToString a =
 
 type Msg
     = GotModel (Result Error { options : Options, project : Project, lastChange : Maybe Time.Posix })
-    | GotFileChange (Result Decode.Error String)
+    | GotFileChange (Result Decode.Error { path : String, time : Time.Posix })
     | GotRequest (Result Decode.Error Request)
     | TaskDone (Result Error ())
 
@@ -231,7 +231,19 @@ subscriptions _ =
     Sub.batch
         [ gotFileChange
             (\v ->
-                GotFileChange (Decode.decodeValue Decode.string v)
+                GotFileChange
+                    (Decode.decodeValue
+                        (Decode.map2 (\v1 v2 -> { path = v1, time = v2 })
+                            (Decode.field "path" Decode.string)
+                            (Decode.field "time" Decode.int
+                                |> Decode.andThen
+                                    (\v2 ->
+                                        Decode.succeed (Time.millisToPosix v2)
+                                    )
+                            )
+                        )
+                        v
+                    )
             )
         , gotRequest
             (\v ->
@@ -378,7 +390,7 @@ startWatching a =
 
         watch : String -> Task JavaScript.Error ()
         watch b =
-            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, file) => scope.Elm.Main.init.ports.gotFileChange.send(file))"
+            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.gotFileChange.send({ path, time: Date.now() }))"
                 (Encode.string b)
                 (Decode.succeed ())
     in
