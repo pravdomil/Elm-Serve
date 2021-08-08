@@ -337,9 +337,6 @@ sendResponse opt a =
             if b == "/elm-serve-client-lib.js" then
                 sendClientLib a
 
-            else if b |> String.endsWith ".html" then
-                sendPatchedHtml opt b a
-
             else
                 fileStatus (opt.root ++ "/" ++ b)
                     |> Task.mapError JavaScriptError_
@@ -355,7 +352,8 @@ sendResponse opt a =
 
                                 NotFound ->
                                     if opt.indexAs404 then
-                                        sendPatchedHtml opt "index.html" a
+                                        sendFile opt "index.html" a
+                                            |> Task.mapError JavaScriptError_
 
                                     else
                                         Task.fail NotFound_
@@ -432,29 +430,6 @@ send status headers data { response } =
             ]
         )
         (Decode.succeed ())
-
-
-sendPatchedHtml : Options -> String -> Request -> Task RespondError ()
-sendPatchedHtml opt path a =
-    readFile (opt.root ++ "/" ++ path)
-        |> Task.onError
-            (\v ->
-                if JavaScript.errorCode v == Just "ENOENT" then
-                    Task.fail NotFound_
-
-                else
-                    Task.fail (JavaScriptError_ v)
-            )
-        |> Task.andThen
-            (\v ->
-                let
-                    body : String
-                    body =
-                        String.replace "<head>" "<head><script src=\"/elm-serve-client-lib.js\"></script>" v
-                in
-                send 200 Dict.empty body a
-                    |> Task.mapError JavaScriptError_
-            )
 
 
 sendClientLib : Request -> Task RespondError ()
