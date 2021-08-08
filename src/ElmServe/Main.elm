@@ -78,7 +78,7 @@ readProject =
 
 
 type Error
-    = JavaScriptError JavaScript.Error
+    = InternalError JavaScript.Error
       --
     | CannotParseOptions (List Parser.DeadEnd)
     | CannotReadProject JavaScript.Error
@@ -93,7 +93,7 @@ type Error
 errorToString : Error -> String
 errorToString a =
     case a of
-        JavaScriptError b ->
+        InternalError b ->
             JavaScript.errorToString b
 
         --
@@ -270,7 +270,7 @@ startWatching a =
         |> List.map watch
         |> Task.sequence
         |> Task.map (\_ -> ())
-        |> Task.mapError JavaScriptError
+        |> Task.mapError InternalError
 
 
 port gotFileChange : (Decode.Value -> msg) -> Sub msg
@@ -302,7 +302,7 @@ startServer a =
             ]
         )
         (Decode.succeed ())
-        |> Task.mapError JavaScriptError
+        |> Task.mapError InternalError
 
 
 
@@ -383,7 +383,7 @@ sendResponse opt a =
     requestPath a
         |> Task.andThen resolvePath
         |> Task.onError errorResponse
-        |> Task.mapError JavaScriptError
+        |> Task.mapError InternalError
 
 
 requestPath : Request -> Task RespondError String
@@ -465,7 +465,7 @@ getArguments =
     JavaScript.run "process.argv"
         Encode.null
         (Decode.list Decode.string)
-        |> Task.mapError JavaScriptError
+        |> Task.mapError InternalError
 
 
 log : String -> Task Error ()
@@ -473,7 +473,7 @@ log a =
     JavaScript.run "console.log(a)"
         (Encode.string a)
         (Decode.succeed ())
-        |> Task.mapError JavaScriptError
+        |> Task.mapError InternalError
 
 
 exitWithMessageAndCode : String -> Int -> Task Error ()
@@ -485,7 +485,7 @@ exitWithMessageAndCode msg code =
             ]
         )
         (Decode.succeed ())
-        |> Task.mapError JavaScriptError
+        |> Task.mapError InternalError
 
 
 
@@ -497,7 +497,7 @@ open a =
     JavaScript.run "require('open')(a)"
         (Encode.string a)
         (Decode.succeed ())
-        |> Task.mapError JavaScriptError
+        |> Task.mapError InternalError
 
 
 readFile : String -> Task JavaScript.Error String
