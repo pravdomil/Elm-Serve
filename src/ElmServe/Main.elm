@@ -84,6 +84,8 @@ type Error
     = CannotParseOptions (List Parser.DeadEnd)
     | CannotReadProject JavaScript.Error
       --
+    | CannotCompileElm JavaScript.Error
+      --
     | CannotDecodeRequest Decode.Error
     | GotRequestButModelIsNothing
       --
@@ -113,6 +115,10 @@ errorToString a =
 
                 JavaScript.DecodeError _ ->
                     "Cannot decode elm.json."
+
+        --
+        CannotCompileElm b ->
+            "Cannot compile Elm. " ++ JavaScript.errorToString b
 
         --
         CannotDecodeRequest _ ->
@@ -157,7 +163,7 @@ update msg model =
                     in
                     ( Just b
                     , log ("Elm Serve\n\nI got following options:\n" ++ Options.toString opt ++ "\n")
-                        |> Task.andThen (\_ -> Process.sleep 1)
+                        |> Task.andThen (\_ -> makeOutputFile opt)
                         |> Task.andThen (\_ -> startWatching b.project)
                         |> Task.andThen (\_ -> startServer opt)
                         |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
@@ -245,6 +251,104 @@ subscriptions _ =
                     )
             )
         ]
+
+
+
+--
+
+
+makeOutputFile : Options -> Task Error ()
+makeOutputFile opt =
+    compileElm opt
+        |> Task.andThen (\_ -> readFile opt.output)
+        |> Task.andThen patchElm
+        |> Task.andThen patchLibs
+        |> Task.andThen (writeFile opt.output)
+
+
+compileElm : Options -> Task Error String
+compileElm opt =
+    let
+        args : List String
+        args =
+            [ "make"
+            , "--output=" ++ opt.output
+            ]
+                ++ List.filterMap identity
+                    [ boolToArg "--debug" opt.debug
+                    , boolToArg "--optimize" opt.optimize
+                    ]
+                ++ opt.input
+
+        boolToArg : String -> Bool -> Maybe String
+        boolToArg name b =
+            if b then
+                Just name
+
+            else
+                Nothing
+    in
+    JavaScript.run """
+    new Promise((resolve, reject) => {
+        var elm = require('child_process').spawn(a.elmPath, a.args);
+        var stdout = '';
+        var stderr = '';
+        elm.stdout.on('data', b => { stdout += b })
+        elm.stderr.on('data', b => { stderr += b })
+        elm.on('close', b => {
+          if (b) { var e = new Error(stderr); e.code = 'NONZERO'; reject(e); }
+          else { resolve(stdout); }
+        })
+    })
+    """
+        (Encode.object
+            [ ( "elmPath", Encode.string opt.elmPath )
+            , ( "args", Encode.list Encode.string args )
+            ]
+        )
+        Decode.string
+        |> Task.mapError CannotCompileElm
+
+
+patchElm : String -> Task Error String
+patchElm a =
+    JavaScript.run "require('elm-hot').inject(a)"
+        (Encode.string a)
+        Decode.string
+        |> Task.mapError InternalError
+
+
+patchLibs : String -> Task Error String
+patchLibs a =
+    let
+        elmServeLib : String
+        elmServeLib =
+            """
+console.log('Hello from Elm Serve!');
+"""
+
+        moduleLib : String
+        moduleLib =
+            """
+// https://github.com/klazuka/elm-hot/blob/fb2dc49e9b4fa53b51fa6088a1ac7ffa0b72557a/test/client.js#L38
+var module = {
+    hot: {
+        accept: function () {},
+        dispose: function (a) { module.hot.disposeCallback = a },
+        data: null,
+        apply: function () {
+            var data = {}
+            module.hot.disposeCallback(data)
+            module.hot.data = data
+        },
+        verbose: true,
+        disposeCallback : null
+    }
+};
+"""
+    in
+    (elmServeLib ++ moduleLib ++ a)
+        |> Task.succeed
 
 
 
