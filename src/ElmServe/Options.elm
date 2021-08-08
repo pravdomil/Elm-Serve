@@ -20,6 +20,7 @@ type alias Options =
     , elmPath : String
     , debug : Bool
     , optimize : Bool
+    , input : List String
     , output : String
     }
 
@@ -55,6 +56,7 @@ toString a =
     , "Elm Path:     " ++ a.elmPath
     , "Debug:        " ++ (a.debug |> boolToString)
     , "Optimize:     " ++ (a.optimize |> boolToString)
+    , "Input:        " ++ (a.input |> String.join ", ")
     , "Output:       " ++ a.output
     ]
         |> String.join "\n"
@@ -109,6 +111,14 @@ parser =
                     |= boolArg "optimize"
                 , P.succeed (\v -> P.Loop { acc | output = v })
                     |= stringArg "output"
+
+                --
+                , P.succeed (\v -> P.Loop { acc | input = v :: acc.input })
+                    |= P.getChompedString
+                        (P.succeed ()
+                            |. P.chompIf ((/=) '-')
+                            |. P.chompUntilEndOr "\u{0000}"
+                        )
 
                 --
                 , P.succeed (P.Done acc)
@@ -173,6 +183,7 @@ parser =
         , elmPath = "elm"
         , debug = False
         , optimize = True
+        , input = []
         , output = "elm.js"
         }
         loop
