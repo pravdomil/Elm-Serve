@@ -125,7 +125,7 @@ errorToString a =
 
         --
         CannotDecodeFileChange _ ->
-            "Internal error. Cannot file change."
+            "Internal error. Cannot decode file change."
 
         GotFileChangeButModelIsNothing ->
             "Internal error. Got file change but model is nothing."
