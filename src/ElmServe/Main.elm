@@ -150,35 +150,37 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotModel a ->
-            case a of
-                Ok b ->
-                    let
-                        opt : Options
-                        opt =
-                            b.options
-                    in
-                    ( Just b
-                    , log ("Elm Serve\n\nI got following options:\n" ++ Options.toString opt ++ "\n")
-                        |> Task.andThen (\_ -> makeOutputFile opt)
-                        |> Task.andThen (\_ -> startWatching b.project)
-                        |> Task.andThen (\_ -> startServer opt)
-                        |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
-                        |> Task.andThen
-                            (\_ ->
-                                if opt.open then
-                                    open (serverUrl opt)
+            let
+                task : Task Error ()
+                task =
+                    case a of
+                        Ok b ->
+                            let
+                                opt : Options
+                                opt =
+                                    b.options
+                            in
+                            log ("Elm Serve\n\nI got following options:\n" ++ Options.toString opt ++ "\n")
+                                |> Task.andThen (\_ -> makeOutputFile opt)
+                                |> Task.andThen (\_ -> startWatching b.project)
+                                |> Task.andThen (\_ -> startServer opt)
+                                |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
+                                |> Task.andThen
+                                    (\_ ->
+                                        if opt.open then
+                                            open (serverUrl opt)
 
-                                else
-                                    Task.succeed ()
-                            )
-                        |> Task.attempt TaskDone
-                    )
+                                        else
+                                            Task.succeed ()
+                                    )
 
-                Err b ->
-                    ( model
-                    , Task.fail b
-                        |> Task.attempt TaskDone
-                    )
+                        Err b ->
+                            Task.fail b
+            in
+            ( Result.toMaybe a
+            , task
+                |> Task.attempt TaskDone
+            )
 
         GotFileChange a ->
             let
