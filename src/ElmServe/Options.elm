@@ -147,8 +147,8 @@ parser =
                     , P.symbol "\u{0000}"
                     ]
                 |= P.getChompedString
-                    (P.succeed identity
-                        |= P.chompIf ((/=) '\u{0000}')
+                    (P.succeed ()
+                        |. P.chompIf ((/=) '\u{0000}')
                         |. P.chompUntilEndOr "\u{0000}"
                     )
                 |. P.oneOf
