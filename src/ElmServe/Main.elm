@@ -507,6 +507,22 @@ readFile path =
         |> Task.mapError InternalError
 
 
+writeFile : String -> String -> Task Error ()
+writeFile path data =
+    JavaScript.run "require('fs/promises').writeFile(a.path, a.data)"
+        (Encode.object
+            [ ( "path", Encode.string path )
+            , ( "data", Encode.string data )
+            ]
+        )
+        (Decode.succeed ())
+        |> Task.mapError InternalError
+
+
+
+--
+
+
 type FileStatus
     = File
     | Directory
