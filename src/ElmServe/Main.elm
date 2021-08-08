@@ -642,11 +642,12 @@ fileStatus path =
         )
         |> Task.onError
             (\v ->
-                if JavaScript.errorCode v == Just "ENOENT" then
-                    Task.succeed NotFound
+                case v of
+                    JavaScript.Exception "ENOENT" _ ->
+                        Task.succeed NotFound
 
-                else
-                    Task.fail v
+                    _ ->
+                        Task.fail v
             )
 
 
