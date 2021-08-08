@@ -106,12 +106,13 @@ errorToString a =
                 JavaScript.FileNotPatched ->
                     JavaScript.errorToString b
 
-                JavaScript.Exception _ ->
-                    if JavaScript.errorCode b == Just "ENOENT" then
-                        "Cannot find elm.json."
+                JavaScript.Exception code _ ->
+                    case code of
+                        "ENOENT" ->
+                            "Cannot find elm.json."
 
-                    else
-                        JavaScript.errorToString b
+                        _ ->
+                            JavaScript.errorToString b
 
                 JavaScript.DecodeError _ ->
                     "Cannot decode elm.json."
