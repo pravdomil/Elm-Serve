@@ -495,11 +495,12 @@ open a =
         |> Task.mapError InternalError
 
 
-readFile : String -> Task JavaScript.Error String
+readFile : String -> Task Error String
 readFile path =
     JavaScript.run "require('fs/promises').readFile(a, 'utf-8')"
         (Encode.string path)
         Decode.string
+        |> Task.mapError InternalError
 
 
 type FileStatus
