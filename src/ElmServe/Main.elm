@@ -13,6 +13,7 @@ import Task exposing (Task)
 import Url exposing (Url)
 import Utils.Json.Decode_ as Decode_
 import Utils.Json.Encode_ as Encode_
+import Utils.Task_ as Task_
 
 
 main : Program () Model Msg
@@ -530,7 +531,7 @@ requestPath { request } =
                 else
                     v
             )
-        |> resultToTask
+        |> Task_.fromResult
 
 
 send : Int -> Dict String String -> String -> Request -> Task JavaScript.Error ()
@@ -680,17 +681,3 @@ serverUrl a =
         ++ a.host
         ++ ":"
         ++ String.fromInt a.port_
-
-
-
---
-
-
-resultToTask : Result x a -> Task x a
-resultToTask a =
-    case a of
-        Ok b ->
-            Task.succeed b
-
-        Err b ->
-            Task.fail b
