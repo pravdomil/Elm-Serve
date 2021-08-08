@@ -10,6 +10,7 @@ import Parser
 import Parser.DeadEnd as DeadEnd
 import Regex exposing (Regex)
 import Task exposing (Task)
+import Time
 import Url exposing (Url)
 import Utils.Json.Decode_ as Decode_
 import Utils.Json.Encode_ as Encode_
@@ -33,6 +34,7 @@ type alias Model =
     Maybe
         { options : Options
         , project : Project
+        , lastChange : Maybe Time.Posix
         }
 
 
@@ -43,6 +45,7 @@ init _ =
         (\v1 v2 ->
             { options = v1
             , project = v2
+            , lastChange = Nothing
             }
         )
         getOptions
@@ -137,7 +140,7 @@ errorToString a =
 
 
 type Msg
-    = GotModel (Result Error { options : Options, project : Project })
+    = GotModel (Result Error { options : Options, project : Project, lastChange : Maybe Time.Posix })
     | GotFileChange (Result Decode.Error String)
     | GotRequest (Result Decode.Error Request)
     | TaskDone (Result Error ())
