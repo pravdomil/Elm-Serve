@@ -255,7 +255,7 @@ makeOutputFile opt =
         recoverFromCompileError : Error -> Task Error String
         recoverFromCompileError b =
             case b of
-                CannotCompileElm (JavaScript.Exception "NONZERO" msg) ->
+                CannotCompileElm (JavaScript.Exception "ENONZERO" msg) ->
                     ("Compile error\n\n" ++ msg)
                         |> Encode.string
                         |> Encode.encode 0
@@ -303,7 +303,7 @@ compileElm opt =
         elm.stdout.on('data', b => { stdout += b })
         elm.stderr.on('data', b => { stderr += b })
         elm.on('close', b => {
-          if (b) { var e = new Error(stderr); e.code = 'NONZERO'; reject(e); }
+          if (b) { var e = new Error(stderr); e.code = 'ENONZERO'; reject(e); }
           else { resolve(stdout); }
         })
     })
