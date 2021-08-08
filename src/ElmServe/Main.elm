@@ -326,7 +326,7 @@ type RespondError
     = CannotParseUrl
     | ParentFolderPath
     | NotFound_
-    | JavaScriptError_ JavaScript.Error
+    | InternalError_ JavaScript.Error
 
 
 sendResponse : Options -> Request -> Task Error ()
@@ -339,13 +339,13 @@ sendResponse opt a =
 
             else
                 fileStatus (opt.root ++ "/" ++ b)
-                    |> Task.mapError JavaScriptError_
+                    |> Task.mapError InternalError_
                     |> Task.andThen
                         (\v ->
                             case v of
                                 File ->
                                     sendFile opt b a
-                                        |> Task.mapError JavaScriptError_
+                                        |> Task.mapError InternalError_
 
                                 Directory ->
                                     redirect (b ++ "/")
@@ -353,7 +353,7 @@ sendResponse opt a =
                                 NotFound ->
                                     if opt.indexAs404 then
                                         sendFile opt "index.html" a
-                                            |> Task.mapError JavaScriptError_
+                                            |> Task.mapError InternalError_
 
                                     else
                                         Task.fail NotFound_
@@ -362,7 +362,7 @@ sendResponse opt a =
         redirect : String -> Task RespondError ()
         redirect b =
             send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") a
-                |> Task.mapError JavaScriptError_
+                |> Task.mapError InternalError_
 
         errorResponse : RespondError -> Task JavaScript.Error ()
         errorResponse b =
@@ -376,7 +376,7 @@ sendResponse opt a =
                 NotFound_ ->
                     send 404 Dict.empty "Not found." a
 
-                JavaScriptError_ c ->
+                InternalError_ c ->
                     send 500 Dict.empty "Server error." a
                         |> Task.andThen (\_ -> Task.fail c)
     in
@@ -440,7 +440,7 @@ sendClientLib a =
             "console.log('Hello from Elm Serve.')"
     in
     send 200 Dict.empty body a
-        |> Task.mapError JavaScriptError_
+        |> Task.mapError InternalError_
 
 
 sendFile : Options -> String -> Request -> Task JavaScript.Error ()
