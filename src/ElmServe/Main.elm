@@ -53,7 +53,10 @@ init _ =
 
 getOptions : Task Error Options
 getOptions =
-    getArguments
+    JavaScript.run "process.argv"
+        Encode.null
+        (Decode.list Decode.string)
+        |> Task.mapError InternalError
         |> Task.andThen
             (\v ->
                 case Options.parse (List.drop 2 v) of
@@ -458,14 +461,6 @@ sendFile opt path { request, response } =
 
 
 --
-
-
-getArguments : Task Error (List String)
-getArguments =
-    JavaScript.run "process.argv"
-        Encode.null
-        (Decode.list Decode.string)
-        |> Task.mapError InternalError
 
 
 log : String -> Task Error ()
