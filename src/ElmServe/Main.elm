@@ -252,9 +252,24 @@ subscriptions _ =
 
 makeOutputFile : Options -> Task Error ()
 makeOutputFile opt =
+    let
+        recoverFromCompileError : Error -> Task Error String
+        recoverFromCompileError b =
+            case b of
+                CannotCompileElm (JavaScript.Exception "NONZERO" msg) ->
+                    ("Compile error\n\n" ++ msg)
+                        |> Encode.string
+                        |> Encode.encode 0
+                        |> (\v -> "console.error(" ++ v ++ ");")
+                        |> Task.succeed
+
+                _ ->
+                    Task.fail b
+    in
     compileElm opt
         |> Task.andThen (\_ -> readFile opt.output)
         |> Task.andThen patchElm
+        |> Task.onError recoverFromCompileError
         |> Task.andThen patchLibs
         |> Task.andThen (writeFile opt.output)
 
