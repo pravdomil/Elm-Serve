@@ -178,19 +178,18 @@ update msg model =
                     )
 
         GotFileChange a ->
+            let
+                task : Task Error ()
+                task =
+                    Task_.fromResult (Result.mapError CannotDecodeFileChange a)
+                        |> Task.andThen
+                            (\b ->
+                                Task_.fromResult (Result.fromMaybe GotFileChangeButModelIsNothing model)
+                                    |> Task.andThen (\c -> log ("File " ++ b.path ++ " changed."))
+                            )
+            in
             ( model
-            , (case a of
-                Ok b ->
-                    case model of
-                        Just _ ->
-                            log ("File " ++ b ++ " changed.")
-
-                        Nothing ->
-                            Task.fail GotFileChangeButModelIsNothing
-
-                Err b ->
-                    Task.fail (CannotDecodeFileChange b)
-              )
+            , task
                 |> Task.attempt TaskDone
             )
 
