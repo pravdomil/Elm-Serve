@@ -37,21 +37,21 @@ toString a =
             else
                 "false"
     in
-    [ "Host:         " ++ a.host
-    , "Port:         " ++ String.fromInt a.port_
-    , "SSL:          " ++ (a.ssl |> Maybe.map (\v -> [ v.cert, v.key ] |> String.join ", ") |> Maybe.withDefault "-")
+    [ "Host:     " ++ a.host
+    , "Port:     " ++ String.fromInt a.port_
+    , "SSL:      " ++ (a.ssl |> Maybe.map (\v -> [ v.cert, v.key ] |> String.join ", ") |> Maybe.withDefault "-")
 
     --
-    , "Root:         " ++ a.root
-    , "Open:         " ++ (a.open |> boolToString)
-    , "No 404:       " ++ (a.no404 |> boolToString)
+    , "Root:     " ++ a.root
+    , "Open:     " ++ (a.open |> boolToString)
+    , "No 404:   " ++ (a.no404 |> boolToString)
 
     --
-    , "Elm:          " ++ a.elm
-    , "Debug:        " ++ (a.debug |> boolToString)
-    , "Optimize:     " ++ (a.optimize |> boolToString)
-    , "Input:        " ++ (a.input |> String.join ", ")
-    , "Output:       " ++ a.output
+    , "Elm:      " ++ a.elm
+    , "Debug:    " ++ (a.debug |> boolToString)
+    , "Optimize: " ++ (a.optimize |> boolToString)
+    , "Input:    " ++ (a.input |> String.join ", ")
+    , "Output:   " ++ a.output
     ]
         |> String.join "\n"
 
