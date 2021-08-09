@@ -3986,7 +3986,7 @@ var $author$project$ElmServe$Options$parser = function () {
 	};
 	return A2(
 		$elm$parser$Parser$loop,
-		{a3: false, a7: 'elm', ak: 'localhost', bd: _List_Nil, bj: false, bn: false, bo: true, N: 'elm.js', at: 8000, aA: '.', aF: $elm$core$Maybe$Nothing},
+		{a3: false, a7: 'elm', ak: 'localhost', bd: _List_Nil, bj: false, bn: false, bo: false, N: 'elm.js', at: 8000, aA: '.', aF: $elm$core$Maybe$Nothing},
 		loop);
 }();
 var $elm$parser$Parser$DeadEnd = F3(
