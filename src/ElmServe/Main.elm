@@ -433,14 +433,14 @@ startWatching a =
 startServer : Options -> Task Error ()
 startServer a =
     JavaScript.run """
-    (() => {
+    new Promise((resolve, reject) => {
         var opt = a.ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
         var callback = (req, res) => { scope.Elm.Main.init.ports.sendMsg.send({ a: 3, b: { req, res } }) }
-
-        require(a.ssl ? 'https' : 'http')
-          .createServer(opt, callback)
-          .listen(a.port, a.host)
-    })()
+        var server = require(a.ssl ? 'https' : 'http').createServer(opt, callback)
+        server.on('error', reject)
+        server.on('listening', resolve)
+        server.listen(a.port, a.host)
+    })
     """
         (Encode.object
             [ ( "host", Encode.string a.host )
