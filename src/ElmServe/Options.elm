@@ -14,7 +14,7 @@ type alias Options =
     , indexAs404 : Bool
 
     --
-    , elmPath : String
+    , elm : String
     , debug : Bool
     , optimize : Bool
     , input : List String
@@ -47,7 +47,7 @@ toString a =
     , "Index As 404: " ++ (a.indexAs404 |> boolToString)
 
     --
-    , "Elm Path:     " ++ a.elmPath
+    , "Elm:          " ++ a.elm
     , "Debug:        " ++ (a.debug |> boolToString)
     , "Optimize:     " ++ (a.optimize |> boolToString)
     , "Input:        " ++ (a.input |> String.join ", ")
@@ -92,8 +92,8 @@ parser =
                     |= boolArg "index-as-404"
 
                 --
-                , P.succeed (\v -> P.Loop { acc | elmPath = v })
-                    |= stringArg "elm-path"
+                , P.succeed (\v -> P.Loop { acc | elm = v })
+                    |= stringArg "elm"
                 , P.succeed (\v -> P.Loop { acc | debug = v })
                     |= boolArg "debug"
                 , P.succeed (\v -> P.Loop { acc | optimize = v })
@@ -164,7 +164,7 @@ parser =
         , indexAs404 = False
 
         --
-        , elmPath = "elm"
+        , elm = "elm"
         , debug = False
         , optimize = True
         , input = []
