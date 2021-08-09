@@ -181,16 +181,25 @@ update msg model =
 
         GotFileChange _ ->
             let
+                killProcess : ReadyModel -> Task x ()
+                killProcess b =
+                    case b.compileProcess of
+                        Just v ->
+                            Process.kill v
+
+                        Nothing ->
+                            Task.succeed ()
+
                 task : Task Error ()
                 task =
                     Task_.fromResult (Result.fromMaybe GotFileChangeButModelIsNothing model)
                         |> Task.andThen
                             (\c ->
-                                c.compileProcess
-                                    |> Maybe.map Process.kill
-                                    |> Maybe.withDefault (Task.succeed ())
-                                    |> Task.andThen (\_ -> Process.sleep 2)
+                                killProcess c
+                                    |> Task.andThen (\_ -> Process.sleep 1)
+                                    |> Task.andThen (\_ -> log "Recompiling...")
                                     |> Task.andThen (\_ -> makeOutputFile c.options)
+                                    |> Task.andThen (\_ -> releaseQueue)
                             )
             in
             ( model
