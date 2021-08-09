@@ -330,6 +330,7 @@ compileElm opt =
             if (b) { var e = new Error(stderr); e.code = 'ENONZERO'; reject(e); }
             else { resolve(stdout); }
         })
+        onCancel(() => elm.kill())
     })
     """
         (Encode.object
