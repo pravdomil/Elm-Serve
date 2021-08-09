@@ -260,17 +260,7 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ gotFileChange_ GotFileChange
-        , gotRequest
-            (\v ->
-                GotRequest
-                    (Decode.decodeValue
-                        (Decode.map2 Request
-                            (Decode.field "req" Decode.value)
-                            (Decode.field "res" Decode.value)
-                        )
-                        v
-                    )
-            )
+        , gotRequest_ GotRequest
         ]
 
 
@@ -475,6 +465,21 @@ type alias Request =
 
 
 port gotRequest : (Decode.Value -> msg) -> Sub msg
+
+
+gotRequest_ : (Result Decode.Error Request -> a) -> Sub msg
+gotRequest_ fn =
+    let
+        decoder : Decode.Value -> Result Decode.Error Request
+        decoder b =
+            Decode.decodeValue
+                (Decode.map2 Request
+                    (Decode.field "req" Decode.value)
+                    (Decode.field "res" Decode.value)
+                )
+                b
+    in
+    gotRequest (decoder >> fn)
 
 
 
