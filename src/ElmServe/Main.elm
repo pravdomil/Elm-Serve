@@ -356,10 +356,8 @@ patchLibs a =
         lib : String
         lib =
             """
-console.log('Hello from Elm Serve!');
-
-// https://github.com/klazuka/elm-hot/blob/fb2dc49e9b4fa53b51fa6088a1ac7ffa0b72557a/test/client.js#L38
 if (typeof module === "undefined") {
+    console.info('Hello from Elm Serve!');
     var module = {
         hot: {
             accept: function () {},
