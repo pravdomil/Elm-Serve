@@ -334,9 +334,7 @@ compileElm opt =
         var stderr = '';
         elm.stdout.on('data', b => { stdout += b })
         elm.stderr.on('data', b => { stderr += b })
-        elm.on('close', b => {
-            b ? reject('ENONZERO', stderr) : resolve(stdout)
-        })
+        elm.on('close', b => { b ? reject('ENONZERO', stderr) : resolve(stdout) })
         onCancel(() => elm.kill())
     })
     """
