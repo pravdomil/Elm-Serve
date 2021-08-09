@@ -259,22 +259,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ gotFileChange
-            (\v ->
-                GotFileChange
-                    (Decode.decodeValue
-                        (Decode.map2 (\v1 v2 -> { path = v1, time = v2 })
-                            (Decode.field "path" Decode.string)
-                            (Decode.field "time" Decode.int
-                                |> Decode.andThen
-                                    (\v2 ->
-                                        Decode.succeed (Time.millisToPosix v2)
-                                    )
-                            )
-                        )
-                        v
-                    )
-            )
+        [ gotFileChange_ GotFileChange
         , gotRequest
             (\v ->
                 GotRequest
@@ -432,6 +417,26 @@ startWatching a =
 
 
 port gotFileChange : (Decode.Value -> msg) -> Sub msg
+
+
+gotFileChange_ : (Result Decode.Error { path : String, time : Time.Posix } -> a) -> Sub msg
+gotFileChange_ fn =
+    let
+        decoder : Decode.Value -> Result Decode.Error { path : String, time : Time.Posix }
+        decoder b =
+            Decode.decodeValue
+                (Decode.map2 (\v1 v2 -> { path = v1, time = v2 })
+                    (Decode.field "path" Decode.string)
+                    (Decode.field "time" Decode.int
+                        |> Decode.andThen
+                            (\v2 ->
+                                Decode.succeed (Time.millisToPosix v2)
+                            )
+                    )
+                )
+                b
+    in
+    gotFileChange (decoder >> fn)
 
 
 
