@@ -373,6 +373,8 @@ if (typeof module === "undefined") {
             disposeCallback : null
         }
     }
+} else {
+    module.hot.apply()
 }
 """
     in
