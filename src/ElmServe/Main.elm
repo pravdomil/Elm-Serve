@@ -117,8 +117,8 @@ errorToString a =
 
         CannotStartServer b ->
             case b of
-                JavaScript.Exception "EADDRINUSE" msg ->
-                    "Cannot start server. " ++ msg
+                JavaScript.Exception "EADDRINUSE" _ ->
+                    "There is somebody already listening on same port!"
 
                 _ ->
                     "Cannot start server. " ++ JavaScript.errorToString b
