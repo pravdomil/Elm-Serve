@@ -416,7 +416,6 @@ applyLib a =
       .then(onLoad)
       .catch(onError)
 })();
-
 """
     in
     (lib ++ a)
