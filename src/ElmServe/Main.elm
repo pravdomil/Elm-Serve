@@ -362,6 +362,7 @@ applyLib a =
             """
 if (typeof elmServe === "undefined") {
     console.info('Hello from Elm Serve!');
+
     var elmServe = {
         compileError: function(a) {
             console.error('Compile Error\\n', a)
@@ -373,6 +374,7 @@ if (typeof elmServe === "undefined") {
             console.clear()
         }
     }
+
     var module = {
         hot: {
             accept: function () {},
