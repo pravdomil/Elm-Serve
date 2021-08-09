@@ -119,11 +119,11 @@ Options:
     --root <path>
         Set server root.
 
-    --index-as-404
-        Serve index.html if page not found. Useful for Browser.application.
-
     --open
         Open server URL in browser.
+
+    --index-as-404
+        Serve index.html if page not found. Useful for Browser.application.
 
 Elm Options:
     --elm-path <path>
