@@ -353,15 +353,11 @@ patchElm a =
 patchLibs : String -> Task Error String
 patchLibs a =
     let
-        elmServeLib : String
-        elmServeLib =
+        lib : String
+        lib =
             """
 console.log('Hello from Elm Serve!');
-"""
 
-        moduleLib : String
-        moduleLib =
-            """
 // https://github.com/klazuka/elm-hot/blob/fb2dc49e9b4fa53b51fa6088a1ac7ffa0b72557a/test/client.js#L38
 var module = {
     hot: {
@@ -379,7 +375,7 @@ var module = {
 };
 """
     in
-    (elmServeLib ++ moduleLib ++ a)
+    (lib ++ a)
         |> Task.succeed
 
 
