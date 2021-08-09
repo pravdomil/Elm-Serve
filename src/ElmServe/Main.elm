@@ -513,7 +513,7 @@ startServer : Options -> Task Error ()
 startServer a =
     JavaScript.run """
     new Promise((resolve, reject) => {
-        var opt = a.ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
+        var opt = a.ssl ? { cert: fs.readFileSync(a.ssl.cert), key: fs.readFileSync(a.ssl.key) } : {}
         var callback = (req, res) => { scope.Elm.Main.init.ports.sendMsg.send({ a: 3, b: { req, res } }) }
         var server = require(a.ssl ? 'https' : 'http').createServer(opt, callback)
         server.on('error', reject)
@@ -525,9 +525,16 @@ startServer a =
             [ ( "host", Encode.string a.host )
             , ( "port", Encode.int a.port_ )
             , ( "root", Encode.string a.root )
-            , ( "ssl", Encode.bool (Options.ssl a) )
-            , ( "sslCert", Encode_.maybe Encode.string a.sslCert )
-            , ( "sslKey", Encode_.maybe Encode.string a.sslKey )
+            , ( "ssl"
+              , Encode_.maybe
+                    (\v ->
+                        Encode.object
+                            [ ( "cert", Encode.string v.cert )
+                            , ( "key", Encode.string v.key )
+                            ]
+                    )
+                    a.ssl
+              )
             ]
         )
         (Decode.succeed ())
@@ -788,11 +795,11 @@ fileStatus path =
 
 serverUrl : Options -> String
 serverUrl a =
-    (if Options.ssl a then
-        "https://"
+    (if a.ssl == Nothing then
+        "http://"
 
      else
-        "http://"
+        "https://"
     )
         ++ a.host
         ++ ":"
