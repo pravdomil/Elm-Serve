@@ -91,6 +91,7 @@ type Error
     | CannotReadProject JavaScript.Error
       --
     | CannotCompileElm JavaScript.Error
+    | CannotStartServer JavaScript.Error
       --
     | InternalErrorModelNotReady
     | InternalError JavaScript.Error
@@ -113,6 +114,9 @@ errorToString a =
         --
         CannotCompileElm b ->
             "Cannot compile Elm. " ++ JavaScript.errorToString b
+
+        CannotStartServer b ->
+            "Cannot start server. " ++ JavaScript.errorToString b
 
         --
         InternalErrorModelNotReady ->
@@ -445,7 +449,7 @@ startServer a =
             ]
         )
         (Decode.succeed ())
-        |> Task.mapError InternalError
+        |> Task.mapError CannotStartServer
 
 
 type alias Request =
