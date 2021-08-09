@@ -91,6 +91,9 @@ parser =
                 --
                 , P.succeed (\v -> P.Loop { acc | root = v })
                     |= stringArg "root"
+                , P.succeed (\_ -> P.Loop acc)
+                    |= boolArg "dir"
+                    |. P.problem "Option --dir is renamed to --root."
                 , P.succeed (\v -> P.Loop { acc | indexAs404 = v })
                     |= boolArg "index-as-404"
                 , P.succeed (\v -> P.Loop { acc | open = v })
