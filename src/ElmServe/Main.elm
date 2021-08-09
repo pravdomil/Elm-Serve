@@ -7,7 +7,6 @@ import Interop.JavaScript as JavaScript
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Parser
-import Parser.DeadEnd as DeadEnd
 import Process
 import Regex exposing (Regex)
 import Task exposing (Task)
@@ -99,6 +98,47 @@ type Error
 
 errorToString : Error -> String
 errorToString a =
+    let
+        usage : String
+        usage =
+            """Welcome to Elm Serve.
+
+Usage:
+    elm-serve <elm-files>...
+
+Options:
+    --host <host>
+        Set server host. Default is localhost.
+
+    --port <port>
+        Set server port. Default is 8000.
+
+    --ssl <cert-file> <key-file>
+        Turn on HTTPS.
+
+    --root <path>
+        Set server root.
+
+    --index-as-404
+        Serve index.html if page not found. Useful for Browser.application.
+
+    --open
+        Open server URL in browser.
+
+Elm Options:
+    --elm-path <path>
+        Set path to Elm compiler.
+
+    --debug
+        Turn on Elm debugger.
+
+    --optimize
+        Turn on Elm optimizations.
+
+    --output <path>
+        Set output from Elm compiler. Default is elm.js.
+"""
+    in
     case a of
         CannotParseOptions b ->
             case b |> List.head |> Maybe.map .problem of
@@ -106,7 +146,7 @@ errorToString a =
                     c
 
                 _ ->
-                    "Cannot parse options because:\n" ++ DeadEnd.toString b
+                    usage
 
         CannotReadProject b ->
             case b of
