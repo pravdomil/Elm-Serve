@@ -199,7 +199,7 @@ update msg model =
                                     |> Task.andThen (\_ -> Process.sleep 1)
                                     |> Task.andThen (\_ -> log "Recompiling...")
                                     |> Task.andThen (\_ -> makeOutputFile c.options)
-                                    |> Task.andThen (\_ -> releaseQueue)
+                                    |> Task.andThen (\_ -> resolveQueue)
                             )
             in
             ( model
@@ -580,6 +580,14 @@ addRequestToQueue a =
         )
         (Decode.succeed ())
         |> Task.mapError InternalError_
+
+
+resolveQueue : Task Error ()
+resolveQueue =
+    JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.forEach(a => a.res.end()); queue = []; })()"
+        Encode.null
+        (Decode.succeed ())
+        |> Task.mapError InternalError
 
 
 sendFile : Options -> String -> Request -> Task JavaScript.Error ()
