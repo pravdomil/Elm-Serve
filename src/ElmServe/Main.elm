@@ -54,7 +54,7 @@ init _ =
         )
         getOptions
         readProject
-        |> Task.attempt GotModel
+        |> Task.attempt GotReadyModel
     )
 
 
@@ -144,7 +144,7 @@ errorToString a =
 
 
 type Msg
-    = GotModel (Result Error { options : Options, project : Project, lastChange : Maybe Time.Posix })
+    = GotReadyModel (Result Error ReadyModel)
     | GotFileChange (Result Decode.Error { path : String, time : Time.Posix })
     | MaybeRecompile (Result Error Time.Posix)
     | GotRequest (Result Decode.Error Request)
@@ -154,7 +154,7 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotModel a ->
+        GotReadyModel a ->
             let
                 task : Task Error ()
                 task =
