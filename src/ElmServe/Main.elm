@@ -32,11 +32,14 @@ main =
 
 
 type alias Model =
-    Maybe
-        { options : Options
-        , project : Project
-        , lastChange : Maybe Time.Posix
-        }
+    Maybe ReadyModel
+
+
+type alias ReadyModel =
+    { options : Options
+    , project : Project
+    , lastChange : Maybe Time.Posix
+    }
 
 
 init : () -> ( Model, Cmd Msg )
