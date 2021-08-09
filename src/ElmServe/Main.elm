@@ -101,7 +101,12 @@ errorToString : Error -> String
 errorToString a =
     case a of
         CannotParseOptions b ->
-            "Cannot parse options because:\n" ++ DeadEnd.toString b
+            case b |> List.head |> Maybe.map .problem of
+                Just (Parser.Problem c) ->
+                    c
+
+                _ ->
+                    "Cannot parse options because:\n" ++ DeadEnd.toString b
 
         CannotReadProject b ->
             case b of
