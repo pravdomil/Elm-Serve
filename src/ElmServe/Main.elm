@@ -202,6 +202,7 @@ update msg model =
                                     |> Task.andThen (\_ -> log "Recompiling...")
                                     |> Task.andThen (\_ -> makeOutputFile c.options)
                                     |> Task.andThen (\_ -> resolveQueue)
+                                    |> Task.onError (\v -> exitWithMessageAndCode (errorToString v) 1)
                             )
             in
             ( model
