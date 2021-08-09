@@ -359,20 +359,22 @@ patchLibs a =
 console.log('Hello from Elm Serve!');
 
 // https://github.com/klazuka/elm-hot/blob/fb2dc49e9b4fa53b51fa6088a1ac7ffa0b72557a/test/client.js#L38
-var module = {
-    hot: {
-        accept: function () {},
-        dispose: function (a) { module.hot.disposeCallback = a },
-        data: null,
-        apply: function () {
-            var data = {}
-            module.hot.disposeCallback(data)
-            module.hot.data = data
-        },
-        verbose: true,
-        disposeCallback : null
+if (typeof module === "undefined") {
+    var module = {
+        hot: {
+            accept: function () {},
+            dispose: function (a) { module.hot.disposeCallback = a },
+            data: null,
+            apply: function () {
+                var data = {}
+                module.hot.disposeCallback(data)
+                module.hot.data = data
+            },
+            verbose: true,
+            disposeCallback : null
+        }
     }
-};
+}
 """
     in
     (lib ++ a)
