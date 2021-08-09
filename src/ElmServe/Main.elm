@@ -690,3 +690,35 @@ serverUrl a =
         ++ a.host
         ++ ":"
         ++ String.fromInt a.port_
+
+
+
+--
+
+
+decodeMsg : Decode.Decoder Msg
+decodeMsg =
+    Decode.field "a" Decode.int
+        |> Decode.andThen
+            (\a ->
+                case a of
+                    1 ->
+                        Decode.map GotFileChange
+                            (Decode.field "b"
+                                (Decode.map (\v1 -> { path = v1 })
+                                    (Decode.field "path" Decode.string)
+                                )
+                            )
+
+                    3 ->
+                        Decode.map GotRequest
+                            (Decode.field "b"
+                                (Decode.map2 Request
+                                    (Decode.field "req" Decode.value)
+                                    (Decode.field "res" Decode.value)
+                                )
+                            )
+
+                    _ ->
+                        Decode.fail ("I can't decode \"Msg\", unknown variant with index " ++ String.fromInt a ++ ".")
+            )
