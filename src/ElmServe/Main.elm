@@ -240,10 +240,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.batch
-        [ gotFileChange_ GotFileChange
-        , gotRequest_ GotRequest
-        ]
+    Sub.none
 
 
 
@@ -388,23 +385,6 @@ startWatching a =
         |> Task.mapError InternalError
 
 
-port gotFileChange : (Decode.Value -> msg) -> Sub msg
-
-
-gotFileChange_ : (Result Decode.Error { path : String } -> a) -> Sub msg
-gotFileChange_ fn =
-    let
-        decoder : Decode.Value -> Result Decode.Error { path : String }
-        decoder b =
-            Decode.decodeValue
-                (Decode.map (\v1 -> { path = v1 })
-                    (Decode.field "path" Decode.string)
-                )
-                b
-    in
-    gotFileChange (decoder >> fn)
-
-
 
 --
 
@@ -438,24 +418,6 @@ type alias Request =
     { request : Decode.Value
     , response : Decode.Value
     }
-
-
-port gotRequest : (Decode.Value -> msg) -> Sub msg
-
-
-gotRequest_ : (Result Decode.Error Request -> a) -> Sub msg
-gotRequest_ fn =
-    let
-        decoder : Decode.Value -> Result Decode.Error Request
-        decoder b =
-            Decode.decodeValue
-                (Decode.map2 Request
-                    (Decode.field "req" Decode.value)
-                    (Decode.field "res" Decode.value)
-                )
-                b
-    in
-    gotRequest (decoder >> fn)
 
 
 
