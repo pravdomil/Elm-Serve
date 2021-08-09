@@ -145,7 +145,7 @@ errorToString a =
 
 type Msg
     = GotReadyModel (Result Error ReadyModel)
-    | GotFileChange (Result Decode.Error { path : String, time : Time.Posix })
+    | GotFileChange (Result Decode.Error { path : String })
     | MaybeRecompile (Result Error Time.Posix)
     | GotRequest (Result Decode.Error Request)
     | TaskDone (Result Error ())
@@ -395,7 +395,7 @@ startWatching a =
 
         watch : String -> Task JavaScript.Error ()
         watch b =
-            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.gotFileChange.send({ path, time: Date.now() }))"
+            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.gotFileChange.send({ path }))"
                 (Encode.string b)
                 (Decode.succeed ())
     in
@@ -409,20 +409,14 @@ startWatching a =
 port gotFileChange : (Decode.Value -> msg) -> Sub msg
 
 
-gotFileChange_ : (Result Decode.Error { path : String, time : Time.Posix } -> a) -> Sub msg
+gotFileChange_ : (Result Decode.Error { path : String } -> a) -> Sub msg
 gotFileChange_ fn =
     let
-        decoder : Decode.Value -> Result Decode.Error { path : String, time : Time.Posix }
+        decoder : Decode.Value -> Result Decode.Error { path : String }
         decoder b =
             Decode.decodeValue
-                (Decode.map2 (\v1 v2 -> { path = v1, time = v2 })
+                (Decode.map (\v1 -> { path = v1 })
                     (Decode.field "path" Decode.string)
-                    (Decode.field "time" Decode.int
-                        |> Decode.andThen
-                            (\v2 ->
-                                Decode.succeed (Time.millisToPosix v2)
-                            )
-                    )
                 )
                 b
     in
