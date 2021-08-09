@@ -344,8 +344,8 @@ compileElm opt =
         elm.stdout.on('data', b => { stdout += b })
         elm.stderr.on('data', b => { stderr += b })
         elm.on('close', b => {
-          if (b) { var e = new Error(stderr); e.code = 'ENONZERO'; reject(e); }
-          else { resolve(stdout); }
+            if (b) { var e = new Error(stderr); e.code = 'ENONZERO'; reject(e); }
+            else { resolve(stdout); }
         })
     })
     """
