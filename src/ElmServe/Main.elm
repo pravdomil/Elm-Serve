@@ -376,6 +376,16 @@ if (typeof module === "undefined") {
 } else {
     module.hot.apply()
 }
+
+(function(){
+    var src = document.currentScript.src
+    fetch("/elm-serve-client-lib.js").then(() => {
+      var script = document.createElement('script')
+      script.src = src
+      document.head.appendChild(script)
+    })
+})();
+
 """
     in
     (lib ++ a)
