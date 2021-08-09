@@ -398,23 +398,26 @@ applyLib a =
         module.hot.apply()
     }
 
+    function listen() {
+        var src = document.currentScript.src
+
+        function onLoad() {
+            var script = document.createElement('script')
+            script.src = src
+            document.head.appendChild(script)
+        }
+
+        function onError() {
+            elmServe.disconnected()
+        }
+
+        fetch("/elm-serve-client-lib.js")
+            .then(onLoad)
+            .catch(onError)
+    }
+
     typeof elmServe === "undefined" ? init() : reload()
-
-    var src = document.currentScript.src
-
-    function onLoad() {
-        var script = document.createElement('script')
-        script.src = src
-        document.head.appendChild(script)
-    }
-
-    function onError() {
-        elmServe.disconnected()
-    }
-
-    fetch("/elm-serve-client-lib.js")
-        .then(onLoad)
-        .catch(onError)
+    listen()
 })();
 """
     in
