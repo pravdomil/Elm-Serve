@@ -366,7 +366,7 @@ applyLib a =
 
         elmServe = {
             compileError: function(a) {
-                console.error('Compile Error\\n', a)
+                console.error(a)
             },
             disconnected: function() {
                 console.error('We are disconnected.')
