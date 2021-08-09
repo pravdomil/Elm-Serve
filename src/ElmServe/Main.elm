@@ -412,9 +412,14 @@ applyLib a =
 
         module = {
             hot: {
+                data: null,
+                verbose: false,
+                disposeCallback : null,
+
+                //
+
                 accept: function () {},
                 dispose: function (a) { module.hot.disposeCallback = a },
-                data: null,
                 apply: function () {
                     if (typeof Elm === "undefined") {
                         location.reload()
@@ -424,9 +429,7 @@ applyLib a =
                     module.hot.disposeCallback(data)
                     module.hot.data = data
                     delete Elm
-                },
-                verbose: false,
-                disposeCallback : null
+                }
             }
         }
     }
