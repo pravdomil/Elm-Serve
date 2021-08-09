@@ -421,7 +421,7 @@ applyLib a =
                 accept: function () {},
                 dispose: function (a) { module.hot.disposeCallback = a },
                 apply: function () {
-                    if (typeof Elm === "undefined") {
+                    if (module.hot.disposeCallback === null) {
                         location.reload()
                         return
                     }
