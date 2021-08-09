@@ -473,7 +473,7 @@ sendResponse opt a =
         resolvePath : String -> Task RespondError ()
         resolvePath b =
             if b == "/elm-serve-client-lib.js" then
-                sendClientLib a
+                addRequestToQueue a
 
             else
                 fileStatus (opt.root ++ "/" ++ b)
@@ -570,14 +570,15 @@ send status headers data { response } =
         (Decode.succeed ())
 
 
-sendClientLib : Request -> Task RespondError ()
-sendClientLib a =
-    let
-        body : String
-        body =
-            "console.log('Hello from Elm Serve.')"
-    in
-    send 200 Dict.empty body a
+addRequestToQueue : Request -> Task RespondError ()
+addRequestToQueue a =
+    JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.push(a); })()"
+        (Encode.object
+            [ ( "req", a.request )
+            , ( "res", a.response )
+            ]
+        )
+        (Decode.succeed ())
         |> Task.mapError InternalError_
 
 
