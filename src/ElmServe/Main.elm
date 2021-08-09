@@ -116,7 +116,12 @@ errorToString a =
             "Cannot compile Elm. " ++ JavaScript.errorToString b
 
         CannotStartServer b ->
-            "Cannot start server. " ++ JavaScript.errorToString b
+            case b of
+                JavaScript.Exception "EADDRINUSE" msg ->
+                    "Cannot start server. " ++ msg
+
+                _ ->
+                    "Cannot start server. " ++ JavaScript.errorToString b
 
         --
         InternalErrorModelNotReady ->
