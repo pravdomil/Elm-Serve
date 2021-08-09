@@ -406,6 +406,10 @@ applyLib a =
                 a.style.color = 'white'
                 a.style.backgroundColor = 'rgba(0, 0, 0, 0.6)'
                 a.style.overflow = 'auto'
+                a.style.cursor = 'pointer'
+
+                a.addEventListener('click', function() { elmServe.hideUi() })
+
                 return a
             })()
         }
