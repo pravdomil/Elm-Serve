@@ -4085,22 +4085,27 @@ var $author$project$Interop$JavaScript$run = F3(
 		
 var task = function(arg_) {
   return _Scheduler_binding(function(callback) {
-    var cancel = undefined
+    var canceled = false
+    var cancelFn = undefined
+
     function onCancel(a) {
-      cancel = a
+      cancelFn = a
+    }
+
+    function try_(fn) {
+      try       { return { $: 0, a: fn() } }
+      catch (e) { return { $: 1, a: e    } }
     }
 
     function ok(a) {
-      callback(_Scheduler_succeed(_Json_wrap(a)));
+      if (canceled === false) callback(_Scheduler_succeed(_Json_wrap(a)));
     }
 
     function err(a) {
-      callback(_Scheduler_fail(toException(_Json_wrap(a))));
+      if (canceled === false) callback(_Scheduler_fail(toException(_Json_wrap(a))));
     }
 
-    var a;
-    try       { a = { $: 0, a: code(_Json_unwrap(arg_), onCancel) } }
-    catch (e) { a = { $: 1, a: e } }
+    var a = try_(function() { return code(_Json_unwrap(arg_), onCancel) })
 
     if (a.$ === 0) {
       if (a.a instanceof Promise) {
@@ -4114,7 +4119,13 @@ var task = function(arg_) {
       err(a.a)
     }
 
-    return cancel
+    return function() {
+      if (cancelFn) {
+        var a = try_(cancelFn)
+        if (a.$ === 1) err(a.a)
+      }
+      canceled = true
+    }
   })
 };
     
@@ -5195,15 +5206,20 @@ var $author$project$ElmServe$Main$compileElm = function (opt) {
 		$elm$core$Task$mapError,
 		$author$project$ElmServe$Main$CannotCompileElm,
 		A3(
-			$author$project$Interop$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject) => {
+			$author$project$Interop$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject_) => {
+        function reject(code, msg) {
+            var e = new Error(msg)
+            e.code = code
+            reject_(e)
+        }
+
         var elm = require('child_process').spawn(a.elmPath, a.args);
         var stdout = '';
         var stderr = '';
         elm.stdout.on('data', b => { stdout += b })
         elm.stderr.on('data', b => { stderr += b })
         elm.on('close', b => {
-            if (b) { var e = new Error(stderr); e.code = 'ENONZERO'; reject(e); }
-            else { resolve(stdout); }
+            b ? reject('ENONZERO', stderr) : resolve(stdout)
         })
         onCancel(() => elm.kill())
     }) },
