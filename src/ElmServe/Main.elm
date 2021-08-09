@@ -367,13 +367,47 @@ applyLib a =
         elmServe = {
             compileError: function(a) {
                 console.error(a)
+                elmServe.showUi(a)
             },
             disconnected: function() {
-                console.error('We are disconnected.')
+                var msg = 'We are disconnected.'
+                console.error(msg)
+                elmServe.showUi(msg)
             },
             clear: function() {
-                console.clear()
-            }
+                elmServe.hideUi()
+            },
+
+            //
+
+            showUi: function(a) {
+                if (elmServe.ui.parentElement === null) {
+                    if (document.body) document.body.appendChild(elmServe.ui)
+                    else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })
+                }
+                elmServe.ui.textContent = a
+            },
+            hideUi: function(a) {
+                elmServe.ui.remove()
+            },
+            ui: (function() {
+                a = document.createElement('div')
+                a.id = 'elmServeUi'
+                a.style.position = 'fixed'
+                a.style.zIndex = '9999999'
+                a.style.left = '0'
+                a.style.right = '0'
+                a.style.top = '0'
+                a.style.bottom = '0'
+
+                a.style.font = '16px monospace'
+                a.style.padding = '16px'
+                a.style.whiteSpace = 'pre-wrap'
+                a.style.color = 'rgb(28, 28, 28)'
+                a.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'
+                a.style.overflow = 'auto'
+                return a
+            })()
         }
 
         module = {
