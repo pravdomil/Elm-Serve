@@ -11,7 +11,7 @@ type alias Options =
     --
     , root : String
     , open : Bool
-    , indexAs404 : Bool
+    , no404 : Bool
 
     --
     , elm : String
@@ -44,7 +44,7 @@ toString a =
     --
     , "Root:         " ++ a.root
     , "Open:         " ++ (a.open |> boolToString)
-    , "Index As 404: " ++ (a.indexAs404 |> boolToString)
+    , "No 404:       " ++ (a.no404 |> boolToString)
 
     --
     , "Elm:          " ++ a.elm
@@ -88,8 +88,8 @@ parser =
                     |. P.problem "Option --dir is renamed to --root."
                 , P.succeed (\v -> P.Loop { acc | open = v })
                     |= boolArg "open"
-                , P.succeed (\v -> P.Loop { acc | indexAs404 = v })
-                    |= boolArg "index-as-404"
+                , P.succeed (\v -> P.Loop { acc | no404 = v })
+                    |= boolArg "no-404"
 
                 --
                 , P.succeed (\v -> P.Loop { acc | elm = v })
@@ -161,7 +161,7 @@ parser =
         --
         , root = "."
         , open = False
-        , indexAs404 = False
+        , no404 = False
 
         --
         , elm = "elm"
