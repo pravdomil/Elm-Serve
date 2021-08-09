@@ -93,10 +93,8 @@ type Error
       --
     | CannotCompileElm JavaScript.Error
       --
-    | CannotDecodeRequest Decode.Error
     | GotRequestButModelIsNothing
       --
-    | CannotDecodeFileChange Decode.Error
     | GotFileChangeButModelIsNothing
       --
     | InternalError JavaScript.Error
@@ -121,16 +119,10 @@ errorToString a =
             "Cannot compile Elm. " ++ JavaScript.errorToString b
 
         --
-        CannotDecodeRequest _ ->
-            "Internal error. Cannot decode request."
-
         GotRequestButModelIsNothing ->
             "Internal error. Got request but model is nothing."
 
         --
-        CannotDecodeFileChange _ ->
-            "Internal error. Cannot decode file change."
-
         GotFileChangeButModelIsNothing ->
             "Internal error. Got file change but model is nothing."
 
@@ -145,9 +137,9 @@ errorToString a =
 
 type Msg
     = GotReadyModel (Result Error ReadyModel)
-    | GotFileChange (Result Decode.Error { path : String })
+    | GotFileChange { path : String }
     | MaybeRecompile (Result Error Time.Posix)
-    | GotRequest (Result Decode.Error Request)
+    | GotRequest Request
     | TaskDone (Result Error ())
 
 
@@ -192,18 +184,12 @@ update msg model =
             let
                 task : Task Error Time.Posix
                 task =
-                    Task_.fromResult (Result.mapError CannotDecodeFileChange a)
-                        |> Task.andThen
-                            (\b ->
-                                Process.sleep 10
-                                    |> Task.map (\_ -> b.time)
-                            )
+                    Process.sleep 10
+                        |> Task.map (\_ -> a.time)
 
                 nextModel : Model
                 nextModel =
-                    Maybe.map2 (\v1 v2 -> { v1 | lastChange = Just v2.time })
-                        model
-                        (Result.toMaybe a)
+                    model |> Maybe.map (\v -> { v | lastChange = Just a.time })
             in
             ( nextModel
             , task
@@ -227,12 +213,8 @@ update msg model =
             let
                 task : Task Error ()
                 task =
-                    Task_.fromResult (Result.mapError CannotDecodeRequest a)
-                        |> Task.andThen
-                            (\b ->
-                                Task_.fromResult (Result.fromMaybe GotRequestButModelIsNothing model)
-                                    |> Task.andThen (\c -> sendResponse c.options b)
-                            )
+                    Task_.fromResult (Result.fromMaybe GotRequestButModelIsNothing model)
+                        |> Task.andThen (\c -> sendResponse c.options a)
             in
             ( model
             , task
