@@ -397,8 +397,13 @@ if (typeof module === "undefined") {
         document.head.appendChild(script)
     }
 
+    function onError() {
+        elmServe.disconnected()
+    }
+
     fetch("/elm-serve-client-lib.js")
       .then(onLoad)
+      .catch(onError)
 })();
 
 """
