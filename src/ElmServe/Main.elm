@@ -38,7 +38,7 @@ type alias Model =
 type alias ReadyModel =
     { options : Options
     , project : Project
-    , lastChange : Maybe Time.Posix
+    , compileProcess : Maybe Process.Id
     }
 
 
@@ -49,7 +49,7 @@ init _ =
         (\v1 v2 ->
             { options = v1
             , project = v2
-            , lastChange = Nothing
+            , compileProcess = Nothing
             }
         )
         getOptions
@@ -138,7 +138,7 @@ errorToString a =
 type Msg
     = GotReadyModel (Result Error ReadyModel)
     | GotFileChange { path : String }
-    | MaybeRecompile (Result Error Time.Posix)
+    | GotCompileProcess Process.Id
     | GotRequest Request
     | TaskDone (Result Error ())
 
@@ -180,32 +180,28 @@ update msg model =
                 |> Task.attempt TaskDone
             )
 
-        GotFileChange a ->
+        GotFileChange _ ->
             let
-                task : Task Error Time.Posix
+                task : Task Error ()
                 task =
-                    Process.sleep 10
-                        |> Task.map (\_ -> a.time)
-
-                nextModel : Model
-                nextModel =
-                    model |> Maybe.map (\v -> { v | lastChange = Just a.time })
-            in
-            ( nextModel
-            , task
-                |> Task.attempt MaybeRecompile
-            )
-
-        MaybeRecompile a ->
-            let
-                shouldRecompile : Bool
-                shouldRecompile =
-                    Maybe.map2 (\v1 v2 -> v1.lastChange == Just v2)
-                        model
-                        (Result.toMaybe a)
-                        |> Maybe.withDefault False
+                    Task_.fromResult (Result.fromMaybe GotFileChangeButModelIsNothing model)
+                        |> Task.andThen
+                            (\c ->
+                                c.compileProcess
+                                    |> Maybe.map Process.kill
+                                    |> Maybe.withDefault (Task.succeed ())
+                                    |> Task.andThen (\_ -> Process.sleep 2)
+                                    |> Task.andThen (\_ -> makeOutputFile c.options)
+                            )
             in
             ( model
+            , task
+                |> Process.spawn
+                |> Task.perform GotCompileProcess
+            )
+
+        GotCompileProcess a ->
+            ( model |> Maybe.map (\v -> { v | compileProcess = Just a })
             , Cmd.none
             )
 
