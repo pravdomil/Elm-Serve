@@ -76,6 +76,9 @@ parser =
                     |= stringArg "host"
                 , P.succeed (\v -> P.Loop { acc | port_ = v })
                     |= intArg "port"
+                , P.succeed (\v1 v2 -> P.Loop { acc | ssl = Just { cert = v1, key = v2 } })
+                    |= stringArg "ssl"
+                    |= argument
 
                 --
                 , P.succeed (\v -> P.Loop { acc | root = v })
@@ -87,11 +90,6 @@ parser =
                     |= boolArg "index-as-404"
                 , P.succeed (\v -> P.Loop { acc | open = v })
                     |= boolArg "open"
-
-                --
-                , P.succeed (\v1 v2 -> P.Loop { acc | ssl = Just { cert = v1, key = v2 } })
-                    |= stringArg "ssl"
-                    |= argument
 
                 --
                 , P.succeed (\v -> P.Loop { acc | elmPath = v })
