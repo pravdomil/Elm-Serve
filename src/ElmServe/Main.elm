@@ -360,42 +360,42 @@ applyLib a =
         lib : String
         lib =
             """
-if (typeof elmServe === "undefined") {
-    console.info('Hello from Elm Serve!');
-
-    var elmServe = {
-        compileError: function(a) {
-            console.error('Compile Error\\n', a)
-        },
-        disconnected: function() {
-            console.error('We are disconnected.')
-        },
-        clear: function() {
-            console.clear()
-        }
-    }
-
-    var module = {
-        hot: {
-            accept: function () {},
-            dispose: function (a) { module.hot.disposeCallback = a },
-            data: null,
-            apply: function () {
-                var data = {}
-                module.hot.disposeCallback(data)
-                module.hot.data = data
-                delete Elm
-            },
-            verbose: false,
-            disposeCallback : null
-        }
-    }
-} else {
-    elmServe.clear()
-    module.hot.apply()
-}
-
 (function(){
+    if (typeof elmServe === "undefined") {
+        console.info('Hello from Elm Serve!');
+
+        elmServe = {
+            compileError: function(a) {
+                console.error('Compile Error\\n', a)
+            },
+            disconnected: function() {
+                console.error('We are disconnected.')
+            },
+            clear: function() {
+                console.clear()
+            }
+        }
+
+        module = {
+            hot: {
+                accept: function () {},
+                dispose: function (a) { module.hot.disposeCallback = a },
+                data: null,
+                apply: function () {
+                    var data = {}
+                    module.hot.disposeCallback(data)
+                    module.hot.data = data
+                    delete Elm
+                },
+                verbose: false,
+                disposeCallback : null
+            }
+        }
+    } else {
+        elmServe.clear()
+        module.hot.apply()
+    }
+
     var src = document.currentScript.src
 
     function onLoad() {
