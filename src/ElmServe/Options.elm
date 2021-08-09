@@ -166,7 +166,7 @@ parser =
         --
         , elm = "elm"
         , debug = False
-        , optimize = True
+        , optimize = False
         , input = []
         , output = "elm.js"
         }
