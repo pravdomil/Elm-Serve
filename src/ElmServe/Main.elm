@@ -378,6 +378,9 @@ if (typeof module === "undefined") {
         }
     }
     var elmServe = {
+        compileError: function(a) {
+            console.error('Compile Error\\n', a)
+        },
         disconnected: function() {
             console.error('We are disconnected.')
         }
