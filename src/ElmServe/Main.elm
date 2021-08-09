@@ -524,7 +524,6 @@ startServer a =
         (Encode.object
             [ ( "host", Encode.string a.host )
             , ( "port", Encode.int a.port_ )
-            , ( "root", Encode.string a.root )
             , ( "ssl"
               , Encode_.maybe
                     (\v ->
@@ -535,6 +534,7 @@ startServer a =
                     )
                     a.ssl
               )
+            , ( "root", Encode.string a.root )
             ]
         )
         (Decode.succeed ())
