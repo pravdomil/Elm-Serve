@@ -413,8 +413,8 @@ applyLib a =
     }
 
     fetch("/elm-serve-client-lib.js")
-      .then(onLoad)
-      .catch(onError)
+        .then(onLoad)
+        .catch(onError)
 })();
 """
     in
