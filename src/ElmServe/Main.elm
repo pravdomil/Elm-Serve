@@ -369,7 +369,7 @@ if (typeof module === "undefined") {
                 module.hot.data = data
                 delete Elm
             },
-            verbose: true,
+            verbose: false,
             disposeCallback : null
         }
     }
