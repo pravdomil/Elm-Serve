@@ -360,8 +360,16 @@ applyLib a =
         lib : String
         lib =
             """
-if (typeof module === "undefined") {
+if (typeof elmServe === "undefined") {
     console.info('Hello from Elm Serve!');
+    var elmServe = {
+        compileError: function(a) {
+            console.error('Compile Error\\n', a)
+        },
+        disconnected: function() {
+            console.error('We are disconnected.')
+        }
+    }
     var module = {
         hot: {
             accept: function () {},
@@ -375,14 +383,6 @@ if (typeof module === "undefined") {
             },
             verbose: false,
             disposeCallback : null
-        }
-    }
-    var elmServe = {
-        compileError: function(a) {
-            console.error('Compile Error\\n', a)
-        },
-        disconnected: function() {
-            console.error('We are disconnected.')
         }
     }
 } else {
