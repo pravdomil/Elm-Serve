@@ -368,6 +368,9 @@ if (typeof elmServe === "undefined") {
         },
         disconnected: function() {
             console.error('We are disconnected.')
+        },
+        clear: function() {
+            console.clear()
         }
     }
     var module = {
@@ -386,6 +389,7 @@ if (typeof elmServe === "undefined") {
         }
     }
 } else {
+    elmServe.clear()
     module.hot.apply()
 }
 
