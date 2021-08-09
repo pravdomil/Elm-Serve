@@ -126,7 +126,7 @@ Options:
         Serve index.html if page not found. Useful for Browser.application.
 
 Elm Options:
-    --elm-path <path>
+    --elm <path>
         Set path to Elm compiler.
 
     --debug
@@ -373,7 +373,7 @@ compileElm opt =
             reject_(e)
         }
 
-        var elm = require('child_process').spawn(a.elmPath, a.args);
+        var elm = require('child_process').spawn(a.elm, a.args);
         var stdout = '';
         var stderr = '';
         elm.stdout.on('data', b => { stdout += b })
@@ -383,7 +383,7 @@ compileElm opt =
     })
     """
         (Encode.object
-            [ ( "elmPath", Encode.string opt.elmPath )
+            [ ( "elm", Encode.string opt.elm )
             , ( "args", Encode.list Encode.string args )
             ]
         )
