@@ -10,8 +10,8 @@ type alias Options =
 
     --
     , root : String
-    , indexAs404 : Bool
     , open : Bool
+    , indexAs404 : Bool
 
     --
     , elmPath : String
@@ -43,8 +43,8 @@ toString a =
 
     --
     , "Root:         " ++ a.root
-    , "Index As 404: " ++ (a.indexAs404 |> boolToString)
     , "Open:         " ++ (a.open |> boolToString)
+    , "Index As 404: " ++ (a.indexAs404 |> boolToString)
 
     --
     , "Elm Path:     " ++ a.elmPath
@@ -86,10 +86,10 @@ parser =
                 , P.succeed (\_ -> P.Loop acc)
                     |= boolArg "dir"
                     |. P.problem "Option --dir is renamed to --root."
-                , P.succeed (\v -> P.Loop { acc | indexAs404 = v })
-                    |= boolArg "index-as-404"
                 , P.succeed (\v -> P.Loop { acc | open = v })
                     |= boolArg "open"
+                , P.succeed (\v -> P.Loop { acc | indexAs404 = v })
+                    |= boolArg "index-as-404"
 
                 --
                 , P.succeed (\v -> P.Loop { acc | elmPath = v })
@@ -160,8 +160,8 @@ parser =
 
         --
         , root = "."
-        , indexAs404 = False
         , open = False
+        , indexAs404 = False
 
         --
         , elmPath = "elm"
