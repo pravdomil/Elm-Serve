@@ -385,11 +385,15 @@ if (typeof module === "undefined") {
 
 (function(){
     var src = document.currentScript.src
-    fetch("/elm-serve-client-lib.js").then(() => {
-      var script = document.createElement('script')
-      script.src = src
-      document.head.appendChild(script)
-    })
+
+    function onLoad() {
+        var script = document.createElement('script')
+        script.src = src
+        document.head.appendChild(script)
+    }
+
+    fetch("/elm-serve-client-lib.js")
+      .then(onLoad)
 })();
 
 """
