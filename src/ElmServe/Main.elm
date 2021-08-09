@@ -296,7 +296,7 @@ makeOutputFile opt =
         |> Task.andThen (\_ -> readFile opt.output)
         |> Task.andThen patchElm
         |> Task.onError recoverFromCompileError
-        |> Task.andThen patchLibs
+        |> Task.andThen applyLib
         |> Task.andThen (writeFile opt.output)
 
 
@@ -356,8 +356,8 @@ patchElm a =
         |> Task.mapError InternalError
 
 
-patchLibs : String -> Task Error String
-patchLibs a =
+applyLib : String -> Task Error String
+applyLib a =
     let
         lib : String
         lib =
