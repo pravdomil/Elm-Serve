@@ -122,7 +122,7 @@ Options:
     --open
         Open server URL in browser.
 
-    --index-as-404
+    --no-404
         Serve index.html if page not found. Useful for Browser.application.
 
 Elm Options:
@@ -619,7 +619,7 @@ sendResponse opt a =
                                     redirect (b ++ "/")
 
                                 NotFound ->
-                                    if opt.indexAs404 then
+                                    if opt.no404 then
                                         sendFile opt "index.html" a
                                             |> Task.mapError InternalError_
 
