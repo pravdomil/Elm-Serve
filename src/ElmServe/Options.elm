@@ -6,15 +6,12 @@ import Parser as P exposing ((|.), (|=), Parser)
 type alias Options =
     { host : String
     , port_ : Int
+    , ssl : Maybe { cert : String, key : String }
 
     --
     , root : String
     , indexAs404 : Bool
     , open : Bool
-
-    --
-    , sslCert : Maybe String
-    , sslKey : Maybe String
 
     --
     , elmPath : String
@@ -42,15 +39,12 @@ toString a =
     in
     [ "Host:         " ++ a.host
     , "Port:         " ++ String.fromInt a.port_
+    , "SSL:          " ++ (a.ssl |> Maybe.map (\v -> [ v.cert, v.key ] |> String.join ", ") |> Maybe.withDefault "-")
 
     --
     , "Root:         " ++ a.root
     , "Index As 404: " ++ (a.indexAs404 |> boolToString)
     , "Open:         " ++ (a.open |> boolToString)
-
-    --
-    , "SSL Cert:     " ++ (a.sslCert |> Maybe.withDefault "-")
-    , "SSL Key:      " ++ (a.sslKey |> Maybe.withDefault "-")
 
     --
     , "Elm Path:     " ++ a.elmPath
@@ -60,11 +54,6 @@ toString a =
     , "Output:       " ++ a.output
     ]
         |> String.join "\n"
-
-
-ssl : Options -> Bool
-ssl a =
-    a.sslCert /= Nothing && a.sslKey /= Nothing
 
 
 
@@ -100,10 +89,9 @@ parser =
                     |= boolArg "open"
 
                 --
-                , P.succeed (\v -> P.Loop { acc | sslCert = Just v })
-                    |= stringArg "ssl-cert"
-                , P.succeed (\v -> P.Loop { acc | sslKey = Just v })
-                    |= stringArg "ssl-key"
+                , P.succeed (\v1 v2 -> P.Loop { acc | ssl = Just { cert = v1, key = v2 } })
+                    |= stringArg "ssl"
+                    |= argument
 
                 --
                 , P.succeed (\v -> P.Loop { acc | elmPath = v })
@@ -170,15 +158,12 @@ parser =
     P.loop
         { host = "localhost"
         , port_ = 8000
+        , ssl = Nothing
 
         --
         , root = "."
         , indexAs404 = False
         , open = False
-
-        --
-        , sslCert = Nothing
-        , sslKey = Nothing
 
         --
         , elmPath = "elm"
