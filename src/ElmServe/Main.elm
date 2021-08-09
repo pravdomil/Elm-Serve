@@ -240,7 +240,29 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    sendMsgSubscription
+
+
+
+--
+
+
+port sendMsg : (Decode.Value -> msg) -> Sub msg
+
+
+sendMsgSubscription : Sub Msg
+sendMsgSubscription =
+    let
+        decoder : Decode.Value -> Msg
+        decoder b =
+            case Decode.decodeValue decodeMsg b of
+                Ok c ->
+                    c
+
+                Err c ->
+                    TaskDone (Err (InternalError (JavaScript.DecodeError c)))
+    in
+    sendMsg decoder
 
 
 
