@@ -387,7 +387,7 @@ applyLib a =
                 }
                 elmServe.ui.textContent = a
             },
-            hideUi: function(a) {
+            hideUi: function() {
                 elmServe.ui.remove()
             },
             ui: (function() {
