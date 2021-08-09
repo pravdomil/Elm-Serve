@@ -361,7 +361,7 @@ applyLib a =
         lib =
             """
 (function(){
-    if (typeof elmServe === "undefined") {
+    function init() {
         console.info('Hello from Elm Serve!');
 
         elmServe = {
@@ -391,10 +391,14 @@ applyLib a =
                 disposeCallback : null
             }
         }
-    } else {
+    }
+
+    function reload() {
         elmServe.clear()
         module.hot.apply()
     }
+
+    typeof elmServe === "undefined" ? init() : reload()
 
     var src = document.currentScript.src
 
