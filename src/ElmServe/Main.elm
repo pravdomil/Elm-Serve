@@ -396,7 +396,7 @@ startWatching a =
 
         watch : String -> Task JavaScript.Error ()
         watch b =
-            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.gotFileChange.send({ path }))"
+            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.sendMsg.send({ a: 1, b: { path } }))"
                 (Encode.string b)
                 (Decode.succeed ())
     in
@@ -416,7 +416,7 @@ startServer a =
     JavaScript.run """
     (() => {
         var opt = a.ssl ? { cert: fs.readFileSync(a.sslCert), key: fs.readFileSync(a.sslKey) } : {}
-        var callback = (req, res) => { scope.Elm.Main.init.ports.gotRequest.send({ req, res }) }
+        var callback = (req, res) => { scope.Elm.Main.init.ports.sendMsg.send({ a: 3, b: { req, res } }) }
 
         require(a.ssl ? 'https' : 'http')
           .createServer(opt, callback)
