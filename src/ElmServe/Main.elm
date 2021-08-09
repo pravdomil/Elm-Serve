@@ -534,7 +534,6 @@ startServer a =
                     )
                     a.ssl
               )
-            , ( "root", Encode.string a.root )
             ]
         )
         (Decode.succeed ())
