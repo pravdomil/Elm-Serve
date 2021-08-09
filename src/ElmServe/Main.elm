@@ -416,6 +416,10 @@ applyLib a =
                 dispose: function (a) { module.hot.disposeCallback = a },
                 data: null,
                 apply: function () {
+                    if (typeof Elm === "undefined") {
+                        location.reload()
+                        return
+                    }
                     var data = {}
                     module.hot.disposeCallback(data)
                     module.hot.data = data
