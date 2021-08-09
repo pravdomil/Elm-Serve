@@ -379,6 +379,11 @@ if (typeof module === "undefined") {
             disposeCallback : null
         }
     }
+    var elmServe = {
+        disconnected: function() {
+            console.error('We are disconnected.')
+        }
+    }
 } else {
     module.hot.apply()
 }
