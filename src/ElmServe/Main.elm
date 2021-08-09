@@ -369,6 +369,7 @@ if (typeof module === "undefined") {
                 var data = {}
                 module.hot.disposeCallback(data)
                 module.hot.data = data
+                delete Elm
             },
             verbose: true,
             disposeCallback : null
