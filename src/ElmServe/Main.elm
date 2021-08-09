@@ -92,10 +92,7 @@ type Error
       --
     | CannotCompileElm JavaScript.Error
       --
-    | GotRequestButModelIsNothing
-      --
-    | GotFileChangeButModelIsNothing
-      --
+    | InternalErrorModelNotReady
     | InternalError JavaScript.Error
 
 
@@ -118,12 +115,8 @@ errorToString a =
             "Cannot compile Elm. " ++ JavaScript.errorToString b
 
         --
-        GotRequestButModelIsNothing ->
-            "Internal error. Got request but model is nothing."
-
-        --
-        GotFileChangeButModelIsNothing ->
-            "Internal error. Got file change but model is nothing."
+        InternalErrorModelNotReady ->
+            "Internal error. Model is not ready."
 
         --
         InternalError b ->
@@ -192,7 +185,7 @@ update msg model =
 
                 task : Task Error ()
                 task =
-                    Task_.fromResult (Result.fromMaybe GotFileChangeButModelIsNothing model)
+                    Task_.fromResult (Result.fromMaybe InternalErrorModelNotReady model)
                         |> Task.andThen
                             (\c ->
                                 killProcess c
@@ -217,7 +210,7 @@ update msg model =
             let
                 task : Task Error ()
                 task =
-                    Task_.fromResult (Result.fromMaybe GotRequestButModelIsNothing model)
+                    Task_.fromResult (Result.fromMaybe InternalErrorModelNotReady model)
                         |> Task.andThen (\c -> sendResponse c.options a)
             in
             ( model
