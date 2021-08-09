@@ -283,10 +283,8 @@ makeOutputFile opt =
         recoverFromCompileError b =
             case b of
                 CannotCompileElm (JavaScript.Exception "ENONZERO" msg) ->
-                    ("Compile error\n\n" ++ msg)
-                        |> Encode.string
-                        |> Encode.encode 0
-                        |> (\v -> "console.error(" ++ v ++ ");")
+                    Encode.encode 0 (Encode.string msg)
+                        |> (\v -> "elmServe.compileError(" ++ v ++ ");")
                         |> Task.succeed
 
                 _ ->
