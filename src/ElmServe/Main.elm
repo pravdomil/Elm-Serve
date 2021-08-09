@@ -362,7 +362,7 @@ applyLib a =
             """
 (function(){
     function init() {
-        console.info('Hello from Elm Serve!');
+        console.info('Hello from Elm Serve!')
 
         elmServe = {
             compileError: function(a) {
