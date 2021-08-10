@@ -366,17 +366,17 @@ compileElm opt =
                 Nothing
     in
     JavaScript.run """
-    new Promise((resolve, reject_) => {
-        function reject(code, msg) {
+    new Promise((resolve, reject) => {
+        function err(code, msg) {
             var e = new Error(msg)
             e.code = code
-            reject_(e)
+            return e
         }
 
         var elm = require('child_process').spawn(a.elm, a.args);
         var stdout = '';
         var stderr = '';
-        elm.on('close', b => { b ? reject('ENONZERO', stderr) : resolve(stdout) })
+        elm.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
         elm.stdout.on('data', b => { stdout += b })
         elm.stderr.on('data', b => { stderr += b })
         onCancel(() => elm.kill())
