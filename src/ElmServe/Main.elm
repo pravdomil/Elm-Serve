@@ -444,7 +444,7 @@ applyLib a =
                 a.style.top = '0'
                 a.style.bottom = '0'
 
-                a.style.font = '16px monospace'
+                a.style.font = '14px/1 monospace'
                 a.style.padding = '16px'
                 a.style.whiteSpace = 'pre'
                 a.style.color = 'white'
