@@ -376,6 +376,7 @@ compileElm opt =
         var elm = require('child_process').spawn(a.elm, a.args);
         var stdout = '';
         var stderr = '';
+        elm.on('error', reject)
         elm.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
         elm.stdout.on('data', b => { stdout += b })
         elm.stderr.on('data', b => { stderr += b })
