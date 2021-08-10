@@ -33,7 +33,7 @@ Options:
         Open server URL in browser.
 
     --no-404
-        Serve index.html if page not found. Useful for Browser.application.
+        Serve /index.html if page not found. Useful for Browser.application.
 
 Elm Options:
     --elm <path>
