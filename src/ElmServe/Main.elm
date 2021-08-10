@@ -408,16 +408,14 @@ applyLib a =
             """
 (function(){
     function init() {
-        console.info('Hello from Elm Serve!')
-
         elmServe = {
             compileError: function(a) {
-                console.error(a)
+                console.error('Elm Serve\\n', a)
                 elmServe.showUi(a)
             },
             disconnected: function() {
                 var msg = 'We are disconnected.'
-                console.error(msg)
+                console.error('Elm Serve\\n', msg)
                 elmServe.showUi(msg)
             },
             clear: function() {
