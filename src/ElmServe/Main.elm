@@ -449,7 +449,7 @@ applyLib a =
 
                 a.style.font = '16px monospace'
                 a.style.padding = '16px'
-                a.style.whiteSpace = 'pre-wrap'
+                a.style.whiteSpace = 'pre'
                 a.style.color = 'white'
                 a.style.backgroundColor = 'rgba(0, 0, 0, 0.6)'
                 a.style.overflow = 'auto'
