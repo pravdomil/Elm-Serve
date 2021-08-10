@@ -5082,7 +5082,7 @@ var $elm$core$Maybe$map = F2(
 		}
 	});
 var $author$project$ElmServe$Main$errorToString = function (a) {
-	var usage = 'Welcome to Elm Serve.\n\nUsage:\n    elm-serve <elm-files>...\n\nOptions:\n    --host <host>\n        Set server host. Default is localhost.\n\n    --port <port>\n        Set server port. Default is 8000.\n\n    --ssl <cert-file> <key-file>\n        Turn on HTTPS.\n\n    --root <path>\n        Set server root.\n\n    --open\n        Open server URL in browser.\n\n    --no-404\n        Serve index.html if page not found. Useful for Browser.application.\n\nElm Options:\n    --elm <path>\n        Set path to Elm compiler.\n\n    --debug\n        Turn on Elm debugger.\n\n    --optimize\n        Turn on Elm optimizations.\n\n    --output <path>\n        Set output from Elm compiler. Default is elm.js.\n';
+	var usage = 'Welcome to Elm Serve.\n\nUsage:\n    elm-serve <elm-files>...\n\nOptions:\n    --host <host>\n        Set server host. Default is localhost.\n\n    --port <port>\n        Set server port. Default is 8000.\n\n    --ssl <cert-file> <key-file>\n        Turn on HTTPS.\n\n    --root <path>\n        Set server root.\n\n    --open\n        Open server URL in browser.\n\n    --no-404\n        Serve /index.html if page not found. Useful for Browser.application.\n\nElm Options:\n    --elm <path>\n        Set path to Elm compiler.\n\n    --debug\n        Turn on Elm debugger.\n\n    --optimize\n        Turn on Elm optimizations.\n\n    --output <path>\n        Set output from Elm compiler. Default is elm.js.\n';
 	switch (a.$) {
 		case 0:
 			var b = a.a;
