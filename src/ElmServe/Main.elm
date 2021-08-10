@@ -406,8 +406,6 @@ applyLib a =
         lib =
             """
 (function(){
-    var src = document.currentScript.src
-
     function init() {
         console.info('Hello from Elm Serve!')
 
@@ -491,6 +489,8 @@ applyLib a =
     }
 
     function listen() {
+        var src = document.currentScript.src
+
         function onLoad() {
             var script = document.createElement('script')
             script.src = src
@@ -499,7 +499,6 @@ applyLib a =
 
         function onError() {
             elmServe.disconnected()
-            setTimeout(listen, 1000)
         }
 
         fetch("/elm-serve-client-lib.js")
