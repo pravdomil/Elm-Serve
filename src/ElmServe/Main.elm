@@ -373,14 +373,14 @@ compileElm opt =
             return e
         }
 
-        var elm = require('child_process').spawn(a.elm, a.args);
+        var b = require('child_process').spawn(a.elm, a.args);
         var stdout = '';
         var stderr = '';
-        elm.on('error', reject)
-        elm.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
-        elm.stdout.on('data', b => { stdout += b })
-        elm.stderr.on('data', b => { stderr += b })
-        onCancel(() => elm.kill())
+        b.on('error', reject)
+        b.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
+        b.stdout.on('data', b => { stdout += b })
+        b.stderr.on('data', b => { stderr += b })
+        onCancel(() => b.kill())
     })
     """
         (Encode.object
