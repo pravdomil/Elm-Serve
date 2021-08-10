@@ -4116,11 +4116,11 @@ var task = function(arg_) {
     }
 
     function ok(a) {
-      if (canceled === false) callback(_Scheduler_succeed(_Json_wrap(a)));
+      if (canceled === false) callback(_Scheduler_succeed(_Json_wrap(a)))
     }
 
     function err(a) {
-      if (canceled === false) callback(_Scheduler_fail(toException(_Json_wrap(a))));
+      if (canceled === false) callback(_Scheduler_fail(toException(_Json_wrap(a))))
     }
 
     var a = try_(function() { return code(_Json_unwrap(arg_), onCancel) })
@@ -5017,6 +5017,26 @@ var $author$project$ElmServe$Main$GotCompileProcess = function (a) {
 	return {$: 2, a: a};
 };
 var $author$project$ElmServe$Main$InternalErrorModelNotReady = {$: 4};
+var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$String$trim = _String_trim;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Interop$JavaScript$errorToString = function (a) {
 	var indent = function (b) {
 		return A2(
@@ -5033,20 +5053,22 @@ var $author$project$Interop$JavaScript$errorToString = function (a) {
 		case 1:
 			var code = a.a;
 			var msg = a.b;
-			return 'Got JavaScript exception.' + (($elm$core$String$isEmpty(code) ? '' : ('\n' + indent('Code: ' + code))) + ($elm$core$String$isEmpty(msg) ? '' : ('\n' + indent(msg))));
+			var firstLine = function (v) {
+				return A2($elm$core$String$endsWith, '.', v) ? v : (v + '.');
+			}(
+				$elm$core$String$trim(
+					A2(
+						$elm$core$Maybe$withDefault,
+						'',
+						$elm$core$List$head(
+							A2($elm$core$String$split, '\n', msg)))));
+			return _Utils_ap(
+				$elm$core$String$isEmpty(firstLine) ? 'There was an error, but we got no details.' : firstLine,
+				$elm$core$String$isEmpty(code) ? '' : (' (' + (code + ')')));
 		default:
 			var b = a.a;
-			return 'Cannot decode value because:\n' + indent(
+			return 'There was a decode error. More details:\n' + indent(
 				$elm$json$Json$Decode$errorToString(b));
-	}
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
 	}
 };
 var $elm$core$Maybe$map = F2(
@@ -5163,7 +5185,7 @@ var $author$project$ElmServe$Main$log = function (a) {
 			$elm$json$Json$Decode$succeed(0)));
 };
 var $author$project$ElmServe$Main$applyLib = function (a) {
-	var lib = '\n(function(){\n    var src = document.currentScript.src\n\n    function init() {\n        console.info(\'Hello from Elm Serve!\')\n\n        elmServe = {\n            compileError: function(a) {\n                console.error(a)\n                elmServe.showUi(a)\n            },\n            disconnected: function() {\n                var msg = \'We are disconnected.\'\n                console.error(msg)\n                elmServe.showUi(msg)\n            },\n            clear: function() {\n                elmServe.hideUi()\n            },\n\n            //\n\n            showUi: function(a) {\n                if (elmServe.ui.parentElement === null) {\n                    if (document.body) document.body.appendChild(elmServe.ui)\n                    else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })\n                }\n                elmServe.ui.textContent = a\n            },\n            hideUi: function() {\n                elmServe.ui.remove()\n            },\n            ui: (function() {\n                a = document.createElement(\'div\')\n                a.id = \'elmServeUi\'\n                a.style.position = \'fixed\'\n                a.style.zIndex = \'9999999\'\n                a.style.left = \'0\'\n                a.style.right = \'0\'\n                a.style.top = \'0\'\n                a.style.bottom = \'0\'\n\n                a.style.font = \'16px monospace\'\n                a.style.padding = \'16px\'\n                a.style.whiteSpace = \'pre-wrap\'\n                a.style.color = \'white\'\n                a.style.backgroundColor = \'rgba(0, 0, 0, 0.6)\'\n                a.style.overflow = \'auto\'\n                a.style.cursor = \'pointer\'\n\n                a.addEventListener(\'click\', function() { elmServe.hideUi() })\n\n                return a\n            })()\n        }\n\n        module = {\n            hot: {\n                data: null,\n                verbose: false,\n                disposeCallback : null,\n\n                //\n\n                accept: function () {},\n                dispose: function (a) { module.hot.disposeCallback = a },\n                apply: function () {\n                    if (module.hot.disposeCallback === null) {\n                        location.reload()\n                        return\n                    }\n                    var data = {}\n                    module.hot.disposeCallback(data)\n                    module.hot.data = data\n                    delete Elm\n                }\n            }\n        }\n    }\n\n    function reload() {\n        elmServe.clear()\n        module.hot.apply()\n    }\n\n    function listen() {\n        function onLoad() {\n            var script = document.createElement(\'script\')\n            script.src = src\n            document.head.appendChild(script)\n        }\n\n        function onError() {\n            elmServe.disconnected()\n            setTimeout(listen, 1000)\n        }\n\n        fetch("/elm-serve-client-lib.js")\n            .then(onLoad)\n            .catch(onError)\n    }\n\n    typeof elmServe === "undefined" ? init() : reload()\n    listen()\n})();\n';
+	var lib = '\n(function(){\n    function init() {\n        console.info(\'Hello from Elm Serve!\')\n\n        elmServe = {\n            compileError: function(a) {\n                console.error(a)\n                elmServe.showUi(a)\n            },\n            disconnected: function() {\n                var msg = \'We are disconnected.\'\n                console.error(msg)\n                elmServe.showUi(msg)\n            },\n            clear: function() {\n                elmServe.hideUi()\n            },\n\n            //\n\n            showUi: function(a) {\n                if (elmServe.ui.parentElement === null) {\n                    if (document.body) document.body.appendChild(elmServe.ui)\n                    else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })\n                }\n                elmServe.ui.textContent = a\n            },\n            hideUi: function() {\n                elmServe.ui.remove()\n            },\n            ui: (function() {\n                a = document.createElement(\'div\')\n                a.id = \'elmServeUi\'\n                a.style.position = \'fixed\'\n                a.style.zIndex = \'9999999\'\n                a.style.left = \'0\'\n                a.style.right = \'0\'\n                a.style.top = \'0\'\n                a.style.bottom = \'0\'\n\n                a.style.font = \'16px monospace\'\n                a.style.padding = \'16px\'\n                a.style.whiteSpace = \'pre\'\n                a.style.color = \'white\'\n                a.style.backgroundColor = \'rgba(0, 0, 0, 0.6)\'\n                a.style.overflow = \'auto\'\n                a.style.cursor = \'pointer\'\n\n                a.addEventListener(\'click\', function() { elmServe.hideUi() })\n\n                return a\n            })()\n        }\n\n        module = {\n            hot: {\n                data: null,\n                verbose: false,\n                disposeCallback : null,\n\n                //\n\n                accept: function () {},\n                dispose: function (a) { module.hot.disposeCallback = a },\n                apply: function () {\n                    if (module.hot.disposeCallback === null) {\n                        location.reload()\n                        return\n                    }\n                    var data = {}\n                    module.hot.disposeCallback(data)\n                    module.hot.data = data\n                    delete Elm\n                }\n            }\n        }\n    }\n\n    function reload() {\n        elmServe.clear()\n        module.hot.apply()\n    }\n\n    function listen() {\n        var src = document.currentScript.src\n\n        function onLoad() {\n            var script = document.createElement(\'script\')\n            script.src = src\n            document.head.appendChild(script)\n        }\n\n        function onError() {\n            elmServe.disconnected()\n        }\n\n        fetch("/elm-serve-client-lib.js")\n            .then(onLoad)\n            .catch(onError)\n    }\n\n    typeof elmServe === "undefined" ? init() : reload()\n    listen()\n})();\n';
 	return $elm$core$Task$succeed(
 		_Utils_ap(lib, a));
 };
@@ -5219,20 +5241,21 @@ var $author$project$ElmServe$Main$compileElm = function (opt) {
 		$elm$core$Task$mapError,
 		$author$project$ElmServe$Main$CannotCompileElm,
 		A3(
-			$author$project$Interop$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject_) => {
-        function reject(code, msg) {
+			$author$project$Interop$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject) => {
+        function err(code, msg) {
             var e = new Error(msg)
             e.code = code
-            reject_(e)
+            return e
         }
 
-        var elm = require('child_process').spawn(a.elm, a.args);
+        var b = require('child_process').spawn(a.elm, a.args);
         var stdout = '';
         var stderr = '';
-        elm.stdout.on('data', b => { stdout += b })
-        elm.stderr.on('data', b => { stderr += b })
-        elm.on('close', b => { b ? reject('ENONZERO', stderr) : resolve(stdout) })
-        onCancel(() => elm.kill())
+        b.on('error', reject)
+        b.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
+        b.stdout.on('data', b => { stdout += b })
+        b.stderr.on('data', b => { stderr += b })
+        onCancel(() => b.kill())
     }) },
 			$elm$json$Json$Encode$object(
 				_List_fromArray(
@@ -5401,7 +5424,6 @@ var $elm$regex$Regex$Match = F4(
 		return {bb: index, bg: match, bk: number, bv: submatches};
 	});
 var $elm$regex$Regex$contains = _Regex_contains;
-var $elm$core$String$endsWith = _String_endsWith;
 var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
 var $elm$regex$Regex$fromString = function (string) {
 	return A2(
@@ -5550,15 +5572,6 @@ var $elm$core$Result$toMaybe = function (result) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$ElmServe$Main$requestPath = function (_v0) {
 	var request = _v0.J;
 	var parentFolderRegex = A2(
