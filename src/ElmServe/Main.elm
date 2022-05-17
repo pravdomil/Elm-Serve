@@ -662,6 +662,7 @@ requestPath { request } =
         |> Result.toMaybe
         |> Maybe.andThen Url.fromString
         |> Maybe.map .path
+        |> Maybe.andThen Url.percentDecode
         |> Result.fromMaybe CannotParseUrl
         |> Result.andThen
             (\v ->
