@@ -1,19 +1,17 @@
 port module ElmServe.Main exposing (..)
 
-import Dict exposing (Dict)
-import Elm.Project as Project exposing (Project)
-import ElmServe.Options as Options exposing (Options)
-import Interop.JavaScript as JavaScript
-import Json.Decode as Decode
-import Json.Encode as Encode
+import Dict
+import Elm.Project
+import ElmServe.Options
+import JavaScript
+import Json.Decode
+import Json.Encode
 import Parser
 import Process
-import Regex exposing (Regex)
-import Task exposing (Task)
-import Url exposing (Url)
-import Utils.Json.Decode_ as Decode_
-import Utils.Json.Encode_ as Encode_
-import Utils.Task_ as Task_
+import Regex
+import Task
+import Task.Extra
+import Url
 
 
 main : Program () Model Msg
@@ -34,8 +32,8 @@ type alias Model =
 
 
 type alias ReadyModel =
-    { options : Options
-    , project : Project
+    { options : ElmServe.Options.Options
+    , project : Elm.Project.Project
     , compileProcess : Maybe Process.Id
     }
 
@@ -56,15 +54,15 @@ init _ =
     )
 
 
-getOptions : Task Error Options
+getOptions : Task.Task Error ElmServe.Options.Options
 getOptions =
     JavaScript.run "process.argv"
-        Encode.null
-        (Decode.list Decode.string)
+        Json.Encode.null
+        (Json.Decode.list Json.Decode.string)
         |> Task.mapError InternalError
         |> Task.andThen
             (\v ->
-                case Options.parse (List.drop 2 v) of
+                case ElmServe.Options.parse (List.drop 2 v) of
                     Ok vv ->
                         Task.succeed vv
 
@@ -73,11 +71,11 @@ getOptions =
             )
 
 
-readProject : Task Error Project
+readProject : Task.Task Error Elm.Project.Project
 readProject =
     JavaScript.run "require('fs/promises').readFile('elm.json', 'utf-8')"
-        Encode.null
-        (Decode_.json Project.decoder)
+        Json.Encode.null
+        (decodeJson Elm.Project.decoder)
         |> Task.mapError CannotReadProject
 
 
@@ -150,7 +148,7 @@ Elm Options:
 
         CannotReadProject b ->
             case b of
-                JavaScript.Exception "ENOENT" _ ->
+                JavaScript.Exception _ (JavaScript.ErrorCode "ENOENT") _ ->
                     "Cannot find elm.json."
 
                 _ ->
@@ -162,7 +160,7 @@ Elm Options:
 
         CannotStartServer b ->
             case b of
-                JavaScript.Exception "EADDRINUSE" _ ->
+                JavaScript.Exception _ (JavaScript.ErrorCode "EADDRINUSE") _ ->
                     "There is somebody already listening on same port!"
 
                 _ ->
@@ -194,16 +192,16 @@ update msg model =
     case msg of
         GotReadyModel a ->
             let
-                task : Task Error ()
+                task : Task.Task Error ()
                 task =
                     case a of
                         Ok b ->
                             let
-                                opt : Options
+                                opt : ElmServe.Options.Options
                                 opt =
                                     b.options
 
-                                openServerUrl : Task Error ()
+                                openServerUrl : Task.Task Error ()
                                 openServerUrl =
                                     if opt.open then
                                         open (serverUrl opt)
@@ -211,7 +209,7 @@ update msg model =
                                     else
                                         Task.succeed ()
                             in
-                            log ("Elm Serve\n\nI got following options:\n" ++ Options.toString opt ++ "\n")
+                            log ("Elm Serve\n\nI got following options:\n" ++ ElmServe.Options.toString opt ++ "\n")
                                 |> Task.andThen (\_ -> makeOutputFile opt)
                                 |> Task.andThen (\_ -> startWatching b.project)
                                 |> Task.andThen (\_ -> startServer opt)
@@ -228,7 +226,7 @@ update msg model =
 
         GotFileChange _ ->
             let
-                killProcess : ReadyModel -> Task x ()
+                killProcess : ReadyModel -> Task.Task x ()
                 killProcess b =
                     case b.compileProcess of
                         Just v ->
@@ -237,9 +235,9 @@ update msg model =
                         Nothing ->
                             Task.succeed ()
 
-                task : Task Error ()
+                task : Task.Task Error ()
                 task =
-                    Task_.fromResult (Result.fromMaybe InternalErrorModelNotReady model)
+                    Task.Extra.fromResult (Result.fromMaybe InternalErrorModelNotReady model)
                         |> Task.andThen
                             (\c ->
                                 killProcess c
@@ -263,9 +261,9 @@ update msg model =
 
         GotRequest a ->
             let
-                task : Task Error ()
+                task : Task.Task Error ()
                 task =
-                    Task_.fromResult (Result.fromMaybe InternalErrorModelNotReady model)
+                    Task.Extra.fromResult (Result.fromMaybe InternalErrorModelNotReady model)
                         |> Task.andThen (\c -> sendResponse c.options a)
             in
             ( model
@@ -299,15 +297,15 @@ subscriptions _ =
 --
 
 
-port sendMsg : (Decode.Value -> msg) -> Sub msg
+port sendMsg : (Json.Decode.Value -> msg) -> Sub msg
 
 
 sendMsgSubscription : Sub Msg
 sendMsgSubscription =
     let
-        decoder : Decode.Value -> Msg
+        decoder : Json.Decode.Value -> Msg
         decoder b =
-            case Decode.decodeValue decodeMsg b of
+            case Json.Decode.decodeValue decodeMsg b of
                 Ok c ->
                     c
 
@@ -321,14 +319,16 @@ sendMsgSubscription =
 --
 
 
-makeOutputFile : Options -> Task Error ()
+makeOutputFile : ElmServe.Options.Options -> Task.Task Error ()
 makeOutputFile opt =
     let
-        recoverFromCompileError : Error -> Task Error String
+        recoverFromCompileError : Error -> Task.Task Error String
         recoverFromCompileError b =
             case b of
-                CannotCompileElm (JavaScript.Exception "ENONZERO" msg) ->
-                    Encode.encode 0 (Encode.string msg)
+                CannotCompileElm (JavaScript.Exception _ (JavaScript.ErrorCode "ENONZERO") msg) ->
+                    (\(JavaScript.ErrorMessage v) -> v) msg
+                        |> Json.Encode.string
+                        |> Json.Encode.encode 0
                         |> (\v -> "elmServe.compileError(" ++ v ++ ");")
                         |> Task.succeed
 
@@ -343,7 +343,7 @@ makeOutputFile opt =
         |> Task.andThen (writeFile opt.output)
 
 
-compileElm : Options -> Task Error String
+compileElm : ElmServe.Options.Options -> Task.Task Error String
 compileElm opt =
     let
         args : List String
@@ -383,24 +383,24 @@ compileElm opt =
         onCancel(() => b.kill())
     })
     """
-        (Encode.object
-            [ ( "elm", Encode.string opt.elm )
-            , ( "args", Encode.list Encode.string args )
+        (Json.Encode.object
+            [ ( "elm", Json.Encode.string opt.elm )
+            , ( "args", Json.Encode.list Json.Encode.string args )
             ]
         )
-        Decode.string
+        Json.Decode.string
         |> Task.mapError CannotCompileElm
 
 
-patchElm : String -> Task Error String
+patchElm : String -> Task.Task Error String
 patchElm a =
     JavaScript.run "require('elm-hot').inject(a)"
-        (Encode.string a)
-        Decode.string
+        (Json.Encode.string a)
+        Json.Decode.string
         |> Task.mapError InternalError
 
 
-applyLib : String -> Task Error String
+applyLib : String -> Task.Task Error String
 applyLib a =
     let
         lib : String
@@ -515,23 +515,23 @@ applyLib a =
 --
 
 
-startWatching : Project -> Task Error ()
+startWatching : Elm.Project.Project -> Task.Task Error ()
 startWatching a =
     let
         dirs : List String
         dirs =
             case a of
-                Project.Application b ->
+                Elm.Project.Application b ->
                     b.dirs
 
-                Project.Package _ ->
+                Elm.Project.Package _ ->
                     [ "src" ]
 
-        watch : String -> Task JavaScript.Error ()
+        watch : String -> Task.Task JavaScript.Error ()
         watch b =
             JavaScript.run "require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.sendMsg.send({ a: 1, b: { path } }))"
-                (Encode.string b)
-                (Decode.succeed ())
+                (Json.Encode.string b)
+                (Json.Decode.succeed ())
     in
     dirs
         |> List.map watch
@@ -544,7 +544,7 @@ startWatching a =
 --
 
 
-startServer : Options -> Task Error ()
+startServer : ElmServe.Options.Options -> Task.Task Error ()
 startServer a =
     JavaScript.run """
     new Promise((resolve, reject) => {
@@ -556,28 +556,28 @@ startServer a =
         server.listen(a.port, a.host)
     })
     """
-        (Encode.object
-            [ ( "host", Encode.string a.host )
-            , ( "port", Encode.int a.port_ )
+        (Json.Encode.object
+            [ ( "host", Json.Encode.string a.host )
+            , ( "port", Json.Encode.int a.port_ )
             , ( "ssl"
-              , Encode_.maybe
+              , encodeMaybe
                     (\v ->
-                        Encode.object
-                            [ ( "cert", Encode.string v.cert )
-                            , ( "key", Encode.string v.key )
+                        Json.Encode.object
+                            [ ( "cert", Json.Encode.string v.cert )
+                            , ( "key", Json.Encode.string v.key )
                             ]
                     )
                     a.ssl
               )
             ]
         )
-        (Decode.succeed ())
+        (Json.Decode.succeed ())
         |> Task.mapError CannotStartServer
 
 
 type alias Request =
-    { request : Decode.Value
-    , response : Decode.Value
+    { request : Json.Decode.Value
+    , response : Json.Decode.Value
     }
 
 
@@ -592,10 +592,10 @@ type RespondError
     | InternalError_ JavaScript.Error
 
 
-sendResponse : Options -> Request -> Task Error ()
+sendResponse : ElmServe.Options.Options -> Request -> Task.Task Error ()
 sendResponse opt a =
     let
-        resolvePath : String -> Task RespondError ()
+        resolvePath : String -> Task.Task RespondError ()
         resolvePath b =
             if b == "/elm-serve-client-lib.js" then
                 addRequestToQueue a
@@ -622,12 +622,12 @@ sendResponse opt a =
                                         Task.fail NotFound_
                         )
 
-        redirect : String -> Task RespondError ()
+        redirect : String -> Task.Task RespondError ()
         redirect b =
             send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") a
                 |> Task.mapError InternalError_
 
-        errorResponse : RespondError -> Task JavaScript.Error ()
+        errorResponse : RespondError -> Task.Task JavaScript.Error ()
         errorResponse b =
             case b of
                 CannotParseUrl ->
@@ -649,15 +649,15 @@ sendResponse opt a =
         |> Task.mapError InternalError
 
 
-requestPath : Request -> Task RespondError String
+requestPath : Request -> Task.Task RespondError String
 requestPath { request } =
     let
-        parentFolderRegex : Regex
+        parentFolderRegex : Regex.Regex
         parentFolderRegex =
             Regex.fromString "(^|/)\\.\\.(/|$)"
                 |> Maybe.withDefault Regex.never
     in
-    Decode.decodeValue (Decode.field "url" Decode.string) request
+    Json.Decode.decodeValue (Json.Decode.field "url" Json.Decode.string) request
         |> Result.map (\v -> "http://localhost" ++ v)
         |> Result.toMaybe
         |> Maybe.andThen Url.fromString
@@ -679,76 +679,76 @@ requestPath { request } =
                 else
                     v
             )
-        |> Task_.fromResult
+        |> Task.Extra.fromResult
 
 
-send : Int -> Dict String String -> String -> Request -> Task JavaScript.Error ()
+send : Int -> Dict.Dict String String -> String -> Request -> Task.Task JavaScript.Error ()
 send status headers data { response } =
     JavaScript.run "a.res.writeHead(a.status, a.headers).end(a.data)"
-        (Encode.object
-            [ ( "status", Encode.int status )
-            , ( "headers", Encode.dict identity Encode.string headers )
-            , ( "data", Encode.string data )
+        (Json.Encode.object
+            [ ( "status", Json.Encode.int status )
+            , ( "headers", Json.Encode.dict identity Json.Encode.string headers )
+            , ( "data", Json.Encode.string data )
             , ( "res", response )
             ]
         )
-        (Decode.succeed ())
+        (Json.Decode.succeed ())
 
 
-addRequestToQueue : Request -> Task RespondError ()
+addRequestToQueue : Request -> Task.Task RespondError ()
 addRequestToQueue a =
     JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.push(a); })()"
-        (Encode.object
+        (Json.Encode.object
             [ ( "req", a.request )
             , ( "res", a.response )
             ]
         )
-        (Decode.succeed ())
+        (Json.Decode.succeed ())
         |> Task.mapError InternalError_
 
 
-resolveQueue : Task Error ()
+resolveQueue : Task.Task Error ()
 resolveQueue =
     JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.forEach(a => a.res.end()); queue = []; })()"
-        Encode.null
-        (Decode.succeed ())
+        Json.Encode.null
+        (Json.Decode.succeed ())
         |> Task.mapError InternalError
 
 
-sendFile : Options -> String -> Request -> Task JavaScript.Error ()
+sendFile : ElmServe.Options.Options -> String -> Request -> Task.Task JavaScript.Error ()
 sendFile opt path { request, response } =
     JavaScript.run "require('send')(a.req, a.path, { root: a.root }).pipe(a.res)"
-        (Encode.object
-            [ ( "root", Encode.string opt.root )
-            , ( "path", Encode.string path )
+        (Json.Encode.object
+            [ ( "root", Json.Encode.string opt.root )
+            , ( "path", Json.Encode.string path )
             , ( "req", request )
             , ( "res", response )
             ]
         )
-        (Decode.succeed ())
+        (Json.Decode.succeed ())
 
 
 
 --
 
 
-log : String -> Task Error ()
+log : String -> Task.Task Error ()
 log a =
     JavaScript.run "console.log(a)"
-        (Encode.string a)
-        (Decode.succeed ())
+        (Json.Encode.string a)
+        (Json.Decode.succeed ())
         |> Task.mapError InternalError
 
 
-exitWithMessageAndCode : String -> Int -> Task Error ()
+exitWithMessageAndCode : String -> Int -> Task.Task Error ()
 exitWithMessageAndCode msg code =
     JavaScript.run "(() => { console.error(a.msg); process.exit(a.code); })()"
-        (Encode.object
-            [ ( "msg", Encode.string msg )
-            , ( "code", Encode.int code )
+        (Json.Encode.object
+            [ ( "msg", Json.Encode.string msg )
+            , ( "code", Json.Encode.int code )
             ]
         )
-        (Decode.succeed ())
+        (Json.Decode.succeed ())
         |> Task.mapError InternalError
 
 
@@ -756,11 +756,11 @@ exitWithMessageAndCode msg code =
 --
 
 
-open : String -> Task Error ()
+open : String -> Task.Task Error ()
 open a =
     JavaScript.run "require('open')(a)"
-        (Encode.string a)
-        (Decode.succeed ())
+        (Json.Encode.string a)
+        (Json.Decode.succeed ())
         |> Task.mapError InternalError
 
 
@@ -768,23 +768,23 @@ open a =
 --
 
 
-readFile : String -> Task Error String
+readFile : String -> Task.Task Error String
 readFile path =
     JavaScript.run "require('fs/promises').readFile(a, 'utf-8')"
-        (Encode.string path)
-        Decode.string
+        (Json.Encode.string path)
+        Json.Decode.string
         |> Task.mapError InternalError
 
 
-writeFile : String -> String -> Task Error ()
+writeFile : String -> String -> Task.Task Error ()
 writeFile path data =
     JavaScript.run "require('fs/promises').writeFile(a.path, a.data)"
-        (Encode.object
-            [ ( "path", Encode.string path )
-            , ( "data", Encode.string data )
+        (Json.Encode.object
+            [ ( "path", Json.Encode.string path )
+            , ( "data", Json.Encode.string data )
             ]
         )
-        (Decode.succeed ())
+        (Json.Decode.succeed ())
         |> Task.mapError InternalError
 
 
@@ -798,24 +798,24 @@ type FileStatus
     | NotFound
 
 
-fileStatus : String -> Task JavaScript.Error FileStatus
+fileStatus : String -> Task.Task JavaScript.Error FileStatus
 fileStatus path =
     JavaScript.run "require('fs/promises').stat(a).then(a => a.isDirectory())"
-        (Encode.string path)
-        (Decode.bool
-            |> Decode.andThen
+        (Json.Encode.string path)
+        (Json.Decode.bool
+            |> Json.Decode.andThen
                 (\v ->
                     if v then
-                        Decode.succeed Directory
+                        Json.Decode.succeed Directory
 
                     else
-                        Decode.succeed File
+                        Json.Decode.succeed File
                 )
         )
         |> Task.onError
             (\v ->
                 case v of
-                    JavaScript.Exception "ENOENT" _ ->
+                    JavaScript.Exception _ (JavaScript.ErrorCode "ENOENT") _ ->
                         Task.succeed NotFound
 
                     _ ->
@@ -827,7 +827,7 @@ fileStatus path =
 --
 
 
-serverUrl : Options -> String
+serverUrl : ElmServe.Options.Options -> String
 serverUrl a =
     (if a.ssl == Nothing then
         "http://"
@@ -844,29 +844,57 @@ serverUrl a =
 --
 
 
-decodeMsg : Decode.Decoder Msg
+decodeMsg : Json.Decode.Decoder Msg
 decodeMsg =
-    Decode.field "a" Decode.int
-        |> Decode.andThen
+    Json.Decode.field "a" Json.Decode.int
+        |> Json.Decode.andThen
             (\a ->
                 case a of
                     1 ->
-                        Decode.map GotFileChange
-                            (Decode.field "b"
-                                (Decode.map (\v1 -> { path = v1 })
-                                    (Decode.field "path" Decode.string)
+                        Json.Decode.map GotFileChange
+                            (Json.Decode.field "b"
+                                (Json.Decode.map (\v1 -> { path = v1 })
+                                    (Json.Decode.field "path" Json.Decode.string)
                                 )
                             )
 
                     3 ->
-                        Decode.map GotRequest
-                            (Decode.field "b"
-                                (Decode.map2 Request
-                                    (Decode.field "req" Decode.value)
-                                    (Decode.field "res" Decode.value)
+                        Json.Decode.map GotRequest
+                            (Json.Decode.field "b"
+                                (Json.Decode.map2 Request
+                                    (Json.Decode.field "req" Json.Decode.value)
+                                    (Json.Decode.field "res" Json.Decode.value)
                                 )
                             )
 
                     _ ->
-                        Decode.fail ("I can't decode \"Msg\", unknown variant with index " ++ String.fromInt a ++ ".")
+                        Json.Decode.fail ("I can't decode \"Msg\", unknown variant with index " ++ String.fromInt a ++ ".")
             )
+
+
+
+--
+
+
+decodeJson : Json.Decode.Decoder a -> Json.Decode.Decoder a
+decodeJson decoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\v ->
+                case Json.Decode.decodeString decoder v of
+                    Ok vv ->
+                        Json.Decode.succeed vv
+
+                    Err vv ->
+                        Json.Decode.fail (Json.Decode.errorToString vv)
+            )
+
+
+encodeMaybe : (a -> Json.Encode.Value) -> (Maybe a -> Json.Encode.Value)
+encodeMaybe encode a =
+    case a of
+        Just b ->
+            encode b
+
+        Nothing ->
+            Json.Encode.null
