@@ -2,7 +2,7 @@
   "name": "elm-serve",
   "bin": "bin/elm-serve",
   "dependencies": {
-    "elm-hot": "^1.1.6",
+    "elm-hot": "github:pravdomil/elm-hot",
     "open": "^8.2.1",
     "send": "^0.17.1"
   },
