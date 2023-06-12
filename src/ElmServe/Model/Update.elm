@@ -372,10 +372,10 @@ resolveQueue =
 
 
 sendFile : ElmServe.Options.Options -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
-sendFile opt path { request, response } =
+sendFile options path { request, response } =
     JavaScript.run "require('send')(a.req, a.path, { root: a.root }).pipe(a.res)"
         (Json.Encode.object
-            [ ( "root", Json.Encode.string opt.root )
+            [ ( "root", Json.Encode.string options.root )
             , ( "path", Json.Encode.string path )
             , ( "req", request )
             , ( "res", response )
