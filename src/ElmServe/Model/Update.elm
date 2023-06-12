@@ -423,18 +423,6 @@ exitWithMessageAndCode msg code =
 --
 
 
-open : String -> Task.Task ElmServe.Error.Error ()
-open a =
-    JavaScript.run "require('open')(a)"
-        (Json.Encode.string a)
-        (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Error.InternalError
-
-
-
---
-
-
 readFile : String -> Task.Task ElmServe.Error.Error String
 readFile path =
     JavaScript.run "require('fs/promises').readFile(a, 'utf-8')"
