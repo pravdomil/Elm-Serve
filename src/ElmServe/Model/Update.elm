@@ -131,7 +131,7 @@ update msg =
                 )
 
         ElmServe.Msg.CompileProcessReceived a ->
-            \model -> ( model |> Result.map (\v -> { v | compileProcess = Just a }), Cmd.none )
+            \model -> ( model |> Result.map (\x -> { x | compileProcess = Just a }), Cmd.none )
 
         ElmServe.Msg.RequestReceived a ->
             \model ->
@@ -315,8 +315,8 @@ resolvePath options req a =
         FileStatus.get (FileSystem.stringToPath (options.root ++ "/" ++ a))
             |> Task.mapError InternalError
             |> Task.andThen
-                (\v ->
-                    case v of
+                (\x ->
+                    case x of
                         FileStatus.File ->
                             sendFile options a req
                                 |> Task.mapError InternalError
