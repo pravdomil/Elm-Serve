@@ -21,8 +21,8 @@ watch a =
 port fileWatch : (Json.Decode.Value -> msg) -> Sub msg
 
 
-fileWatchSubscription : (Result Json.Decode.Error String -> msg) -> Sub msg
-fileWatchSubscription fn =
+subscription : (Result Json.Decode.Error String -> msg) -> Sub msg
+subscription fn =
     let
         decoder : Json.Decode.Decoder String
         decoder =
