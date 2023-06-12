@@ -48,20 +48,20 @@ parser =
                 , Parser.succeed (\v -> Parser.Loop { acc | root = v })
                     |= namedStringArgument "root"
                 , Parser.succeed (\_ -> Parser.Loop acc)
-                    |= namedArgument "dir"
+                    |= flag "dir"
                     |. Parser.problem "Option --dir is renamed to --root."
                 , Parser.succeed (\v -> Parser.Loop { acc | open = v })
-                    |= namedArgument "open"
+                    |= flag "open"
                 , Parser.succeed (\v -> Parser.Loop { acc | no404 = v })
-                    |= namedArgument "no-404"
+                    |= flag "no-404"
 
                 --
                 , Parser.succeed (\v -> Parser.Loop { acc | elm = v })
                     |= namedStringArgument "elm"
                 , Parser.succeed (\v -> Parser.Loop { acc | debug = v })
-                    |= namedArgument "debug"
+                    |= flag "debug"
                 , Parser.succeed (\v -> Parser.Loop { acc | optimize = v })
-                    |= namedArgument "optimize"
+                    |= flag "optimize"
                 , Parser.succeed (\v -> Parser.Loop { acc | output = v })
                     |= namedStringArgument "output"
 
@@ -73,22 +73,6 @@ parser =
                 , Parser.succeed (Parser.Done acc)
                     |. Parser.end
                 ]
-
-        namedArgument : String -> Parser.Parser ()
-        namedArgument name =
-            Parser.symbol ("--" ++ name)
-                |> Parser.andThen (\() -> argumentEnd)
-
-        namedIntArgument : String -> Parser.Parser Int
-        namedIntArgument name =
-            namedArgumentStart name
-                |> Parser.andThen (\() -> Parser.int)
-                |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
-
-        namedStringArgument : String -> Parser.Parser String
-        namedStringArgument name =
-            namedArgumentStart name
-                |> Parser.andThen (\() -> argument)
     in
     Parser.loop
         { server = HttpServer.Options "localhost" 8000 Nothing
@@ -112,9 +96,18 @@ parser =
 --
 
 
-namedArgumentStart : String -> Parser.Parser ()
-namedArgumentStart a =
-    Parser.symbol ("--" ++ a)
+argument : Parser.Parser String
+argument =
+    Parser.getChompedString
+        (Parser.chompIf (\x -> x /= '\u{0000}')
+            |> Parser.andThen (\() -> Parser.chompUntilEndOr "\u{0000}")
+        )
+        |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
+
+
+namedArgument : String -> Parser.Parser a -> Parser.Parser a
+namedArgument name a =
+    Parser.symbol ("--" ++ name)
         |> Parser.andThen
             (\() ->
                 Parser.oneOf
@@ -122,14 +115,21 @@ namedArgumentStart a =
                     , Parser.symbol "\u{0000}"
                     ]
             )
+        |> Parser.andThen (\() -> a)
+        |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
 
-argument : Parser.Parser String
-argument =
-    Parser.getChompedString
-        (Parser.chompIf (\x -> x /= '\u{0000}')
-            |> Parser.andThen (\() -> Parser.chompUntilEndOr "\u{0000}")
-        )
+flag : String -> Parser.Parser a -> Parser.Parser a
+flag name a =
+    Parser.symbol ("--" ++ name)
+        |> Parser.andThen
+            (\() ->
+                Parser.oneOf
+                    [ Parser.symbol "="
+                    , Parser.symbol "\u{0000}"
+                    ]
+            )
+        |> Parser.andThen (\() -> a)
         |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
 
