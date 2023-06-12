@@ -1,7 +1,7 @@
 module ElmServe.Options exposing (..)
 
 import HttpServer
-import Parser as P exposing ((|.), (|=))
+import Parser
 
 
 type alias Options =
@@ -25,99 +25,99 @@ type alias Options =
 --
 
 
-parse : List String -> Result (List P.DeadEnd) Options
+parse : List String -> Result (List Parser.DeadEnd) Options
 parse a =
-    P.run parser (String.join "\u{0000}" a)
+    Parser.run parser (String.join "\u{0000}" a)
 
 
-parser : P.Parser Options
+parser : Parser.Parser Options
 parser =
     let
-        loop : Options -> P.Parser (P.Step Options Options)
+        loop : Options -> Parser.Parser (Parser.Step Options Options)
         loop acc =
-            P.oneOf
-                [ P.succeed (\v -> P.Loop { acc | host = v })
+            Parser.oneOf
+                [ Parser.succeed (\v -> Parser.Loop { acc | host = v })
                     |= stringArg "host"
-                , P.succeed (\v -> P.Loop { acc | port_ = v })
+                , Parser.succeed (\v -> Parser.Loop { acc | port_ = v })
                     |= intArg "port"
-                , P.succeed (\v1 v2 -> P.Loop { acc | ssl = Just { cert = v1, key = v2 } })
+                , Parser.succeed (\v1 v2 -> Parser.Loop { acc | ssl = Just { cert = v1, key = v2 } })
                     |= stringArg "ssl"
                     |= argument
 
                 --
-                , P.succeed (\v -> P.Loop { acc | root = v })
+                , Parser.succeed (\v -> Parser.Loop { acc | root = v })
                     |= stringArg "root"
-                , P.succeed (\_ -> P.Loop acc)
+                , Parser.succeed (\_ -> Parser.Loop acc)
                     |= boolArg "dir"
-                    |. P.problem "Option --dir is renamed to --root."
-                , P.succeed (\v -> P.Loop { acc | open = v })
+                    |. Parser.problem "Option --dir is renamed to --root."
+                , Parser.succeed (\v -> Parser.Loop { acc | open = v })
                     |= boolArg "open"
-                , P.succeed (\v -> P.Loop { acc | no404 = v })
+                , Parser.succeed (\v -> Parser.Loop { acc | no404 = v })
                     |= boolArg "no-404"
 
                 --
-                , P.succeed (\v -> P.Loop { acc | elm = v })
+                , Parser.succeed (\v -> Parser.Loop { acc | elm = v })
                     |= stringArg "elm"
-                , P.succeed (\v -> P.Loop { acc | debug = v })
+                , Parser.succeed (\v -> Parser.Loop { acc | debug = v })
                     |= boolArg "debug"
-                , P.succeed (\v -> P.Loop { acc | optimize = v })
+                , Parser.succeed (\v -> Parser.Loop { acc | optimize = v })
                     |= boolArg "optimize"
-                , P.succeed (\v -> P.Loop { acc | output = v })
+                , Parser.succeed (\v -> Parser.Loop { acc | output = v })
                     |= stringArg "output"
 
                 --
-                , P.succeed (\v -> P.Loop { acc | input = v :: acc.input })
+                , Parser.succeed (\v -> Parser.Loop { acc | input = v :: acc.input })
                     |= argument
 
                 --
-                , P.succeed (P.Done acc)
-                    |. P.end
+                , Parser.succeed (Parser.Done acc)
+                    |. Parser.end
                 ]
 
-        boolArg : String -> P.Parser Bool
+        boolArg : String -> Parser.Parser Bool
         boolArg name =
-            P.succeed True
-                |. P.symbol ("--" ++ name)
+            Parser.succeed True
+                |. Parser.symbol ("--" ++ name)
                 |. argEnd
 
-        intArg : String -> P.Parser Int
+        intArg : String -> Parser.Parser Int
         intArg name =
-            P.succeed identity
-                |. P.symbol ("--" ++ name)
-                |. P.oneOf
-                    [ P.symbol "="
-                    , P.symbol "\u{0000}"
+            Parser.succeed identity
+                |. Parser.symbol ("--" ++ name)
+                |. Parser.oneOf
+                    [ Parser.symbol "="
+                    , Parser.symbol "\u{0000}"
                     ]
-                |= P.int
+                |= Parser.int
                 |. argEnd
 
-        stringArg : String -> P.Parser String
+        stringArg : String -> Parser.Parser String
         stringArg name =
-            P.succeed identity
-                |. P.symbol ("--" ++ name)
-                |. P.oneOf
-                    [ P.symbol "="
-                    , P.symbol "\u{0000}"
+            Parser.succeed identity
+                |. Parser.symbol ("--" ++ name)
+                |. Parser.oneOf
+                    [ Parser.symbol "="
+                    , Parser.symbol "\u{0000}"
                     ]
                 |= argument
 
-        argument : P.Parser String
+        argument : Parser.Parser String
         argument =
-            P.getChompedString
-                (P.succeed ()
-                    |. P.chompIf (\v -> v /= '-' && v /= '\u{0000}')
-                    |. P.chompUntilEndOr "\u{0000}"
+            Parser.getChompedString
+                (Parser.succeed ()
+                    |. Parser.chompIf (\v -> v /= '-' && v /= '\u{0000}')
+                    |. Parser.chompUntilEndOr "\u{0000}"
                 )
                 |. argEnd
 
-        argEnd : P.Parser ()
+        argEnd : Parser.Parser ()
         argEnd =
-            P.oneOf
-                [ P.symbol "\u{0000}"
-                , P.end
+            Parser.oneOf
+                [ Parser.symbol "\u{0000}"
+                , Parser.end
                 ]
     in
-    P.loop
+    Parser.loop
         { server = HttpServer.Options "localhost" 8000 Nothing
 
         --
