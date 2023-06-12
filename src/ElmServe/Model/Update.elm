@@ -237,7 +237,7 @@ type RespondError
     | InternalError_ JavaScript.Error
 
 
-sendResponse : ElmServe.Options.Options -> ElmServe.Msg.Request -> Task.Task ElmServe.Error.Error ()
+sendResponse : ElmServe.Options.Options -> HttpServer.Request -> Task.Task ElmServe.Error.Error ()
 sendResponse opt a =
     let
         resolvePath : String -> Task.Task RespondError ()
@@ -294,7 +294,7 @@ sendResponse opt a =
         |> Task.mapError ElmServe.Error.InternalError
 
 
-requestPath : ElmServe.Msg.Request -> Task.Task RespondError String
+requestPath : HttpServer.Request -> Task.Task RespondError String
 requestPath { request } =
     let
         parentFolderRegex : Regex.Regex
@@ -328,7 +328,7 @@ requestPath { request } =
         |> Task.Extra.fromResult
 
 
-send : Int -> Dict.Dict String String -> String -> ElmServe.Msg.Request -> Task.Task JavaScript.Error ()
+send : Int -> Dict.Dict String String -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
 send status headers data { response } =
     JavaScript.run "a.res.writeHead(a.status, a.headers).end(a.data)"
         (Json.Encode.object
@@ -341,7 +341,7 @@ send status headers data { response } =
         (Json.Decode.succeed ())
 
 
-addRequestToQueue : ElmServe.Msg.Request -> Task.Task RespondError ()
+addRequestToQueue : HttpServer.Request -> Task.Task RespondError ()
 addRequestToQueue a =
     JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.push(a); })()"
         (Json.Encode.object
@@ -361,7 +361,7 @@ resolveQueue =
         |> Task.mapError ElmServe.Error.InternalError
 
 
-sendFile : ElmServe.Options.Options -> String -> ElmServe.Msg.Request -> Task.Task JavaScript.Error ()
+sendFile : ElmServe.Options.Options -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
 sendFile opt path { request, response } =
     JavaScript.run "require('send')(a.req, a.path, { root: a.root }).pipe(a.res)"
         (Json.Encode.object
