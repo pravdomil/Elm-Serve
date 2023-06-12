@@ -5898,7 +5898,7 @@ var $author$project$ElmServe$Model$Update$startServer = function (options) {
 				return A2(
 					$elm$core$Task$mapError,
 					$author$project$ElmServe$Error$ConsoleError,
-					$author$project$Console$log('Server is running at:\n' + (url + '\n')));
+					$author$project$Console$log('Server is running at:\n' + url));
 			},
 			A2(
 				$elm$core$Task$mapError,
@@ -6071,7 +6071,7 @@ var $author$project$ElmServe$Model$Update$update = function (msg) {
 									A2(
 										$elm$core$Task$mapError,
 										$author$project$ElmServe$Error$ConsoleError,
-										$author$project$Console$log('Elm Serve\n\n'))))));
+										$author$project$Console$log('Elm Serve'))))));
 					return _Utils_Tuple2(
 						$elm$core$Result$Ok(b),
 						A2(
