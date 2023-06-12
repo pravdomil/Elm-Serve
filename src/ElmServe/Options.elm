@@ -82,14 +82,22 @@ parser =
 
         namedIntArgument : String -> Parser.Parser Int
         namedIntArgument name =
-            Parser.succeed identity
-                |. Parser.symbol ("--" ++ name)
-                |. Parser.oneOf
-                    [ Parser.symbol "="
-                    , Parser.symbol "\u{0000}"
-                    ]
-                |= Parser.int
-                |. argumentEnd
+            Parser.symbol ("--" ++ name)
+                |> Parser.andThen
+                    (\() ->
+                        Parser.oneOf
+                            [ Parser.symbol "="
+                            , Parser.symbol "\u{0000}"
+                            ]
+                    )
+                |> Parser.andThen
+                    (\() ->
+                        Parser.int
+                    )
+                |> Parser.andThen
+                    (\x ->
+                        argumentEnd |> Parser.map (\() -> x)
+                    )
 
         namedStringArgument : String -> Parser.Parser String
         namedStringArgument name =
