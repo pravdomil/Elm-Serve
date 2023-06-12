@@ -244,38 +244,6 @@ type RespondError
 sendResponse : ElmServe.Options.Options -> HttpServer.Request -> Task.Task ElmServe.Error.Error ()
 sendResponse opt a =
     let
-        resolvePath : String -> Task.Task RespondError ()
-        resolvePath b =
-            if b == "/elm-serve-client-lib.js" then
-                addRequestToQueue a
-
-            else
-                FileStatus.get (FileSystem.stringToPath (opt.root ++ "/" ++ b))
-                    |> Task.mapError InternalError
-                    |> Task.andThen
-                        (\v ->
-                            case v of
-                                FileStatus.File ->
-                                    sendFile opt b a
-                                        |> Task.mapError InternalError
-
-                                FileStatus.Directory ->
-                                    redirect (b ++ "/")
-
-                                FileStatus.NotFound ->
-                                    if opt.no404 then
-                                        sendFile opt "index.html" a
-                                            |> Task.mapError InternalError
-
-                                    else
-                                        Task.fail NotFound
-                        )
-
-        redirect : String -> Task.Task RespondError ()
-        redirect b =
-            send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") a
-                |> Task.mapError InternalError
-
         errorResponse : RespondError -> Task.Task JavaScript.Error ()
         errorResponse b =
             case b of
@@ -294,7 +262,7 @@ sendResponse opt a =
     in
     requestPath a
         |> Task.Extra.fromResult
-        |> Task.andThen resolvePath
+        |> Task.andThen (resolvePath opt a)
         |> Task.onError errorResponse
         |> Task.mapError ElmServe.Error.InternalError
 
@@ -330,6 +298,40 @@ requestPath a =
                 else
                     x
             )
+
+
+resolvePath : ElmServe.Options.Options -> HttpServer.Request -> String -> Task.Task RespondError ()
+resolvePath options req a =
+    let
+        redirect : String -> Task.Task RespondError ()
+        redirect b =
+            send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") req
+                |> Task.mapError InternalError
+    in
+    if a == "/elm-serve-client-lib.js" then
+        addRequestToQueue req
+
+    else
+        FileStatus.get (FileSystem.stringToPath (options.root ++ "/" ++ a))
+            |> Task.mapError InternalError
+            |> Task.andThen
+                (\v ->
+                    case v of
+                        FileStatus.File ->
+                            sendFile options a req
+                                |> Task.mapError InternalError
+
+                        FileStatus.Directory ->
+                            redirect (a ++ "/")
+
+                        FileStatus.NotFound ->
+                            if options.no404 then
+                                sendFile options "index.html" req
+                                    |> Task.mapError InternalError
+
+                            else
+                                Task.fail NotFound
+                )
 
 
 send : Int -> Dict.Dict String String -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
