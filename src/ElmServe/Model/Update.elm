@@ -6,6 +6,7 @@ import ElmServe.Error
 import ElmServe.Model
 import ElmServe.Msg
 import ElmServe.Options
+import ElmServe.Utils.Utils
 import HttpServer
 import JavaScript
 import Json.Decode
@@ -17,45 +18,36 @@ import Task.Extra
 import Url
 
 
-init : () -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
-init _ =
+init : Json.Decode.Value -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+init flags =
+    let
+        options : Task.Task ElmServe.Error.Error ElmServe.Options.Options
+        options =
+            Json.Decode.decodeValue
+                (Json.Decode.at [ "global", "process", "argv" ] (Json.Decode.list Json.Decode.string))
+                flags
+                |> Result.withDefault []
+                |> (\x ->
+                        case ElmServe.Options.parse (List.drop 2 x) of
+                            Ok x2 ->
+                                Task.succeed x2
+
+                            Err x2 ->
+                                Task.fail (ElmServe.Error.CannotParseOptions x2)
+                   )
+
+        cmd : Cmd ElmServe.Msg.Msg
+        cmd =
+            Task.map3
+                ElmServe.Model.ReadyModel
+                options
+                (ElmServe.Utils.Utils.readProject "elm.json" |> Task.mapError ElmServe.Error.CannotReadProject)
+                (Task.succeed Nothing)
+                |> Task.attempt ElmServe.Msg.ModelReceived
+    in
     ( Nothing
-    , Task.map2
-        (\v1 v2 ->
-            { options = v1
-            , project = v2
-            , compileProcess = Nothing
-            }
-        )
-        getOptions
-        readProject
-        |> Task.attempt ElmServe.Msg.GotReadyModel
+    , cmd
     )
-
-
-getOptions : Task.Task ElmServe.Error.Error ElmServe.Options.Options
-getOptions =
-    JavaScript.run "process.argv"
-        Json.Encode.null
-        (Json.Decode.list Json.Decode.string)
-        |> Task.mapError ElmServe.Error.InternalError
-        |> Task.andThen
-            (\v ->
-                case ElmServe.Options.parse (List.drop 2 v) of
-                    Ok vv ->
-                        Task.succeed vv
-
-                    Err vv ->
-                        Task.fail (ElmServe.Error.CannotParseOptions vv)
-            )
-
-
-readProject : Task.Task ElmServe.Error.Error Elm.Project.Project
-readProject =
-    JavaScript.run "require('fs/promises').readFile('elm.json', 'utf-8')"
-        Json.Encode.null
-        (decodeJson Elm.Project.decoder)
-        |> Task.mapError ElmServe.Error.CannotReadProject
 
 
 
@@ -65,7 +57,7 @@ readProject =
 update : ElmServe.Msg.Msg -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 update msg model =
     case msg of
-        ElmServe.Msg.GotReadyModel a ->
+        ElmServe.Msg.ModelReceived a ->
             let
                 task : Task.Task ElmServe.Error.Error ()
                 task =
