@@ -124,14 +124,11 @@ update msg =
                 ( model
                 , task
                     |> Process.spawn
-                    |> Task.perform ElmServe.Msg.GotCompileProcess
+                    |> Task.perform ElmServe.Msg.CompileProcessReceived
                 )
 
-        ElmServe.Msg.GotCompileProcess a ->
-            \model ->
-                ( model |> Maybe.map (\v -> { v | compileProcess = Just a })
-                , Cmd.none
-                )
+        ElmServe.Msg.CompileProcessReceived a ->
+            \model -> ( model |> Result.map (\v -> { v | compileProcess = Just a }), Cmd.none )
 
         ElmServe.Msg.GotRequest a ->
             \model ->
