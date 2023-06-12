@@ -85,7 +85,7 @@ update msg =
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> startServer b.options)
                                     |> Task.andThen (\_ -> startWatching b.project)
-                                    |> Task.onError (\x -> exitWithMessageAndCode (ElmServe.Error.toString x) 1)
+                                    |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
                         in
                         ( Ok b
                         , task
@@ -94,7 +94,7 @@ update msg =
 
                     Err b ->
                         ( Err (ElmServe.Model.Error b)
-                        , exitWithMessageAndCode (ElmServe.Error.toString b) 1
+                        , consoleErrorAndExit (ElmServe.Error.toString b) 1
                             |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
                         )
 
@@ -119,7 +119,7 @@ update msg =
                                     |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> resolveQueue)
-                                    |> Task.onError (\x -> exitWithMessageAndCode (ElmServe.Error.toString x) 1)
+                                    |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
 
                             Err _ ->
                                 Task.succeed ()
@@ -381,31 +381,7 @@ sendFile opt path { request, response } =
 --
 
 
-exitWithMessageAndCode : String -> Int -> Task.Task ElmServe.Error.Error ()
-exitWithMessageAndCode msg code =
+consoleErrorAndExit : String -> Int -> Task.Task ElmServe.Error.Error ()
+consoleErrorAndExit msg code =
     (Console.logError msg |> Task.mapError ElmServe.Error.ConsoleError)
         |> Task.andThen (\() -> Process.Extra.hardExit code |> Task.mapError ElmServe.Error.ExitError)
-
-
-
---
-
-
-readFile : String -> Task.Task ElmServe.Error.Error String
-readFile path =
-    JavaScript.run "require('fs/promises').readFile(a, 'utf-8')"
-        (Json.Encode.string path)
-        Json.Decode.string
-        |> Task.mapError ElmServe.Error.InternalError
-
-
-writeFile : String -> String -> Task.Task ElmServe.Error.Error ()
-writeFile path data =
-    JavaScript.run "require('fs/promises').writeFile(a.path, a.data)"
-        (Json.Encode.object
-            [ ( "path", Json.Encode.string path )
-            , ( "data", Json.Encode.string data )
-            ]
-        )
-        (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Error.InternalError
