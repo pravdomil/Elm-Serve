@@ -76,26 +76,26 @@ update msg =
                 case a of
                     Ok b ->
                         let
+                            serverUrl : String
+                            serverUrl =
+                                HttpServer.url b.options.server
+
+                            openServerUrl : Task.Task x ()
+                            openServerUrl =
+                                if b.options.open then
+                                    ElmServe.Utils.Utils.open serverUrl
+                                        |> Task.onError (\_ -> Task.succeed ())
+
+                                else
+                                    Task.succeed ()
+
                             task : Task.Task ElmServe.Error.Error ()
                             task =
-                                let
-                                    opt : ElmServe.Options.Options
-                                    opt =
-                                        b.options
-
-                                    openServerUrl : Task.Task ElmServe.Error.Error ()
-                                    openServerUrl =
-                                        if opt.open then
-                                            open (serverUrl opt)
-
-                                        else
-                                            Task.succeed ()
-                                in
                                 (Console.log "Elm Serve\n\n" |> Task.mapError ElmServe.Error.ConsoleError)
-                                    |> Task.andThen (\_ -> makeOutputFile opt)
+                                    |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> startWatching b.project)
-                                    |> Task.andThen (\_ -> HttpServer.start opt)
-                                    |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
+                                    |> Task.andThen (\_ -> HttpServer.start b.options.server)
+                                    |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl ++ "\n"))
                                     |> Task.andThen (\_ -> openServerUrl)
                         in
                         ( Ok b
