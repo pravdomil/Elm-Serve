@@ -1,12 +1,13 @@
 module ElmServe.Model exposing (..)
 
 import Elm.Project
+import ElmServe.Error
 import ElmServe.Options
 import Process
 
 
 type alias Model =
-    Maybe ReadyModel
+    Result Error ReadyModel
 
 
 
@@ -18,3 +19,12 @@ type alias ReadyModel =
     , project : Elm.Project.Project
     , compileProcess : Maybe Process.Id
     }
+
+
+
+--
+
+
+type Error
+    = Loading
+    | Error ElmServe.Error.Error
