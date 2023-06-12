@@ -55,13 +55,13 @@ parser =
 
                 --
                 , namedArgument "elm" stringArgument
-                    |> Parser.map (\x -> Parser.Loop { acc | elm = x })
+                    |> Parser.map (\x -> Parser.Loop { acc | elm = (\x2 -> { x2 | elmPath = x }) acc.elm })
                 , flag "debug"
-                    |> Parser.map (\() -> Parser.Loop { acc | debug = True })
+                    |> Parser.map (\() -> Parser.Loop { acc | elm = (\x2 -> { x2 | debug = True }) acc.elm })
                 , flag "optimize"
-                    |> Parser.map (\() -> Parser.Loop { acc | optimize = True })
+                    |> Parser.map (\() -> Parser.Loop { acc | elm = (\x2 -> { x2 | optimize = True }) acc.elm })
                 , namedArgument "output" stringArgument
-                    |> Parser.map (\x -> Parser.Loop { acc | output = x })
+                    |> Parser.map (\x -> Parser.Loop { acc | elm = (\x2 -> { x2 | output = x }) acc.elm })
 
                 --
                 , stringArgument
