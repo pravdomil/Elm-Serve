@@ -10,6 +10,7 @@ import ElmServe.Msg
 import ElmServe.Options
 import ElmServe.Utils.Utils
 import FileSystem
+import FileWatch
 import HttpServer
 import JavaScript
 import Json.Decode
@@ -214,14 +215,8 @@ startWatching a =
 
                 Elm.Project.Package _ ->
                     [ "src" ]
-
-        watch : String -> Task.Task JavaScript.Error ()
-        watch b =
-            JavaScript.run "require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.sendMsg.send({ a: 1, b: { path } }))"
-                (Json.Encode.string b)
-                (Json.Decode.succeed ())
     in
-    Task.sequence (List.map watch dirs)
+    Task.sequence (List.map (\x -> FileWatch.watch (FileSystem.stringToPath x)) dirs)
         |> Task.map (\_ -> ())
         |> Task.mapError ElmServe.Error.CannotWatchFiles
 
