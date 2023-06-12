@@ -74,11 +74,10 @@ parser =
                     |. Parser.end
                 ]
 
-        namedArgument : String -> Parser.Parser Bool
+        namedArgument : String -> Parser.Parser ()
         namedArgument name =
-            Parser.succeed True
-                |. Parser.symbol ("--" ++ name)
-                |. argumentEnd
+            Parser.symbol ("--" ++ name)
+                |> Parser.andThen (\() -> argumentEnd)
 
         namedIntArgument : String -> Parser.Parser Int
         namedIntArgument name =
