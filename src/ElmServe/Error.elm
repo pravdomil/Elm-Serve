@@ -13,7 +13,6 @@ type Error
     | CannotWatchFiles JavaScript.Error
     | CannotSendResponse JavaScript.Error
       --
-    | InternalErrorModelNotReady
     | ConsoleError JavaScript.Error
     | ExitError JavaScript.Error
 
