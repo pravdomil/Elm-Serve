@@ -237,8 +237,8 @@ startWatching a =
 type RespondError
     = CannotParseUrl
     | ParentFolderPath
-    | NotFound_
-    | InternalError_ JavaScript.Error
+    | NotFound
+    | InternalError JavaScript.Error
 
 
 sendResponse : ElmServe.Options.Options -> HttpServer.Request -> Task.Task ElmServe.Error.Error ()
@@ -251,13 +251,13 @@ sendResponse opt a =
 
             else
                 FileStatus.get (FileSystem.stringToPath (opt.root ++ "/" ++ b))
-                    |> Task.mapError InternalError_
+                    |> Task.mapError InternalError
                     |> Task.andThen
                         (\v ->
                             case v of
                                 FileStatus.File ->
                                     sendFile opt b a
-                                        |> Task.mapError InternalError_
+                                        |> Task.mapError InternalError
 
                                 FileStatus.Directory ->
                                     redirect (b ++ "/")
@@ -265,16 +265,16 @@ sendResponse opt a =
                                 FileStatus.NotFound ->
                                     if opt.no404 then
                                         sendFile opt "index.html" a
-                                            |> Task.mapError InternalError_
+                                            |> Task.mapError InternalError
 
                                     else
-                                        Task.fail NotFound_
+                                        Task.fail NotFound
                         )
 
         redirect : String -> Task.Task RespondError ()
         redirect b =
             send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") a
-                |> Task.mapError InternalError_
+                |> Task.mapError InternalError
 
         errorResponse : RespondError -> Task.Task JavaScript.Error ()
         errorResponse b =
@@ -285,10 +285,10 @@ sendResponse opt a =
                 ParentFolderPath ->
                     send 403 Dict.empty "Forbidden - cannot go to parent folder." a
 
-                NotFound_ ->
+                NotFound ->
                     send 404 Dict.empty "Not found." a
 
-                InternalError_ c ->
+                InternalError c ->
                     send 500 Dict.empty "Server error." a
                         |> Task.andThen (\_ -> Task.fail c)
     in
@@ -354,7 +354,7 @@ addRequestToQueue a =
             ]
         )
         (Json.Decode.succeed ())
-        |> Task.mapError InternalError_
+        |> Task.mapError InternalError
 
 
 resolveQueue : Task.Task ElmServe.Error.Error ()
