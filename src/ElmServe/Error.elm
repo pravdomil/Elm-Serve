@@ -11,6 +11,7 @@ type Error
     | CannotCompileElm JavaScript.Error
     | CannotStartServer JavaScript.Error
     | CannotWatchFiles JavaScript.Error
+    | CannotSendResponse JavaScript.Error
       --
     | InternalErrorModelNotReady
     | ConsoleError JavaScript.Error

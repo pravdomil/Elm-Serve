@@ -264,7 +264,7 @@ sendResponse opt a =
         |> Task.Extra.fromResult
         |> Task.andThen (resolvePath opt a)
         |> Task.onError errorResponse
-        |> Task.mapError ElmServe.Error.InternalError
+        |> Task.mapError ElmServe.Error.CannotSendResponse
 
 
 requestPath : HttpServer.Request -> Result RespondError String
