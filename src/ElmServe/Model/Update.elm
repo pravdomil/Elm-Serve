@@ -96,7 +96,7 @@ update msg =
                             |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
                         )
 
-        ElmServe.Msg.GotFileChange _ ->
+        ElmServe.Msg.FileChanged _ ->
             \model ->
                 let
                     killProcess : ElmServe.Model.Ready -> Task.Task x ()
@@ -490,7 +490,7 @@ decodeMsg =
             (\a ->
                 case a of
                     1 ->
-                        Json.Decode.map ElmServe.Msg.GotFileChange
+                        Json.Decode.map ElmServe.Msg.FileChanged
                             (Json.Decode.field "b"
                                 (Json.Decode.map (\v1 -> { path = v1 })
                                     (Json.Decode.field "path" Json.Decode.string)
