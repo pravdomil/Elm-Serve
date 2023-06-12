@@ -508,31 +508,3 @@ decodeMsg =
                     _ ->
                         Json.Decode.fail ("I can't decode \"Msg\", unknown variant with index " ++ String.fromInt a ++ ".")
             )
-
-
-
---
-
-
-decodeJson : Json.Decode.Decoder a -> Json.Decode.Decoder a
-decodeJson decoder =
-    Json.Decode.string
-        |> Json.Decode.andThen
-            (\v ->
-                case Json.Decode.decodeString decoder v of
-                    Ok vv ->
-                        Json.Decode.succeed vv
-
-                    Err vv ->
-                        Json.Decode.fail (Json.Decode.errorToString vv)
-            )
-
-
-encodeMaybe : (a -> Json.Encode.Value) -> (Maybe a -> Json.Encode.Value)
-encodeMaybe encode a =
-    case a of
-        Just b ->
-            encode b
-
-        Nothing ->
-            Json.Encode.null
