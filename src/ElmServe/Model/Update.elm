@@ -298,38 +298,37 @@ sendResponse opt a =
         |> Task.mapError ElmServe.Error.InternalError
 
 
-requestPath : HttpServer.Request -> Task.Task RespondError String
-requestPath { request } =
+requestPath : HttpServer.Request -> Result RespondError String
+requestPath a =
     let
         parentFolderRegex : Regex.Regex
         parentFolderRegex =
             Regex.fromString "(^|/)\\.\\.(/|$)"
                 |> Maybe.withDefault Regex.never
     in
-    Json.Decode.decodeValue (Json.Decode.field "url" Json.Decode.string) request
-        |> Result.map (\v -> "http://localhost" ++ v)
+    Json.Decode.decodeValue (Json.Decode.field "url" Json.Decode.string) a.request
+        |> Result.map (\x -> "http://localhost" ++ x)
         |> Result.toMaybe
         |> Maybe.andThen Url.fromString
         |> Maybe.map .path
         |> Maybe.andThen Url.percentDecode
         |> Result.fromMaybe CannotParseUrl
         |> Result.andThen
-            (\v ->
-                if Regex.contains parentFolderRegex v then
+            (\x ->
+                if Regex.contains parentFolderRegex x then
                     Err ParentFolderPath
 
                 else
-                    Ok v
+                    Ok x
             )
         |> Result.map
-            (\v ->
-                if v |> String.endsWith "/" then
-                    v ++ "index.html"
+            (\x ->
+                if x |> String.endsWith "/" then
+                    x ++ "index.html"
 
                 else
-                    v
+                    x
             )
-        |> Task.Extra.fromResult
 
 
 send : Int -> Dict.Dict String String -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
