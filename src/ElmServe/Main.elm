@@ -2,6 +2,7 @@ port module ElmServe.Main exposing (..)
 
 import Dict
 import Elm.Project
+import ElmServe.Model
 import ElmServe.Options
 import JavaScript
 import Json.Decode
@@ -14,7 +15,7 @@ import Task.Extra
 import Url
 
 
-main : Program () Model Msg
+main : Program () ElmServe.Model.Model Msg
 main =
     Platform.worker
         { init = init
@@ -27,18 +28,7 @@ main =
 --
 
 
-type alias Model =
-    Maybe ReadyModel
-
-
-type alias ReadyModel =
-    { options : ElmServe.Options.Options
-    , project : Elm.Project.Project
-    , compileProcess : Maybe Process.Id
-    }
-
-
-init : () -> ( Model, Cmd Msg )
+init : () -> ( ElmServe.Model.Model, Cmd Msg )
 init _ =
     ( Nothing
     , Task.map2
@@ -180,14 +170,14 @@ Elm Options:
 
 
 type Msg
-    = GotReadyModel (Result Error ReadyModel)
+    = GotReadyModel (Result Error ElmServe.Model.ReadyModel)
     | GotFileChange { path : String }
     | GotCompileProcess Process.Id
     | GotRequest Request
     | TaskDone (Result Error ())
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd Msg )
 update msg model =
     case msg of
         GotReadyModel a ->
@@ -226,7 +216,7 @@ update msg model =
 
         GotFileChange _ ->
             let
-                killProcess : ReadyModel -> Task.Task x ()
+                killProcess : ElmServe.Model.ReadyModel -> Task.Task x ()
                 killProcess b =
                     case b.compileProcess of
                         Just v ->
@@ -288,7 +278,7 @@ update msg model =
             )
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : ElmServe.Model.Model -> Sub Msg
 subscriptions _ =
     sendMsgSubscription
 
