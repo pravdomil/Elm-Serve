@@ -15,4 +15,5 @@ npm i
 # Compile application.
 elm make src/Main.elm --output bin/elm-serve.js --optimize
 elm-ffi bin/elm-serve.js --run --shebang
+elm-minify bin/elm-serve.js
 mv bin/elm-serve.js bin/elm-serve
