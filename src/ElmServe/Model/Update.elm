@@ -130,35 +130,20 @@ update msg =
         ElmServe.Msg.CompileProcessReceived a ->
             \model -> ( model |> Result.map (\v -> { v | compileProcess = Just a }), Cmd.none )
 
-        ElmServe.Msg.GotRequest a ->
+        ElmServe.Msg.RequestReceived a ->
             \model ->
-                let
-                    task : Task.Task ElmServe.Error.Error ()
-                    task =
-                        Task.Extra.fromResult (Result.fromMaybe ElmServe.Error.InternalErrorModelNotReady model)
-                            |> Task.andThen (\c -> sendResponse c.options a)
-                in
-                ( model
-                , task
-                    |> Task.attempt ElmServe.Msg.TaskDone
-                )
+                case model of
+                    Ok b ->
+                        ( model
+                        , sendResponse b.options a
+                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                        )
 
-        ElmServe.Msg.TaskDone a ->
-            \model ->
-                let
-                    cmd : Cmd ElmServe.Msg.Msg
-                    cmd =
-                        case a of
-                            Ok _ ->
-                                Cmd.none
-
-                            Err b ->
-                                exitWithMessageAndCode (ElmServe.Error.toString b) 1
-                                    |> Task.attempt (\_ -> ElmServe.Msg.TaskDone (Ok ()))
-                in
-                ( model
-                , cmd
-                )
+                    Err _ ->
+                        ( model
+                        , send 500 Dict.empty "Server is not ready." a
+                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                        )
 
 
 subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
@@ -498,7 +483,7 @@ decodeMsg =
                             )
 
                     3 ->
-                        Json.Decode.map ElmServe.Msg.GotRequest
+                        Json.Decode.map ElmServe.Msg.RequestReceived
                             (Json.Decode.field "b"
                                 (Json.Decode.map2 ElmServe.Msg.Request
                                     (Json.Decode.field "req" Json.Decode.value)

@@ -9,10 +9,9 @@ import Process
 type Msg
     = NothingHappened
     | ModelReceived (Result ElmServe.Error.Error ElmServe.Model.Ready)
-    | FileChanged { path : String }
+    | FileChanged String
     | CompileProcessReceived Process.Id
-    | GotRequest Request
-    | TaskDone (Result ElmServe.Error.Error ())
+    | RequestReceived Request
 
 
 
