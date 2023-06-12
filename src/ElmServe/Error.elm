@@ -12,6 +12,7 @@ type Error
     | CannotStartServer JavaScript.Error
     | CannotWatchFiles JavaScript.Error
     | CannotSendResponse JavaScript.Error
+    | QueueError JavaScript.Error
       --
     | ConsoleError JavaScript.Error
     | ExitError JavaScript.Error

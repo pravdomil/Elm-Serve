@@ -334,6 +334,10 @@ resolvePath options req a =
                 )
 
 
+
+--
+
+
 send : Int -> Dict.Dict String String -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
 send status headers data { response } =
     JavaScript.run "a.res.writeHead(a.status, a.headers).end(a.data)"
@@ -364,7 +368,7 @@ resolveQueue =
     JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.forEach(a => a.res.end()); queue = []; })()"
         Json.Encode.null
         (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Error.InternalError
+        |> Task.mapError ElmServe.Error.QueueError
 
 
 sendFile : ElmServe.Options.Options -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
