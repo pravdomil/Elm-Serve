@@ -293,6 +293,7 @@ sendResponse opt a =
                         |> Task.andThen (\_ -> Task.fail c)
     in
     requestPath a
+        |> Task.Extra.fromResult
         |> Task.andThen resolvePath
         |> Task.onError errorResponse
         |> Task.mapError ElmServe.Error.InternalError
