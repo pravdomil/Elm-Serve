@@ -26,5 +26,6 @@ type alias Ready =
 
 
 type Error
-    = Loading
+    = NotAsked
+    | Loading
     | Error ElmServe.Error.Error

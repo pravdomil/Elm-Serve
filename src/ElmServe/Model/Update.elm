@@ -11,6 +11,7 @@ import HttpServer
 import JavaScript
 import Json.Decode
 import Json.Encode
+import Platform.Extra
 import Process
 import Regex
 import Task
@@ -20,6 +21,14 @@ import Url
 
 init : Json.Decode.Value -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 init flags =
+    ( Err ElmServe.Model.NotAsked
+    , Cmd.none
+    )
+        |> Platform.Extra.andThen (initModel flags)
+
+
+initModel : Json.Decode.Value -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+initModel flags _ =
     let
         options : Task.Task ElmServe.Error.Error ElmServe.Options.Options
         options =
