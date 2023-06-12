@@ -105,6 +105,13 @@ argument =
         |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
 
+flag : String -> Parser.Parser a -> Parser.Parser a
+flag name a =
+    Parser.symbol ("--" ++ name)
+        |> Parser.andThen (\() -> a)
+        |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
+
+
 namedArgument : String -> Parser.Parser a -> Parser.Parser a
 namedArgument name a =
     Parser.symbol ("--" ++ name)
@@ -115,13 +122,6 @@ namedArgument name a =
                     , Parser.symbol "\u{0000}"
                     ]
             )
-        |> Parser.andThen (\() -> a)
-        |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
-
-
-flag : String -> Parser.Parser a -> Parser.Parser a
-flag name a =
-    Parser.symbol ("--" ++ name)
         |> Parser.andThen (\() -> a)
         |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
