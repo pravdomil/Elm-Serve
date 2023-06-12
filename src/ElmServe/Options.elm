@@ -1,12 +1,11 @@
 module ElmServe.Options exposing (..)
 
+import HttpServer
 import Parser as P exposing ((|.), (|=))
 
 
 type alias Options =
-    { host : String
-    , port_ : Int
-    , ssl : Maybe { cert : String, key : String }
+    { http : HttpServer.Options
 
     --
     , root : String
@@ -120,9 +119,7 @@ parser =
                 ]
     in
     P.loop
-        { host = "localhost"
-        , port_ = 8000
-        , ssl = Nothing
+        { server = HttpServer.Options "localhost" 8000 Nothing
 
         --
         , root = "."
