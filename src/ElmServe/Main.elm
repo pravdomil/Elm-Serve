@@ -7,7 +7,6 @@ import ElmServe.Options
 import JavaScript
 import Json.Decode
 import Json.Encode
-import Parser
 import Process
 import Regex
 import Task
