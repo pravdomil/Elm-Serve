@@ -27,8 +27,7 @@ type alias Options =
 
 parse : List String -> Result (List P.DeadEnd) Options
 parse a =
-    String.join "\u{0000}" a
-        |> P.run parser
+    P.run parser (String.join "\u{0000}" a)
 
 
 parser : P.Parser Options
