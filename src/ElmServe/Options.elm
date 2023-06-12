@@ -127,11 +127,10 @@ namedArgumentStart a =
 argument : Parser.Parser String
 argument =
     Parser.getChompedString
-        (Parser.succeed ()
-            |. Parser.chompIf (\v -> v /= '-' && v /= '\u{0000}')
-            |. Parser.chompUntilEndOr "\u{0000}"
+        (Parser.chompIf (\x -> x /= '\u{0000}')
+            |> Parser.andThen (\() -> Parser.chompUntilEndOr "\u{0000}")
         )
-        |. argumentEnd
+        |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
 
 argumentEnd : Parser.Parser ()
