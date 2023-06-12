@@ -4,6 +4,7 @@ import Dict
 import Elm.Project
 import ElmServe.Error
 import ElmServe.Model
+import ElmServe.Msg
 import ElmServe.Options
 import JavaScript
 import Json.Decode
@@ -15,7 +16,7 @@ import Task.Extra
 import Url
 
 
-main : Program () ElmServe.Model.Model Msg
+main : Program () ElmServe.Model.Model ElmServe.Msg.Msg
 main =
     Platform.worker
         { init = init
@@ -28,7 +29,7 @@ main =
 --
 
 
-init : () -> ( ElmServe.Model.Model, Cmd Msg )
+init : () -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 init _ =
     ( Nothing
     , Task.map2
@@ -40,7 +41,7 @@ init _ =
         )
         getOptions
         readProject
-        |> Task.attempt GotReadyModel
+        |> Task.attempt ElmServe.Msg.GotReadyModel
     )
 
 
@@ -73,18 +74,10 @@ readProject =
 --
 
 
-type Msg
-    = GotReadyModel (Result ElmServe.Error.Error ElmServe.Model.ReadyModel)
-    | GotFileChange { path : String }
-    | GotCompileProcess Process.Id
-    | GotRequest Request
-    | TaskDone (Result ElmServe.Error.Error ())
-
-
-update : Msg -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd Msg )
+update : ElmServe.Msg.Msg -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 update msg model =
     case msg of
-        GotReadyModel a ->
+        ElmServe.Msg.GotReadyModel a ->
             let
                 task : Task.Task ElmServe.Error.Error ()
                 task =
@@ -115,10 +108,10 @@ update msg model =
             in
             ( Result.toMaybe a
             , task
-                |> Task.attempt TaskDone
+                |> Task.attempt ElmServe.Msg.TaskDone
             )
 
-        GotFileChange _ ->
+        ElmServe.Msg.GotFileChange _ ->
             let
                 killProcess : ElmServe.Model.ReadyModel -> Task.Task x ()
                 killProcess b =
@@ -145,15 +138,15 @@ update msg model =
             ( model
             , task
                 |> Process.spawn
-                |> Task.perform GotCompileProcess
+                |> Task.perform ElmServe.Msg.GotCompileProcess
             )
 
-        GotCompileProcess a ->
+        ElmServe.Msg.GotCompileProcess a ->
             ( model |> Maybe.map (\v -> { v | compileProcess = Just a })
             , Cmd.none
             )
 
-        GotRequest a ->
+        ElmServe.Msg.GotRequest a ->
             let
                 task : Task.Task ElmServe.Error.Error ()
                 task =
@@ -162,12 +155,12 @@ update msg model =
             in
             ( model
             , task
-                |> Task.attempt TaskDone
+                |> Task.attempt ElmServe.Msg.TaskDone
             )
 
-        TaskDone a ->
+        ElmServe.Msg.TaskDone a ->
             let
-                cmd : Cmd Msg
+                cmd : Cmd ElmServe.Msg.Msg
                 cmd =
                     case a of
                         Ok _ ->
@@ -175,14 +168,14 @@ update msg model =
 
                         Err b ->
                             exitWithMessageAndCode (ElmServe.Error.toString b) 1
-                                |> Task.attempt (\_ -> TaskDone (Ok ()))
+                                |> Task.attempt (\_ -> ElmServe.Msg.TaskDone (Ok ()))
             in
             ( model
             , cmd
             )
 
 
-subscriptions : ElmServe.Model.Model -> Sub Msg
+subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
 subscriptions _ =
     sendMsgSubscription
 
@@ -194,17 +187,17 @@ subscriptions _ =
 port sendMsg : (Json.Decode.Value -> msg) -> Sub msg
 
 
-sendMsgSubscription : Sub Msg
+sendMsgSubscription : Sub ElmServe.Msg.Msg
 sendMsgSubscription =
     let
-        decoder : Json.Decode.Value -> Msg
+        decoder : Json.Decode.Value -> ElmServe.Msg.Msg
         decoder b =
             case Json.Decode.decodeValue decodeMsg b of
                 Ok c ->
                     c
 
                 Err c ->
-                    TaskDone (Err (ElmServe.Error.InternalError (JavaScript.DecodeError c)))
+                    ElmServe.Msg.TaskDone (Err (ElmServe.Error.InternalError (JavaScript.DecodeError c)))
     in
     sendMsg decoder
 
@@ -469,12 +462,6 @@ startServer a =
         |> Task.mapError ElmServe.Error.CannotStartServer
 
 
-type alias Request =
-    { request : Json.Decode.Value
-    , response : Json.Decode.Value
-    }
-
-
 
 --
 
@@ -486,7 +473,7 @@ type RespondError
     | InternalError_ JavaScript.Error
 
 
-sendResponse : ElmServe.Options.Options -> Request -> Task.Task ElmServe.Error.Error ()
+sendResponse : ElmServe.Options.Options -> ElmServe.Msg.Request -> Task.Task ElmServe.Error.Error ()
 sendResponse opt a =
     let
         resolvePath : String -> Task.Task RespondError ()
@@ -543,7 +530,7 @@ sendResponse opt a =
         |> Task.mapError ElmServe.Error.InternalError
 
 
-requestPath : Request -> Task.Task RespondError String
+requestPath : ElmServe.Msg.Request -> Task.Task RespondError String
 requestPath { request } =
     let
         parentFolderRegex : Regex.Regex
@@ -577,7 +564,7 @@ requestPath { request } =
         |> Task.Extra.fromResult
 
 
-send : Int -> Dict.Dict String String -> String -> Request -> Task.Task JavaScript.Error ()
+send : Int -> Dict.Dict String String -> String -> ElmServe.Msg.Request -> Task.Task JavaScript.Error ()
 send status headers data { response } =
     JavaScript.run "a.res.writeHead(a.status, a.headers).end(a.data)"
         (Json.Encode.object
@@ -590,7 +577,7 @@ send status headers data { response } =
         (Json.Decode.succeed ())
 
 
-addRequestToQueue : Request -> Task.Task RespondError ()
+addRequestToQueue : ElmServe.Msg.Request -> Task.Task RespondError ()
 addRequestToQueue a =
     JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.push(a); })()"
         (Json.Encode.object
@@ -610,7 +597,7 @@ resolveQueue =
         |> Task.mapError ElmServe.Error.InternalError
 
 
-sendFile : ElmServe.Options.Options -> String -> Request -> Task.Task JavaScript.Error ()
+sendFile : ElmServe.Options.Options -> String -> ElmServe.Msg.Request -> Task.Task JavaScript.Error ()
 sendFile opt path { request, response } =
     JavaScript.run "require('send')(a.req, a.path, { root: a.root }).pipe(a.res)"
         (Json.Encode.object
@@ -739,14 +726,14 @@ serverUrl a =
 --
 
 
-decodeMsg : Json.Decode.Decoder Msg
+decodeMsg : Json.Decode.Decoder ElmServe.Msg.Msg
 decodeMsg =
     Json.Decode.field "a" Json.Decode.int
         |> Json.Decode.andThen
             (\a ->
                 case a of
                     1 ->
-                        Json.Decode.map GotFileChange
+                        Json.Decode.map ElmServe.Msg.GotFileChange
                             (Json.Decode.field "b"
                                 (Json.Decode.map (\v1 -> { path = v1 })
                                     (Json.Decode.field "path" Json.Decode.string)
@@ -754,9 +741,9 @@ decodeMsg =
                             )
 
                     3 ->
-                        Json.Decode.map GotRequest
+                        Json.Decode.map ElmServe.Msg.GotRequest
                             (Json.Decode.field "b"
-                                (Json.Decode.map2 Request
+                                (Json.Decode.map2 ElmServe.Msg.Request
                                     (Json.Decode.field "req" Json.Decode.value)
                                     (Json.Decode.field "res" Json.Decode.value)
                                 )
