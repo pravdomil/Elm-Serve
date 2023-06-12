@@ -2,12 +2,14 @@ module ElmServe.Model.Update exposing (..)
 
 import Console
 import Dict
+import Elm.Compiler
 import Elm.Project
 import ElmServe.Error
 import ElmServe.Model
 import ElmServe.Msg
 import ElmServe.Options
 import ElmServe.Utils.Utils
+import FileSystem
 import HttpServer
 import JavaScript
 import Json.Decode
@@ -209,27 +211,28 @@ sendMsgSubscription =
 
 
 makeOutputFile : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
-makeOutputFile opt =
+makeOutputFile options =
     let
-        recoverFromCompileError : ElmServe.Error.Error -> Task.Task ElmServe.Error.Error String
+        outputPath : FileSystem.Path
+        outputPath =
+            FileSystem.stringToPath options.elm.output
+
+        recoverFromCompileError : JavaScript.Error -> Task.Task JavaScript.Error String
         recoverFromCompileError b =
             case b of
-                ElmServe.Error.CannotCompileElm (JavaScript.Exception _ (JavaScript.ErrorCode "ENONZERO") msg) ->
-                    (\(JavaScript.ErrorMessage v) -> v) msg
-                        |> Json.Encode.string
-                        |> Json.Encode.encode 0
-                        |> (\v -> "elmServe.compileError(" ++ v ++ ");")
-                        |> Task.succeed
+                JavaScript.Exception _ (JavaScript.ErrorCode "ENONZERO") (JavaScript.ErrorMessage c) ->
+                    Task.succeed (ElmServe.Utils.Utils.reportCompileErrorJs c)
 
                 _ ->
                     Task.fail b
     in
-    compileElm opt
-        |> Task.andThen (\_ -> readFile opt.output)
-        |> Task.andThen patchElm
+    Elm.Compiler.compile options.elm
+        |> Task.andThen (\_ -> FileSystem.read outputPath)
+        |> Task.andThen (\x -> ElmServe.Utils.Utils.patchElm x)
         |> Task.onError recoverFromCompileError
-        |> Task.andThen applyLib
-        |> Task.andThen (writeFile opt.output)
+        |> Task.map (\x -> ElmServe.Utils.Utils.jsLibrary ++ x)
+        |> Task.andThen (FileSystem.write outputPath)
+        |> Task.mapError ElmServe.Error.CannotCompileElm
 
 
 
