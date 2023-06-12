@@ -13,8 +13,8 @@ type FileStatus
     | NotFound
 
 
-fileStatus : FileSystem.Path -> Task.Task JavaScript.Error FileStatus
-fileStatus path =
+get : FileSystem.Path -> Task.Task JavaScript.Error FileStatus
+get path =
     JavaScript.run "require('fs/promises').stat(a).then(a => a.isDirectory())"
         (Json.Encode.string (FileSystem.pathToString path))
         (Json.Decode.bool
