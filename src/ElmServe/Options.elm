@@ -74,18 +74,12 @@ parser =
     in
     Parser.loop
         { server = HttpServer.Options "localhost" 8000 Nothing
+        , elm = Elm.Compiler.Options "elm" False False [] "elm.js"
 
         --
         , root = "."
         , open = False
         , no404 = False
-
-        --
-        , elm = "elm"
-        , debug = False
-        , optimize = False
-        , input = []
-        , output = "elm.js"
         }
         loop
 
