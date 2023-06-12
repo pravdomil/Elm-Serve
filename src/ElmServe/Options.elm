@@ -96,8 +96,8 @@ parser =
 --
 
 
-argument : Parser.Parser String
-argument =
+stringArgument : Parser.Parser String
+stringArgument =
     Parser.getChompedString
         (Parser.chompIf (\x -> x /= '\u{0000}')
             |> Parser.andThen (\() -> Parser.chompUntilEndOr "\u{0000}")
