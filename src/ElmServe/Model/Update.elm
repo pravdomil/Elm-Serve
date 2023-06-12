@@ -102,28 +102,28 @@ update msg =
                     killProcess : ElmServe.Model.Ready -> Task.Task x ()
                     killProcess b =
                         case b.compileProcess of
-                            Just v ->
-                                Process.kill v
+                            Just x ->
+                                Process.kill x
 
                             Nothing ->
                                 Task.succeed ()
 
                     task : Task.Task ElmServe.Error.Error ()
                     task =
-                        Task.Extra.fromResult (Result.fromMaybe ElmServe.Error.InternalErrorModelNotReady model)
-                            |> Task.andThen
-                                (\c ->
-                                    killProcess c
-                                        |> Task.andThen (\_ -> Process.sleep 1)
-                                        |> Task.andThen (\_ -> log "Recompiling...")
-                                        |> Task.andThen (\_ -> makeOutputFile c.options)
-                                        |> Task.andThen (\_ -> resolveQueue)
-                                        |> Task.onError (\v -> exitWithMessageAndCode (ElmServe.Error.toString v) 1)
-                                )
+                        case model of
+                            Ok b ->
+                                killProcess b
+                                    |> Task.andThen (\_ -> Process.sleep 0.5)
+                                    |> Task.andThen (\_ -> log "Recompiling...")
+                                    |> Task.andThen (\_ -> makeOutputFile b.options)
+                                    |> Task.andThen (\_ -> resolveQueue)
+                                    |> Task.onError (\v -> exitWithMessageAndCode (ElmServe.Error.toString v) 1)
+
+                            Err _ ->
+                                Task.succeed ()
                 in
                 ( model
-                , task
-                    |> Process.spawn
+                , Process.spawn task
                     |> Task.perform ElmServe.Msg.CompileProcessReceived
                 )
 
