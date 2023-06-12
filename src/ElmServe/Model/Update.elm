@@ -78,27 +78,12 @@ update msg =
                 case a of
                     Ok b ->
                         let
-                            serverUrl : String
-                            serverUrl =
-                                HttpServer.url b.options.server
-
-                            openServerUrl : Task.Task x ()
-                            openServerUrl =
-                                if b.options.open then
-                                    ElmServe.Utils.Utils.open serverUrl
-                                        |> Task.onError (\_ -> Task.succeed ())
-
-                                else
-                                    Task.succeed ()
-
                             task : Task.Task ElmServe.Error.Error ()
                             task =
                                 (Console.log "Elm Serve\n\n" |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> startWatching b.project)
-                                    |> Task.andThen (\_ -> HttpServer.start b.options.server)
-                                    |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl ++ "\n"))
-                                    |> Task.andThen (\_ -> openServerUrl)
+                                    |> Task.andThen (\_ -> startServer b.options)
                         in
                         ( Ok b
                         , task
@@ -235,8 +220,26 @@ makeOutputFile options =
         |> Task.mapError ElmServe.Error.CannotCompileElm
 
 
+startServer : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
+startServer options =
+    let
+        url : String
+        url =
+            HttpServer.url options.server
 
---
+        open : Task.Task x ()
+        open =
+            if options.open then
+                ElmServe.Utils.Utils.open url
+                    |> Task.onError (\_ -> Task.succeed ())
+
+            else
+                Task.succeed ()
+    in
+    HttpServer.start options.server
+        |> Task.mapError ElmServe.Error.CannotStartServer
+        |> Task.andThen (\_ -> Console.log ("Server is running at:\n" ++ url ++ "\n") |> Task.mapError ElmServe.Error.ConsoleError)
+        |> Task.andThen (\_ -> open)
 
 
 startWatching : Elm.Project.Project -> Task.Task ElmServe.Error.Error ()
