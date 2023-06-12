@@ -1,4 +1,4 @@
-// elm-hot@fb2dc49e9b4fa53b51fa6088a1ac7ffa0b72557a
+// klazuka/elm-hot@fb2dc49e9b4fa53b51fa6088a1ac7ffa0b72557a
 
 const fs = require('fs');
 const path = require('path');
