@@ -1,7 +1,7 @@
 module ElmServe.Options exposing (..)
 
 import HttpServer
-import Parser
+import Parser exposing ((|=))
 
 
 type alias Options =
@@ -33,45 +33,48 @@ parse a =
 parser : Parser.Parser Options
 parser =
     let
+        map2 fn a b =
+            Parser.succeed fn
+                |= a
+                |= b
+
         loop : Options -> Parser.Parser (Parser.Step Options Options)
         loop acc =
             Parser.oneOf
-                [ Parser.succeed (\v -> Parser.Loop { acc | host = v })
-                    |= namedStringArgument "host"
-                , Parser.succeed (\v -> Parser.Loop { acc | port_ = v })
-                    |= namedIntArgument "port"
-                , Parser.succeed (\v1 v2 -> Parser.Loop { acc | ssl = Just { cert = v1, key = v2 } })
-                    |= namedStringArgument "ssl"
-                    |= argument
+                [ namedArgument "host" stringArgument
+                    |> Parser.map (\x -> Parser.Loop { acc | server = (\x2 -> { x2 | host = x }) acc.server })
+                , namedArgument "port" Parser.int
+                    |> Parser.map (\x -> Parser.Loop { acc | server = (\x2 -> { x2 | port_ = x }) acc.server })
+                , namedArgument "ssl" (map2 (\x x2 -> { cert = x, key = x2 }) stringArgument stringArgument)
+                    |> Parser.map (\x -> Parser.Loop { acc | server = (\x2 -> { x2 | ssl = Just x }) acc.server })
 
                 --
-                , Parser.succeed (\v -> Parser.Loop { acc | root = v })
-                    |= namedStringArgument "root"
-                , Parser.succeed (\_ -> Parser.Loop acc)
-                    |= flag "dir"
-                    |. Parser.problem "Option --dir is renamed to --root."
-                , Parser.succeed (\v -> Parser.Loop { acc | open = v })
-                    |= flag "open"
-                , Parser.succeed (\v -> Parser.Loop { acc | no404 = v })
-                    |= flag "no-404"
+                , namedArgument "root" stringArgument
+                    |> Parser.map (\x -> Parser.Loop { acc | root = x })
+                , flag "dir"
+                    |> Parser.andThen (\() -> Parser.problem "Option --dir is renamed to --root.")
+                , flag "open"
+                    |> Parser.map (\() -> Parser.Loop { acc | open = True })
+                , flag "no-404"
+                    |> Parser.map (\() -> Parser.Loop { acc | no404 = True })
 
                 --
-                , Parser.succeed (\v -> Parser.Loop { acc | elm = v })
-                    |= namedStringArgument "elm"
-                , Parser.succeed (\v -> Parser.Loop { acc | debug = v })
-                    |= flag "debug"
-                , Parser.succeed (\v -> Parser.Loop { acc | optimize = v })
-                    |= flag "optimize"
-                , Parser.succeed (\v -> Parser.Loop { acc | output = v })
-                    |= namedStringArgument "output"
+                , namedArgument "elm" stringArgument
+                    |> Parser.map (\x -> Parser.Loop { acc | elm = x })
+                , flag "debug"
+                    |> Parser.map (\() -> Parser.Loop { acc | debug = True })
+                , flag "optimize"
+                    |> Parser.map (\() -> Parser.Loop { acc | optimize = True })
+                , namedArgument "output" stringArgument
+                    |> Parser.map (\x -> Parser.Loop { acc | output = x })
 
                 --
-                , Parser.succeed (\v -> Parser.Loop { acc | input = v :: acc.input })
-                    |= argument
+                , stringArgument
+                    |> Parser.map (\x -> Parser.Loop { acc | input = x :: acc.input })
 
                 --
-                , Parser.succeed (Parser.Done acc)
-                    |. Parser.end
+                , Parser.end
+                    |> Parser.map (\() -> Parser.Done acc)
                 ]
     in
     Parser.loop
