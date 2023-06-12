@@ -117,7 +117,7 @@ update msg =
                                     |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> resolveQueue)
-                                    |> Task.onError (\v -> exitWithMessageAndCode (ElmServe.Error.toString v) 1)
+                                    |> Task.onError (\x -> exitWithMessageAndCode (ElmServe.Error.toString x) 1)
 
                             Err _ ->
                                 Task.succeed ()
