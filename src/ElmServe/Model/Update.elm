@@ -82,7 +82,7 @@ update msg =
                         let
                             task : Task.Task ElmServe.Error.Error ()
                             task =
-                                (Console.log "Elm Serve\n\n" |> Task.mapError ElmServe.Error.ConsoleError)
+                                (Console.log "Elm Serve" |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> startServer b.options)
                                     |> Task.andThen (\_ -> startWatching b.project)
@@ -209,7 +209,7 @@ startServer options =
     in
     HttpServer.start options.server
         |> Task.mapError ElmServe.Error.ServerError
-        |> Task.andThen (\_ -> Console.log ("Server is running at:\n" ++ url ++ "\n") |> Task.mapError ElmServe.Error.ConsoleError)
+        |> Task.andThen (\_ -> Console.log ("Server is running at:\n" ++ url) |> Task.mapError ElmServe.Error.ConsoleError)
         |> Task.andThen (\_ -> open)
 
 
