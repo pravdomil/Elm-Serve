@@ -183,7 +183,7 @@ makeOutputFile options =
                     Task.fail b
     in
     Elm.Compiler.compile options.elm
-        |> Task.andThen (\_ -> ElmServe.Utils.Utils.elmFfi options.elm.output)
+        |> Task.andThen (\_ -> ElmServe.Utils.Utils.elmFfi options.elm.output |> Task.onError (\_ -> Task.succeed ""))
         |> Task.andThen (\_ -> FileSystem.read outputPath)
         |> Task.andThen (\x -> ElmServe.Utils.Utils.elmHot x)
         |> Task.onError recoverFromCompileError
