@@ -91,7 +91,7 @@ update msg =
                                         else
                                             Task.succeed ()
                                 in
-                                log "Elm Serve\n\n"
+                                (Console.log "Elm Serve\n\n" |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile opt)
                                     |> Task.andThen (\_ -> startWatching b.project)
                                     |> Task.andThen (\_ -> HttpServer.start opt)
