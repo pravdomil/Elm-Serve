@@ -84,10 +84,11 @@ update msg =
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> startServer b.options)
                                     |> Task.andThen (\_ -> startWatching b.project)
+                                    |> Task.onError (\x -> exitWithMessageAndCode (ElmServe.Error.toString x) 1)
                         in
                         ( Ok b
                         , task
-                            |> Task.attempt ElmServe.Msg.TaskDone
+                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
                         )
 
                     Err b ->
