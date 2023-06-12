@@ -105,10 +105,9 @@ stringArgument =
         |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
 
-flag : String -> Parser.Parser a -> Parser.Parser a
-flag name a =
+flag : String -> Parser.Parser ()
+flag name =
     Parser.symbol ("--" ++ name)
-        |> Parser.andThen (\() -> a)
         |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
 
