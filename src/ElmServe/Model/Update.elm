@@ -116,7 +116,7 @@ update msg =
                         case model of
                             Ok b ->
                                 killCompileProcess b
-                                    |> Task.andThen (\_ -> Process.sleep 0.5)
+                                    |> Task.andThen (\_ -> Process.sleep 1)
                                     |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
                                     |> Task.andThen (\_ -> resolveQueue)
