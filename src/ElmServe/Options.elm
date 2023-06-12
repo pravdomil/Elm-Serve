@@ -122,13 +122,6 @@ namedArgument name a =
 flag : String -> Parser.Parser a -> Parser.Parser a
 flag name a =
     Parser.symbol ("--" ++ name)
-        |> Parser.andThen
-            (\() ->
-                Parser.oneOf
-                    [ Parser.symbol "="
-                    , Parser.symbol "\u{0000}"
-                    ]
-            )
         |> Parser.andThen (\() -> a)
         |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
