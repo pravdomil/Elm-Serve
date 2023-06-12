@@ -32,6 +32,17 @@ decodeJson decoder =
 --
 
 
+open : String -> Task.Task JavaScript.Error ()
+open a =
+    JavaScript.run "require('open')(a)"
+        (Json.Encode.string a)
+        (Json.Decode.succeed ())
+
+
+
+--
+
+
 patchElm : String -> Task.Task JavaScript.Error String
 patchElm a =
     JavaScript.run "require('./resources/patch.js').inject(a)"
