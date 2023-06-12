@@ -6,6 +6,7 @@ import ElmServe.Error
 import ElmServe.Model
 import ElmServe.Msg
 import ElmServe.Options
+import HttpServer
 import JavaScript
 import Json.Decode
 import Json.Encode
@@ -86,7 +87,7 @@ update msg model =
                             log "Elm Serve\n\n"
                                 |> Task.andThen (\_ -> makeOutputFile opt)
                                 |> Task.andThen (\_ -> startWatching b.project)
-                                |> Task.andThen (\_ -> startServer opt)
+                                |> Task.andThen (\_ -> HttpServer.start opt)
                                 |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
                                 |> Task.andThen (\_ -> openServerUrl)
 
@@ -412,41 +413,6 @@ startWatching a =
         |> Task.sequence
         |> Task.map (\_ -> ())
         |> Task.mapError ElmServe.Error.InternalError
-
-
-
---
-
-
-startServer : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
-startServer a =
-    JavaScript.run """
-    new Promise((resolve, reject) => {
-        var opt = a.ssl ? { cert: fs.readFileSync(a.ssl.cert), key: fs.readFileSync(a.ssl.key) } : {}
-        var callback = (req, res) => { scope.Elm.Main.init.ports.sendMsg.send({ a: 3, b: { req, res } }) }
-        var server = require(a.ssl ? 'https' : 'http').createServer(opt, callback)
-        server.on('error', reject)
-        server.on('listening', resolve)
-        server.listen(a.port, a.host)
-    })
-    """
-        (Json.Encode.object
-            [ ( "host", Json.Encode.string a.host )
-            , ( "port", Json.Encode.int a.port_ )
-            , ( "ssl"
-              , encodeMaybe
-                    (\v ->
-                        Json.Encode.object
-                            [ ( "cert", Json.Encode.string v.cert )
-                            , ( "key", Json.Encode.string v.key )
-                            ]
-                    )
-                    a.ssl
-              )
-            ]
-        )
-        (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Error.CannotStartServer
 
 
 
