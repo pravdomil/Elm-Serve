@@ -292,7 +292,7 @@ requestPath a =
             )
         |> Result.map
             (\x ->
-                if x |> String.endsWith "/" then
+                if String.endsWith "/" x then
                     x ++ "index.html"
 
                 else
