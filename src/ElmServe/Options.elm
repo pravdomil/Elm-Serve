@@ -26,40 +26,6 @@ type alias Options =
 --
 
 
-toString : Options -> String
-toString a =
-    let
-        boolToString : Bool -> String
-        boolToString b =
-            if b then
-                "true"
-
-            else
-                "false"
-    in
-    [ "Host:     " ++ a.host
-    , "Port:     " ++ String.fromInt a.port_
-    , "SSL:      " ++ (a.ssl |> Maybe.map (\v -> [ v.cert, v.key ] |> String.join ", ") |> Maybe.withDefault "-")
-
-    --
-    , "Root:     " ++ a.root
-    , "Open:     " ++ (a.open |> boolToString)
-    , "No 404:   " ++ (a.no404 |> boolToString)
-
-    --
-    , "Elm:      " ++ a.elm
-    , "Debug:    " ++ (a.debug |> boolToString)
-    , "Optimize: " ++ (a.optimize |> boolToString)
-    , "Input:    " ++ (a.input |> String.join ", ")
-    , "Output:   " ++ a.output
-    ]
-        |> String.join "\n"
-
-
-
---
-
-
 parse : List String -> Result (List P.DeadEnd) Options
 parse a =
     String.join "\u{0000}" a

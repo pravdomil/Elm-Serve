@@ -209,7 +209,7 @@ update msg model =
                                     else
                                         Task.succeed ()
                             in
-                            log ("Elm Serve\n\nI got following options:\n" ++ ElmServe.Options.toString opt ++ "\n")
+                            log "Elm Serve\n\n"
                                 |> Task.andThen (\_ -> makeOutputFile opt)
                                 |> Task.andThen (\_ -> startWatching b.project)
                                 |> Task.andThen (\_ -> startServer opt)
