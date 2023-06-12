@@ -48,7 +48,7 @@ initModel flags _ =
                                 Task.succeed x2
 
                             Err x2 ->
-                                Task.fail (ElmServe.Error.CannotParseOptions x2)
+                                Task.fail (ElmServe.Error.OptionsError x2)
                    )
 
         cmd : Cmd ElmServe.Msg.Msg
@@ -56,7 +56,7 @@ initModel flags _ =
             Task.map3
                 ElmServe.Model.Ready
                 options
-                (ElmServe.Utils.Utils.readProject "elm.json" |> Task.mapError ElmServe.Error.CannotReadProject)
+                (ElmServe.Utils.Utils.readProject "elm.json" |> Task.mapError ElmServe.Error.ProjectError)
                 (Task.succeed Nothing)
                 |> Task.attempt ElmServe.Msg.ModelReceived
     in
@@ -188,7 +188,7 @@ makeOutputFile options =
         |> Task.onError recoverFromCompileError
         |> Task.map (\x -> ElmServe.Utils.Utils.jsLibrary ++ x)
         |> Task.andThen (FileSystem.write outputPath)
-        |> Task.mapError ElmServe.Error.CannotCompileElm
+        |> Task.mapError ElmServe.Error.CompileError
 
 
 startServer : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
@@ -208,7 +208,7 @@ startServer options =
                 Task.succeed ()
     in
     HttpServer.start options.server
-        |> Task.mapError ElmServe.Error.CannotStartServer
+        |> Task.mapError ElmServe.Error.ServerError
         |> Task.andThen (\_ -> Console.log ("Server is running at:\n" ++ url ++ "\n") |> Task.mapError ElmServe.Error.ConsoleError)
         |> Task.andThen (\_ -> open)
 
@@ -227,7 +227,7 @@ startWatching a =
     in
     Task.sequence (List.map (\x -> FileWatch.watch (FileSystem.stringToPath x)) dirs)
         |> Task.map (\_ -> ())
-        |> Task.mapError ElmServe.Error.CannotWatchFiles
+        |> Task.mapError ElmServe.Error.WatchFilesError
 
 
 
@@ -264,7 +264,7 @@ sendResponse opt a =
         |> Task.Extra.fromResult
         |> Task.andThen (resolvePath opt a)
         |> Task.onError errorResponse
-        |> Task.mapError ElmServe.Error.CannotSendResponse
+        |> Task.mapError ElmServe.Error.ResponseError
 
 
 requestPath : HttpServer.Request -> Result RespondError String

@@ -5,13 +5,13 @@ import Parser
 
 
 type Error
-    = CannotParseOptions (List Parser.DeadEnd)
-    | CannotReadProject JavaScript.Error
+    = OptionsError (List Parser.DeadEnd)
+    | ProjectError JavaScript.Error
       --
-    | CannotCompileElm JavaScript.Error
-    | CannotStartServer JavaScript.Error
-    | CannotWatchFiles JavaScript.Error
-    | CannotSendResponse JavaScript.Error
+    | CompileError JavaScript.Error
+    | ServerError JavaScript.Error
+    | WatchFilesError JavaScript.Error
+    | ResponseError JavaScript.Error
     | QueueError JavaScript.Error
       --
     | ConsoleError JavaScript.Error
@@ -62,7 +62,7 @@ Elm Options:
 """
     in
     case a of
-        CannotParseOptions b ->
+        OptionsError b ->
             case b |> List.head |> Maybe.map .problem of
                 Just (Parser.Problem c) ->
                     c
@@ -70,7 +70,7 @@ Elm Options:
                 _ ->
                     usage
 
-        CannotReadProject b ->
+        ProjectError b ->
             case b of
                 JavaScript.Exception _ (JavaScript.ErrorCode "ENOENT") _ ->
                     "Cannot find elm.json."
@@ -79,10 +79,10 @@ Elm Options:
                     "Cannot read elm.json. " ++ JavaScript.errorToString b
 
         --
-        CannotCompileElm b ->
+        CompileError b ->
             "Cannot compile Elm. " ++ JavaScript.errorToString b
 
-        CannotStartServer b ->
+        ServerError b ->
             case b of
                 JavaScript.Exception _ (JavaScript.ErrorCode "EADDRINUSE") _ ->
                     "There is somebody already listening on same port!"
