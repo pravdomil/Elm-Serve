@@ -65,7 +65,7 @@ parser =
 
                 --
                 , stringArgument
-                    |> Parser.map (\x -> Parser.Loop { acc | input = x :: acc.input })
+                    |> Parser.map (\x -> Parser.Loop { acc | elm = (\x2 -> { x2 | input = x :: acc.elm.input }) acc.elm })
 
                 --
                 , Parser.end
