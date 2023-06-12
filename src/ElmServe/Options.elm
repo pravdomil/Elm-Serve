@@ -37,33 +37,33 @@ parser =
         loop acc =
             Parser.oneOf
                 [ Parser.succeed (\v -> Parser.Loop { acc | host = v })
-                    |= stringArg "host"
+                    |= namedStringArgument "host"
                 , Parser.succeed (\v -> Parser.Loop { acc | port_ = v })
-                    |= intArg "port"
+                    |= namedIntArgument "port"
                 , Parser.succeed (\v1 v2 -> Parser.Loop { acc | ssl = Just { cert = v1, key = v2 } })
-                    |= stringArg "ssl"
+                    |= namedStringArgument "ssl"
                     |= argument
 
                 --
                 , Parser.succeed (\v -> Parser.Loop { acc | root = v })
-                    |= stringArg "root"
+                    |= namedStringArgument "root"
                 , Parser.succeed (\_ -> Parser.Loop acc)
-                    |= boolArg "dir"
+                    |= namedArgument "dir"
                     |. Parser.problem "Option --dir is renamed to --root."
                 , Parser.succeed (\v -> Parser.Loop { acc | open = v })
-                    |= boolArg "open"
+                    |= namedArgument "open"
                 , Parser.succeed (\v -> Parser.Loop { acc | no404 = v })
-                    |= boolArg "no-404"
+                    |= namedArgument "no-404"
 
                 --
                 , Parser.succeed (\v -> Parser.Loop { acc | elm = v })
-                    |= stringArg "elm"
+                    |= namedStringArgument "elm"
                 , Parser.succeed (\v -> Parser.Loop { acc | debug = v })
-                    |= boolArg "debug"
+                    |= namedArgument "debug"
                 , Parser.succeed (\v -> Parser.Loop { acc | optimize = v })
-                    |= boolArg "optimize"
+                    |= namedArgument "optimize"
                 , Parser.succeed (\v -> Parser.Loop { acc | output = v })
-                    |= stringArg "output"
+                    |= namedStringArgument "output"
 
                 --
                 , Parser.succeed (\v -> Parser.Loop { acc | input = v :: acc.input })
@@ -74,14 +74,14 @@ parser =
                     |. Parser.end
                 ]
 
-        boolArg : String -> Parser.Parser Bool
-        boolArg name =
+        namedArgument : String -> Parser.Parser Bool
+        namedArgument name =
             Parser.succeed True
                 |. Parser.symbol ("--" ++ name)
                 |. argumentEnd
 
-        intArg : String -> Parser.Parser Int
-        intArg name =
+        namedIntArgument : String -> Parser.Parser Int
+        namedIntArgument name =
             Parser.succeed identity
                 |. Parser.symbol ("--" ++ name)
                 |. Parser.oneOf
@@ -91,8 +91,8 @@ parser =
                 |= Parser.int
                 |. argumentEnd
 
-        stringArg : String -> Parser.Parser String
-        stringArg name =
+        namedStringArgument : String -> Parser.Parser String
+        namedStringArgument name =
             Parser.symbol ("--" ++ name)
                 |> Parser.andThen
                     (\() ->
