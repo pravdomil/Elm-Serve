@@ -81,19 +81,17 @@ parser =
 
         namedIntArgument : String -> Parser.Parser Int
         namedIntArgument name =
-            Parser.symbol ("--" ++ name)
-                |> Parser.andThen
-                    (\() ->
-                        Parser.oneOf
-                            [ Parser.symbol "="
-                            , Parser.symbol "\u{0000}"
-                            ]
-                    )
+            argumentStart name
                 |> Parser.andThen (\() -> Parser.int)
                 |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
         namedStringArgument : String -> Parser.Parser String
         namedStringArgument name =
+            argumentStart name
+                |> Parser.andThen (\() -> argument)
+
+        argumentStart : String -> Parser.Parser ()
+        argumentStart name =
             Parser.symbol ("--" ++ name)
                 |> Parser.andThen
                     (\() ->
@@ -101,10 +99,6 @@ parser =
                             [ Parser.symbol "="
                             , Parser.symbol "\u{0000}"
                             ]
-                    )
-                |> Parser.andThen
-                    (\() ->
-                        argument
                     )
 
         argument : Parser.Parser String
