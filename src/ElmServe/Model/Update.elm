@@ -45,7 +45,7 @@ init flags =
                 (Task.succeed Nothing)
                 |> Task.attempt ElmServe.Msg.ModelReceived
     in
-    ( Nothing
+    ( Err ElmServe.Model.Loading
     , cmd
     )
 
