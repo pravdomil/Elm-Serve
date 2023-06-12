@@ -99,8 +99,8 @@ update msg =
         ElmServe.Msg.FileChanged _ ->
             \model ->
                 let
-                    killProcess : ElmServe.Model.Ready -> Task.Task x ()
-                    killProcess b =
+                    killCompileProcess : ElmServe.Model.Ready -> Task.Task x ()
+                    killCompileProcess b =
                         case b.compileProcess of
                             Just x ->
                                 Process.kill x
@@ -112,7 +112,7 @@ update msg =
                     task =
                         case model of
                             Ok b ->
-                                killProcess b
+                                killCompileProcess b
                                     |> Task.andThen (\_ -> Process.sleep 0.5)
                                     |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
