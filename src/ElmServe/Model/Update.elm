@@ -482,23 +482,6 @@ fileStatus path =
 --
 
 
-serverUrl : ElmServe.Options.Options -> String
-serverUrl a =
-    (if a.ssl == Nothing then
-        "http://"
-
-     else
-        "https://"
-    )
-        ++ a.host
-        ++ ":"
-        ++ String.fromInt a.port_
-
-
-
---
-
-
 decodeMsg : Json.Decode.Decoder ElmServe.Msg.Msg
 decodeMsg =
     Json.Decode.field "a" Json.Decode.int
