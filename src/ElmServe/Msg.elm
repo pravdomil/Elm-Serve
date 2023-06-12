@@ -7,7 +7,8 @@ import Process
 
 
 type Msg
-    = ModelReceived (Result ElmServe.Error.Error ElmServe.Model.Ready)
+    = NothingHappened
+    | ModelReceived (Result ElmServe.Error.Error ElmServe.Model.Ready)
     | GotFileChange { path : String }
     | GotCompileProcess Process.Id
     | GotRequest Request

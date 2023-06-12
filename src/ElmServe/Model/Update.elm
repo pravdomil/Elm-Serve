@@ -64,104 +64,115 @@ initModel flags _ =
 
 
 update : ElmServe.Msg.Msg -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
-update msg model =
+update msg =
     case msg of
+        ElmServe.Msg.NothingHappened ->
+            Platform.Extra.noOperation
+
         ElmServe.Msg.ModelReceived a ->
-            let
-                task : Task.Task ElmServe.Error.Error ()
-                task =
-                    case a of
-                        Ok b ->
-                            let
-                                opt : ElmServe.Options.Options
-                                opt =
-                                    b.options
+            \model ->
+                case a of
+                    Ok b ->
+                        let
+                            task : Task.Task ElmServe.Error.Error ()
+                            task =
+                                let
+                                    opt : ElmServe.Options.Options
+                                    opt =
+                                        b.options
 
-                                openServerUrl : Task.Task ElmServe.Error.Error ()
-                                openServerUrl =
-                                    if opt.open then
-                                        open (serverUrl opt)
+                                    openServerUrl : Task.Task ElmServe.Error.Error ()
+                                    openServerUrl =
+                                        if opt.open then
+                                            open (serverUrl opt)
 
-                                    else
-                                        Task.succeed ()
-                            in
-                            log "Elm Serve\n\n"
-                                |> Task.andThen (\_ -> makeOutputFile opt)
-                                |> Task.andThen (\_ -> startWatching b.project)
-                                |> Task.andThen (\_ -> HttpServer.start opt)
-                                |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
-                                |> Task.andThen (\_ -> openServerUrl)
+                                        else
+                                            Task.succeed ()
+                                in
+                                log "Elm Serve\n\n"
+                                    |> Task.andThen (\_ -> makeOutputFile opt)
+                                    |> Task.andThen (\_ -> startWatching b.project)
+                                    |> Task.andThen (\_ -> HttpServer.start opt)
+                                    |> Task.andThen (\_ -> log ("Server is running at:\n" ++ serverUrl opt ++ "\n"))
+                                    |> Task.andThen (\_ -> openServerUrl)
+                        in
+                        ( Ok b
+                        , task
+                            |> Task.attempt ElmServe.Msg.TaskDone
+                        )
 
-                        Err b ->
-                            Task.fail b
-            in
-            ( Result.toMaybe a
-            , task
-                |> Task.attempt ElmServe.Msg.TaskDone
-            )
+                    Err b ->
+                        ( Err (ElmServe.Model.Error b)
+                        , exitWithMessageAndCode (ElmServe.Error.toString b) 1
+                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                        )
 
         ElmServe.Msg.GotFileChange _ ->
-            let
-                killProcess : ElmServe.Model.Ready -> Task.Task x ()
-                killProcess b =
-                    case b.compileProcess of
-                        Just v ->
-                            Process.kill v
+            \model ->
+                let
+                    killProcess : ElmServe.Model.Ready -> Task.Task x ()
+                    killProcess b =
+                        case b.compileProcess of
+                            Just v ->
+                                Process.kill v
 
-                        Nothing ->
-                            Task.succeed ()
+                            Nothing ->
+                                Task.succeed ()
 
-                task : Task.Task ElmServe.Error.Error ()
-                task =
-                    Task.Extra.fromResult (Result.fromMaybe ElmServe.Error.InternalErrorModelNotReady model)
-                        |> Task.andThen
-                            (\c ->
-                                killProcess c
-                                    |> Task.andThen (\_ -> Process.sleep 1)
-                                    |> Task.andThen (\_ -> log "Recompiling...")
-                                    |> Task.andThen (\_ -> makeOutputFile c.options)
-                                    |> Task.andThen (\_ -> resolveQueue)
-                                    |> Task.onError (\v -> exitWithMessageAndCode (ElmServe.Error.toString v) 1)
-                            )
-            in
-            ( model
-            , task
-                |> Process.spawn
-                |> Task.perform ElmServe.Msg.GotCompileProcess
-            )
+                    task : Task.Task ElmServe.Error.Error ()
+                    task =
+                        Task.Extra.fromResult (Result.fromMaybe ElmServe.Error.InternalErrorModelNotReady model)
+                            |> Task.andThen
+                                (\c ->
+                                    killProcess c
+                                        |> Task.andThen (\_ -> Process.sleep 1)
+                                        |> Task.andThen (\_ -> log "Recompiling...")
+                                        |> Task.andThen (\_ -> makeOutputFile c.options)
+                                        |> Task.andThen (\_ -> resolveQueue)
+                                        |> Task.onError (\v -> exitWithMessageAndCode (ElmServe.Error.toString v) 1)
+                                )
+                in
+                ( model
+                , task
+                    |> Process.spawn
+                    |> Task.perform ElmServe.Msg.GotCompileProcess
+                )
 
         ElmServe.Msg.GotCompileProcess a ->
-            ( model |> Maybe.map (\v -> { v | compileProcess = Just a })
-            , Cmd.none
-            )
+            \model ->
+                ( model |> Maybe.map (\v -> { v | compileProcess = Just a })
+                , Cmd.none
+                )
 
         ElmServe.Msg.GotRequest a ->
-            let
-                task : Task.Task ElmServe.Error.Error ()
-                task =
-                    Task.Extra.fromResult (Result.fromMaybe ElmServe.Error.InternalErrorModelNotReady model)
-                        |> Task.andThen (\c -> sendResponse c.options a)
-            in
-            ( model
-            , task
-                |> Task.attempt ElmServe.Msg.TaskDone
-            )
+            \model ->
+                let
+                    task : Task.Task ElmServe.Error.Error ()
+                    task =
+                        Task.Extra.fromResult (Result.fromMaybe ElmServe.Error.InternalErrorModelNotReady model)
+                            |> Task.andThen (\c -> sendResponse c.options a)
+                in
+                ( model
+                , task
+                    |> Task.attempt ElmServe.Msg.TaskDone
+                )
 
         ElmServe.Msg.TaskDone a ->
-            let
-                cmd : Cmd ElmServe.Msg.Msg
-                cmd =
-                    case a of
-                        Ok _ ->
-                            Cmd.none
+            \model ->
+                let
+                    cmd : Cmd ElmServe.Msg.Msg
+                    cmd =
+                        case a of
+                            Ok _ ->
+                                Cmd.none
 
-                        Err b ->
-                            exitWithMessageAndCode (ElmServe.Error.toString b) 1
-                                |> Task.attempt (\_ -> ElmServe.Msg.TaskDone (Ok ()))
-            in
-            ( model
-            , cmd
-            )
+                            Err b ->
+                                exitWithMessageAndCode (ElmServe.Error.toString b) 1
+                                    |> Task.attempt (\_ -> ElmServe.Msg.TaskDone (Ok ()))
+                in
+                ( model
+                , cmd
+                )
 
 
 subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
