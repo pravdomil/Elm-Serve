@@ -43,8 +43,8 @@ open a =
 --
 
 
-patchElm : String -> Task.Task JavaScript.Error String
-patchElm a =
+elmHot : String -> Task.Task JavaScript.Error String
+elmHot a =
     JavaScript.run "require('../resources/patch.js').inject(a)"
         (Json.Encode.string a)
         Json.Decode.string

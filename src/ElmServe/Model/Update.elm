@@ -184,7 +184,7 @@ makeOutputFile options =
     in
     Elm.Compiler.compile options.elm
         |> Task.andThen (\_ -> FileSystem.read outputPath)
-        |> Task.andThen (\x -> ElmServe.Utils.Utils.patchElm x)
+        |> Task.andThen (\x -> ElmServe.Utils.Utils.elmHot x)
         |> Task.onError recoverFromCompileError
         |> Task.map (\x -> ElmServe.Utils.Utils.jsLibrary ++ x)
         |> Task.andThen (FileSystem.write outputPath)
