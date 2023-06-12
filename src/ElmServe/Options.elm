@@ -5,7 +5,7 @@ import Parser
 
 
 type alias Options =
-    { http : HttpServer.Options
+    { server : HttpServer.Options
 
     --
     , root : String
