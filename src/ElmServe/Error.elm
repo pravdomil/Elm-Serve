@@ -12,7 +12,8 @@ type Error
     | CannotStartServer JavaScript.Error
       --
     | InternalErrorModelNotReady
-    | InternalError JavaScript.Error
+    | ConsoleError JavaScript.Error
+    | ExitError JavaScript.Error
 
 
 toString : Error -> String

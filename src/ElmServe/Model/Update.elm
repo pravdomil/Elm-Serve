@@ -1,5 +1,6 @@
 module ElmServe.Model.Update exposing (..)
 
+import Console
 import Dict
 import Elm.Project
 import ElmServe.Error
@@ -13,6 +14,7 @@ import Json.Decode
 import Json.Encode
 import Platform.Extra
 import Process
+import Process.Extra
 import Regex
 import Task
 import Task.Extra
@@ -70,7 +72,7 @@ update msg =
             Platform.Extra.noOperation
 
         ElmServe.Msg.ModelReceived a ->
-            \model ->
+            \_ ->
                 case a of
                     Ok b ->
                         let
@@ -579,24 +581,10 @@ sendFile opt path { request, response } =
 --
 
 
-log : String -> Task.Task ElmServe.Error.Error ()
-log a =
-    JavaScript.run "console.log(a)"
-        (Json.Encode.string a)
-        (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Error.InternalError
-
-
 exitWithMessageAndCode : String -> Int -> Task.Task ElmServe.Error.Error ()
 exitWithMessageAndCode msg code =
-    JavaScript.run "(() => { console.error(a.msg); process.exit(a.code); })()"
-        (Json.Encode.object
-            [ ( "msg", Json.Encode.string msg )
-            , ( "code", Json.Encode.int code )
-            ]
-        )
-        (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Error.InternalError
+    (Console.logError msg |> Task.mapError ElmServe.Error.ConsoleError)
+        |> Task.andThen (\() -> Process.Extra.hardExit code |> Task.mapError ElmServe.Error.ExitError)
 
 
 
