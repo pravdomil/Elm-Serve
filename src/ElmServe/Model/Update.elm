@@ -149,29 +149,7 @@ update msg =
 
 subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
 subscriptions _ =
-    sendMsgSubscription
-
-
-
---
-
-
-port sendMsg : (Json.Decode.Value -> msg) -> Sub msg
-
-
-sendMsgSubscription : Sub ElmServe.Msg.Msg
-sendMsgSubscription =
-    let
-        decoder : Json.Decode.Value -> ElmServe.Msg.Msg
-        decoder b =
-            case Json.Decode.decodeValue decodeMsg b of
-                Ok c ->
-                    c
-
-                Err c ->
-                    ElmServe.Msg.TaskDone (Err (ElmServe.Error.InternalError (JavaScript.DecodeError c)))
-    in
-    sendMsg decoder
+    HttpServer.requestSubscription ElmServe.Msg.RequestReceived
 
 
 
