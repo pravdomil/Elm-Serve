@@ -23,7 +23,7 @@ toString a =
     let
         usage : String
         usage =
-            """Welcome to Elm Serve.
+            """Elm Serve
 
 Usage:
     elm-serve <elm-files>...
