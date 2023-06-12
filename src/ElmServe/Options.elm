@@ -93,13 +93,18 @@ parser =
 
         stringArg : String -> Parser.Parser String
         stringArg name =
-            Parser.succeed identity
-                |. Parser.symbol ("--" ++ name)
-                |. Parser.oneOf
-                    [ Parser.symbol "="
-                    , Parser.symbol "\u{0000}"
-                    ]
-                |= argument
+            Parser.symbol ("--" ++ name)
+                |> Parser.andThen
+                    (\() ->
+                        Parser.oneOf
+                            [ Parser.symbol "="
+                            , Parser.symbol "\u{0000}"
+                            ]
+                    )
+                |> Parser.andThen
+                    (\() ->
+                        argument
+                    )
 
         argument : Parser.Parser String
         argument =
