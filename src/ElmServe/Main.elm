@@ -1,4 +1,4 @@
-port module ElmServe.Main exposing (..)
+module ElmServe.Main exposing (..)
 
 import ElmServe.Model
 import ElmServe.Model.Update
