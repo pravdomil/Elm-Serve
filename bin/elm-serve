@@ -601,11 +601,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.S.D === region.ac.D)
+	if (region.O.D === region.ab.D)
 	{
-		return 'on line ' + region.S.D;
+		return 'on line ' + region.O.D;
 	}
-	return 'on lines ' + region.S.D + ' through ' + region.ac.D;
+	return 'on lines ' + region.O.D + ' through ' + region.ab.D;
 }
 
 
@@ -790,197 +790,6 @@ function _Utils_ap(xs, ys)
 		curr = curr.b = _List_Cons(xs.a, ys);
 	}
 	return root;
-}
-
-
-
-// TASKS
-
-function _Scheduler_succeed(value)
-{
-	return {
-		$: 0,
-		a: value
-	};
-}
-
-function _Scheduler_fail(error)
-{
-	return {
-		$: 1,
-		a: error
-	};
-}
-
-function _Scheduler_binding(callback)
-{
-	return {
-		$: 2,
-		b: callback,
-		c: null
-	};
-}
-
-var _Scheduler_andThen = F2(function(callback, task)
-{
-	return {
-		$: 3,
-		b: callback,
-		d: task
-	};
-});
-
-var _Scheduler_onError = F2(function(callback, task)
-{
-	return {
-		$: 4,
-		b: callback,
-		d: task
-	};
-});
-
-function _Scheduler_receive(callback)
-{
-	return {
-		$: 5,
-		b: callback
-	};
-}
-
-
-// PROCESSES
-
-var _Scheduler_guid = 0;
-
-function _Scheduler_rawSpawn(task)
-{
-	var proc = {
-		$: 0,
-		e: _Scheduler_guid++,
-		f: task,
-		g: null,
-		h: []
-	};
-
-	_Scheduler_enqueue(proc);
-
-	return proc;
-}
-
-function _Scheduler_spawn(task)
-{
-	return _Scheduler_binding(function(callback) {
-		callback(_Scheduler_succeed(_Scheduler_rawSpawn(task)));
-	});
-}
-
-function _Scheduler_rawSend(proc, msg)
-{
-	proc.h.push(msg);
-	_Scheduler_enqueue(proc);
-}
-
-var _Scheduler_send = F2(function(proc, msg)
-{
-	return _Scheduler_binding(function(callback) {
-		_Scheduler_rawSend(proc, msg);
-		callback(_Scheduler_succeed(_Utils_Tuple0));
-	});
-});
-
-function _Scheduler_kill(proc)
-{
-	return _Scheduler_binding(function(callback) {
-		var task = proc.f;
-		if (task.$ === 2 && task.c)
-		{
-			task.c();
-		}
-
-		proc.f = null;
-
-		callback(_Scheduler_succeed(_Utils_Tuple0));
-	});
-}
-
-
-/* STEP PROCESSES
-
-type alias Process =
-  { $ : tag
-  , id : unique_id
-  , root : Task
-  , stack : null | { $: SUCCEED | FAIL, a: callback, b: stack }
-  , mailbox : [msg]
-  }
-
-*/
-
-
-var _Scheduler_working = false;
-var _Scheduler_queue = [];
-
-
-function _Scheduler_enqueue(proc)
-{
-	_Scheduler_queue.push(proc);
-	if (_Scheduler_working)
-	{
-		return;
-	}
-	_Scheduler_working = true;
-	while (proc = _Scheduler_queue.shift())
-	{
-		_Scheduler_step(proc);
-	}
-	_Scheduler_working = false;
-}
-
-
-function _Scheduler_step(proc)
-{
-	while (proc.f)
-	{
-		var rootTag = proc.f.$;
-		if (rootTag === 0 || rootTag === 1)
-		{
-			while (proc.g && proc.g.$ !== rootTag)
-			{
-				proc.g = proc.g.i;
-			}
-			if (!proc.g)
-			{
-				return;
-			}
-			proc.f = proc.g.b(proc.f.a);
-			proc.g = proc.g.i;
-		}
-		else if (rootTag === 2)
-		{
-			proc.f.c = proc.f.b(function(newRoot) {
-				proc.f = newRoot;
-				_Scheduler_enqueue(proc);
-			});
-			return;
-		}
-		else if (rootTag === 5)
-		{
-			if (proc.h.length === 0)
-			{
-				return;
-			}
-			proc.f = proc.f.b(proc.h.shift());
-		}
-		else // if (rootTag === 3 || rootTag === 4)
-		{
-			proc.g = {
-				$: rootTag === 3 ? 0 : 1,
-				b: proc.f.b,
-				i: proc.g
-			};
-			proc.f = proc.f.d;
-		}
-	}
 }
 
 
@@ -1836,6 +1645,197 @@ var _Json_encodeNull = _Json_wrap(null);
 
 
 
+// TASKS
+
+function _Scheduler_succeed(value)
+{
+	return {
+		$: 0,
+		a: value
+	};
+}
+
+function _Scheduler_fail(error)
+{
+	return {
+		$: 1,
+		a: error
+	};
+}
+
+function _Scheduler_binding(callback)
+{
+	return {
+		$: 2,
+		b: callback,
+		c: null
+	};
+}
+
+var _Scheduler_andThen = F2(function(callback, task)
+{
+	return {
+		$: 3,
+		b: callback,
+		d: task
+	};
+});
+
+var _Scheduler_onError = F2(function(callback, task)
+{
+	return {
+		$: 4,
+		b: callback,
+		d: task
+	};
+});
+
+function _Scheduler_receive(callback)
+{
+	return {
+		$: 5,
+		b: callback
+	};
+}
+
+
+// PROCESSES
+
+var _Scheduler_guid = 0;
+
+function _Scheduler_rawSpawn(task)
+{
+	var proc = {
+		$: 0,
+		e: _Scheduler_guid++,
+		f: task,
+		g: null,
+		h: []
+	};
+
+	_Scheduler_enqueue(proc);
+
+	return proc;
+}
+
+function _Scheduler_spawn(task)
+{
+	return _Scheduler_binding(function(callback) {
+		callback(_Scheduler_succeed(_Scheduler_rawSpawn(task)));
+	});
+}
+
+function _Scheduler_rawSend(proc, msg)
+{
+	proc.h.push(msg);
+	_Scheduler_enqueue(proc);
+}
+
+var _Scheduler_send = F2(function(proc, msg)
+{
+	return _Scheduler_binding(function(callback) {
+		_Scheduler_rawSend(proc, msg);
+		callback(_Scheduler_succeed(_Utils_Tuple0));
+	});
+});
+
+function _Scheduler_kill(proc)
+{
+	return _Scheduler_binding(function(callback) {
+		var task = proc.f;
+		if (task.$ === 2 && task.c)
+		{
+			task.c();
+		}
+
+		proc.f = null;
+
+		callback(_Scheduler_succeed(_Utils_Tuple0));
+	});
+}
+
+
+/* STEP PROCESSES
+
+type alias Process =
+  { $ : tag
+  , id : unique_id
+  , root : Task
+  , stack : null | { $: SUCCEED | FAIL, a: callback, b: stack }
+  , mailbox : [msg]
+  }
+
+*/
+
+
+var _Scheduler_working = false;
+var _Scheduler_queue = [];
+
+
+function _Scheduler_enqueue(proc)
+{
+	_Scheduler_queue.push(proc);
+	if (_Scheduler_working)
+	{
+		return;
+	}
+	_Scheduler_working = true;
+	while (proc = _Scheduler_queue.shift())
+	{
+		_Scheduler_step(proc);
+	}
+	_Scheduler_working = false;
+}
+
+
+function _Scheduler_step(proc)
+{
+	while (proc.f)
+	{
+		var rootTag = proc.f.$;
+		if (rootTag === 0 || rootTag === 1)
+		{
+			while (proc.g && proc.g.$ !== rootTag)
+			{
+				proc.g = proc.g.i;
+			}
+			if (!proc.g)
+			{
+				return;
+			}
+			proc.f = proc.g.b(proc.f.a);
+			proc.g = proc.g.i;
+		}
+		else if (rootTag === 2)
+		{
+			proc.f.c = proc.f.b(function(newRoot) {
+				proc.f = newRoot;
+				_Scheduler_enqueue(proc);
+			});
+			return;
+		}
+		else if (rootTag === 5)
+		{
+			if (proc.h.length === 0)
+			{
+				return;
+			}
+			proc.f = proc.f.b(proc.h.shift());
+		}
+		else // if (rootTag === 3 || rootTag === 4)
+		{
+			proc.g = {
+				$: rootTag === 3 ? 0 : 1,
+				b: proc.f.b,
+				i: proc.g
+			};
+			proc.f = proc.f.d;
+		}
+	}
+}
+
+
+
 function _Process_sleep(time)
 {
 	return _Scheduler_binding(function(callback) {
@@ -1858,7 +1858,7 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.bd,
+		impl.bb,
 		impl.bA,
 		impl.bx,
 		function() { return function() {} }
@@ -1880,6 +1880,7 @@ function _Platform_initialize(flagDecoder, args, init, update, subscriptions, st
 	var stepper = stepperBuilder(sendToApp, model);
 	var ports = _Platform_setupEffects(managers, sendToApp);
 
+	scope.ports = ports
 	function sendToApp(msg, viewMetadata)
 	{
 		var pair = A2(update, msg, model);
@@ -2495,9 +2496,9 @@ var _Regex_never = /.^/;
 
 var _Regex_fromStringWith = F2(function(options, string)
 {
-	var flags = 'g';
-	if (options.bi) { flags += 'm'; }
-	if (options.a_) { flags += 'i'; }
+	var flags = 'gu';
+	if (options.bf) { flags += 'm'; }
+	if (options.aY) { flags += 'i'; }
 
 	try
 	{
@@ -2685,152 +2686,10 @@ var $elm$core$Set$toList = function (_v0) {
 	return $elm$core$Dict$keys(dict);
 };
 var $elm$core$Basics$GT = 2;
-var $author$project$ElmServe$Main$GotReadyModel = function (a) {
-	return {$: 0, a: a};
-};
-var $elm$core$Maybe$Nothing = {$: 1};
-var $elm$core$Basics$apR = F2(
-	function (x, f) {
-		return f(x);
-	});
 var $elm$core$Result$Err = function (a) {
 	return {$: 1, a: a};
 };
-var $elm$core$Result$Ok = function (a) {
-	return {$: 0, a: a};
-};
-var $elm$core$Basics$identity = function (x) {
-	return x;
-};
-var $elm$core$Task$Perform = $elm$core$Basics$identity;
-var $elm$core$Task$andThen = _Scheduler_andThen;
-var $elm$core$Task$succeed = _Scheduler_succeed;
-var $elm$core$Task$init = $elm$core$Task$succeed(0);
-var $elm$core$Basics$add = _Basics_add;
-var $elm$core$List$foldl = F3(
-	function (func, acc, list) {
-		foldl:
-		while (true) {
-			if (!list.b) {
-				return acc;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				var $temp$func = func,
-					$temp$acc = A2(func, x, acc),
-					$temp$list = xs;
-				func = $temp$func;
-				acc = $temp$acc;
-				list = $temp$list;
-				continue foldl;
-			}
-		}
-	});
-var $elm$core$Basics$gt = _Utils_gt;
-var $elm$core$List$reverse = function (list) {
-	return A3($elm$core$List$foldl, $elm$core$List$cons, _List_Nil, list);
-};
-var $elm$core$List$foldrHelper = F4(
-	function (fn, acc, ctr, ls) {
-		if (!ls.b) {
-			return acc;
-		} else {
-			var a = ls.a;
-			var r1 = ls.b;
-			if (!r1.b) {
-				return A2(fn, a, acc);
-			} else {
-				var b = r1.a;
-				var r2 = r1.b;
-				if (!r2.b) {
-					return A2(
-						fn,
-						a,
-						A2(fn, b, acc));
-				} else {
-					var c = r2.a;
-					var r3 = r2.b;
-					if (!r3.b) {
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(fn, c, acc)));
-					} else {
-						var d = r3.a;
-						var r4 = r3.b;
-						var res = (ctr > 500) ? A3(
-							$elm$core$List$foldl,
-							fn,
-							acc,
-							$elm$core$List$reverse(r4)) : A4($elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(
-									fn,
-									c,
-									A2(fn, d, res))));
-					}
-				}
-			}
-		}
-	});
-var $elm$core$List$foldr = F3(
-	function (fn, acc, ls) {
-		return A4($elm$core$List$foldrHelper, fn, acc, 0, ls);
-	});
-var $elm$core$List$map = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, acc) {
-					return A2(
-						$elm$core$List$cons,
-						f(x),
-						acc);
-				}),
-			_List_Nil,
-			xs);
-	});
-var $elm$core$Task$map = F2(
-	function (func, taskA) {
-		return A2(
-			$elm$core$Task$andThen,
-			function (a) {
-				return $elm$core$Task$succeed(
-					func(a));
-			},
-			taskA);
-	});
-var $elm$core$Task$map2 = F3(
-	function (func, taskA, taskB) {
-		return A2(
-			$elm$core$Task$andThen,
-			function (a) {
-				return A2(
-					$elm$core$Task$andThen,
-					function (b) {
-						return $elm$core$Task$succeed(
-							A2(func, a, b));
-					},
-					taskB);
-			},
-			taskA);
-	});
-var $elm$core$Task$sequence = function (tasks) {
-	return A3(
-		$elm$core$List$foldr,
-		$elm$core$Task$map2($elm$core$List$cons),
-		$elm$core$Task$succeed(_List_Nil),
-		tasks);
-};
+var $author$project$ElmServe$Model$NotAsked = {$: 0};
 var $elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
 		return {$: 3, a: a, b: b};
@@ -2843,13 +2702,18 @@ var $elm$json$Json$Decode$Index = F2(
 	function (a, b) {
 		return {$: 1, a: a, b: b};
 	});
+var $elm$core$Result$Ok = function (a) {
+	return {$: 0, a: a};
+};
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 2, a: a};
 };
 var $elm$core$Basics$False = 1;
+var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 0, a: a};
 };
+var $elm$core$Maybe$Nothing = {$: 1};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -2873,6 +2737,25 @@ var $elm$json$Json$Decode$indent = function (str) {
 		'\n    ',
 		A2($elm$core$String$split, '\n', str));
 };
+var $elm$core$List$foldl = F3(
+	function (func, acc, list) {
+		foldl:
+		while (true) {
+			if (!list.b) {
+				return acc;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				var $temp$func = func,
+					$temp$acc = A2(func, x, acc),
+					$temp$list = xs;
+				func = $temp$func;
+				acc = $temp$acc;
+				list = $temp$list;
+				continue foldl;
+			}
+		}
+	});
 var $elm$core$List$length = function (xs) {
 	return A3(
 		$elm$core$List$foldl,
@@ -2937,6 +2820,9 @@ var $elm$core$Char$isDigit = function (_char) {
 };
 var $elm$core$Char$isAlphaNum = function (_char) {
 	return $elm$core$Char$isLower(_char) || ($elm$core$Char$isUpper(_char) || $elm$core$Char$isDigit(_char));
+};
+var $elm$core$List$reverse = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$List$cons, _List_Nil, list);
 };
 var $elm$core$String$uncons = _String_uncons;
 var $elm$json$Json$Decode$errorOneOf = F2(
@@ -3066,9 +2952,14 @@ var $elm$core$Basics$apL = F2(
 	function (f, x) {
 		return f(x);
 	});
+var $elm$core$Basics$apR = F2(
+	function (x, f) {
+		return f(x);
+	});
 var $elm$core$Basics$eq = _Utils_equal;
 var $elm$core$Basics$floor = _Basics_floor;
 var $elm$core$Elm$JsArray$length = _JsArray_length;
+var $elm$core$Basics$gt = _Utils_gt;
 var $elm$core$Basics$max = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) > 0) ? x : y;
@@ -3191,6 +3082,147 @@ var $elm$core$Result$isOk = function (result) {
 		return false;
 	}
 };
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $author$project$Platform$Extra$andThen = F2(
+	function (fn, _v0) {
+		var model = _v0.a;
+		var cmd = _v0.b;
+		var _v1 = fn(model);
+		var nextModel = _v1.a;
+		var nextCmd = _v1.b;
+		return _Utils_Tuple2(
+			nextModel,
+			$elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[nextCmd, cmd])));
+	});
+var $author$project$ElmServe$Model$Loading = {$: 1};
+var $author$project$ElmServe$Msg$ModelReceived = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$ElmServe$Error$OptionsError = function (a) {
+	return {$: 0, a: a};
+};
+var $author$project$ElmServe$Error$ProjectError = function (a) {
+	return {$: 1, a: a};
+};
+var $author$project$ElmServe$Model$Ready = F3(
+	function (options, project, compileProcess) {
+		return {a1: compileProcess, bm: options, br: project};
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$core$List$foldrHelper = F4(
+	function (fn, acc, ctr, ls) {
+		if (!ls.b) {
+			return acc;
+		} else {
+			var a = ls.a;
+			var r1 = ls.b;
+			if (!r1.b) {
+				return A2(fn, a, acc);
+			} else {
+				var b = r1.a;
+				var r2 = r1.b;
+				if (!r2.b) {
+					return A2(
+						fn,
+						a,
+						A2(fn, b, acc));
+				} else {
+					var c = r2.a;
+					var r3 = r2.b;
+					if (!r3.b) {
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(fn, c, acc)));
+					} else {
+						var d = r3.a;
+						var r4 = r3.b;
+						var res = (ctr > 500) ? A3(
+							$elm$core$List$foldl,
+							fn,
+							acc,
+							$elm$core$List$reverse(r4)) : A4($elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(
+									fn,
+									c,
+									A2(fn, d, res))));
+					}
+				}
+			}
+		}
+	});
+var $elm$core$List$foldr = F3(
+	function (fn, acc, ls) {
+		return A4($elm$core$List$foldrHelper, fn, acc, 0, ls);
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$core$Basics$identity = function (x) {
+	return x;
+};
+var $elm$core$Task$Perform = $elm$core$Basics$identity;
+var $elm$core$Task$andThen = _Scheduler_andThen;
+var $elm$core$Task$succeed = _Scheduler_succeed;
+var $elm$core$Task$init = $elm$core$Task$succeed(0);
+var $elm$core$List$map = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, acc) {
+					return A2(
+						$elm$core$List$cons,
+						f(x),
+						acc);
+				}),
+			_List_Nil,
+			xs);
+	});
+var $elm$core$Task$map = F2(
+	function (func, taskA) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (a) {
+				return $elm$core$Task$succeed(
+					func(a));
+			},
+			taskA);
+	});
+var $elm$core$Task$map2 = F3(
+	function (func, taskA, taskB) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (a) {
+				return A2(
+					$elm$core$Task$andThen,
+					function (b) {
+						return $elm$core$Task$succeed(
+							A2(func, a, b));
+					},
+					taskB);
+			},
+			taskA);
+	});
+var $elm$core$Task$sequence = function (tasks) {
+	return A3(
+		$elm$core$List$foldr,
+		$elm$core$Task$map2($elm$core$List$cons),
+		$elm$core$Task$succeed(_List_Nil),
+		tasks);
+};
 var $elm$core$Platform$sendToApp = _Platform_sendToApp;
 var $elm$core$Task$spawnCmd = F2(
 	function (router, _v0) {
@@ -3248,12 +3280,7 @@ var $elm$core$Task$attempt = F2(
 						$elm$core$Result$Ok),
 					task)));
 	});
-var $author$project$ElmServe$Main$CannotParseOptions = function (a) {
-	return {$: 0, a: a};
-};
-var $author$project$ElmServe$Main$InternalError = function (a) {
-	return {$: 5, a: a};
-};
+var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$core$List$drop = F2(
 	function (n, list) {
 		drop:
@@ -3277,6 +3304,26 @@ var $elm$core$List$drop = F2(
 	});
 var $elm$core$Task$fail = _Scheduler_fail;
 var $elm$json$Json$Decode$list = _Json_decodeList;
+var $elm$core$Task$map3 = F4(
+	function (func, taskA, taskB, taskC) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (a) {
+				return A2(
+					$elm$core$Task$andThen,
+					function (b) {
+						return A2(
+							$elm$core$Task$andThen,
+							function (c) {
+								return $elm$core$Task$succeed(
+									A3(func, a, b, c));
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
 var $elm$core$Task$mapError = F2(
 	function (convert, task) {
 		return A2(
@@ -3284,14 +3331,24 @@ var $elm$core$Task$mapError = F2(
 			A2($elm$core$Basics$composeL, $elm$core$Task$fail, convert),
 			task);
 	});
-var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $elm$parser$Parser$Done = function (a) {
 	return {$: 1, a: a};
 };
 var $elm$parser$Parser$Loop = function (a) {
 	return {$: 0, a: a};
 };
-var $elm$parser$Parser$UnexpectedChar = {$: 11};
+var $author$project$Elm$Compiler$Options = F5(
+	function (elmPath, debug, optimize, input, output) {
+		return {W: debug, aa: elmPath, ak: input, aq: optimize, ar: output};
+	});
+var $author$project$ElmServe$Options$Options = F5(
+	function (server, elm, root, open, no404) {
+		return {_: elm, bh: no404, bl: open, az: root, aD: server};
+	});
+var $author$project$HttpServer$Options = F3(
+	function (host, port_, ssl) {
+		return {a8: host, bo: port_, bv: ssl};
+	});
 var $elm$parser$Parser$Advanced$Bad = F2(
 	function (a, b) {
 		return {$: 1, a: a, b: b};
@@ -3301,13 +3358,44 @@ var $elm$parser$Parser$Advanced$Good = F3(
 		return {$: 0, a: a, b: b, c: c};
 	});
 var $elm$parser$Parser$Advanced$Parser = $elm$core$Basics$identity;
+var $elm$parser$Parser$Advanced$andThen = F2(
+	function (callback, _v0) {
+		var parseA = _v0;
+		return function (s0) {
+			var _v1 = parseA(s0);
+			if (_v1.$ === 1) {
+				var p = _v1.a;
+				var x = _v1.b;
+				return A2($elm$parser$Parser$Advanced$Bad, p, x);
+			} else {
+				var p1 = _v1.a;
+				var a = _v1.b;
+				var s1 = _v1.c;
+				var _v2 = callback(a);
+				var parseB = _v2;
+				var _v3 = parseB(s1);
+				if (_v3.$ === 1) {
+					var p2 = _v3.a;
+					var x = _v3.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+				} else {
+					var p2 = _v3.a;
+					var b = _v3.b;
+					var s2 = _v3.c;
+					return A3($elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
+				}
+			}
+		};
+	});
+var $elm$parser$Parser$andThen = $elm$parser$Parser$Advanced$andThen;
+var $elm$parser$Parser$ExpectingEnd = {$: 10};
 var $elm$parser$Parser$Advanced$AddRight = F2(
 	function (a, b) {
 		return {$: 1, a: a, b: b};
 	});
 var $elm$parser$Parser$Advanced$DeadEnd = F4(
 	function (row, col, problem, contextStack) {
-		return {Y: col, a3: contextStack, br: problem, aB: row};
+		return {U: col, a2: contextStack, bq: problem, aA: row};
 	});
 var $elm$parser$Parser$Advanced$Empty = {$: 0};
 var $elm$parser$Parser$Advanced$fromState = F2(
@@ -3315,50 +3403,9 @@ var $elm$parser$Parser$Advanced$fromState = F2(
 		return A2(
 			$elm$parser$Parser$Advanced$AddRight,
 			$elm$parser$Parser$Advanced$Empty,
-			A4($elm$parser$Parser$Advanced$DeadEnd, s.aB, s.Y, x, s.c));
+			A4($elm$parser$Parser$Advanced$DeadEnd, s.aA, s.U, x, s.c));
 	});
-var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$parser$Parser$Advanced$chompIf = F2(
-	function (isGood, expecting) {
-		return function (s) {
-			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, s.b, s.a);
-			return _Utils_eq(newOffset, -1) ? A2(
-				$elm$parser$Parser$Advanced$Bad,
-				false,
-				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : (_Utils_eq(newOffset, -2) ? A3(
-				$elm$parser$Parser$Advanced$Good,
-				true,
-				0,
-				{Y: 1, c: s.c, d: s.d, b: s.b + 1, aB: s.aB + 1, a: s.a}) : A3(
-				$elm$parser$Parser$Advanced$Good,
-				true,
-				0,
-				{Y: s.Y + 1, c: s.c, d: s.d, b: newOffset, aB: s.aB, a: s.a}));
-		};
-	});
-var $elm$parser$Parser$chompIf = function (isGood) {
-	return A2($elm$parser$Parser$Advanced$chompIf, isGood, $elm$parser$Parser$UnexpectedChar);
-};
 var $elm$core$String$length = _String_length;
-var $elm$parser$Parser$Advanced$chompUntilEndOr = function (str) {
-	return function (s) {
-		var _v0 = A5(_Parser_findSubString, str, s.b, s.aB, s.Y, s.a);
-		var newOffset = _v0.a;
-		var newRow = _v0.b;
-		var newCol = _v0.c;
-		var adjustedOffset = (newOffset < 0) ? $elm$core$String$length(s.a) : newOffset;
-		return A3(
-			$elm$parser$Parser$Advanced$Good,
-			_Utils_cmp(s.b, adjustedOffset) < 0,
-			0,
-			{Y: newCol, c: s.c, d: s.d, b: adjustedOffset, aB: newRow, a: s.a});
-	};
-};
-var $elm$parser$Parser$chompUntilEndOr = $elm$parser$Parser$Advanced$chompUntilEndOr;
-var $elm$parser$Parser$ExpectingEnd = {$: 10};
 var $elm$parser$Parser$Advanced$end = function (x) {
 	return function (s) {
 		return _Utils_eq(
@@ -3370,82 +3417,137 @@ var $elm$parser$Parser$Advanced$end = function (x) {
 	};
 };
 var $elm$parser$Parser$end = $elm$parser$Parser$Advanced$end($elm$parser$Parser$ExpectingEnd);
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
+var $elm$parser$Parser$Advanced$Append = F2(
+	function (a, b) {
+		return {$: 2, a: a, b: b};
 	});
-var $elm$core$String$slice = _String_slice;
-var $elm$parser$Parser$Advanced$mapChompedString = F2(
+var $elm$parser$Parser$Advanced$oneOfHelp = F3(
+	function (s0, bag, parsers) {
+		oneOfHelp:
+		while (true) {
+			if (!parsers.b) {
+				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
+			} else {
+				var parse = parsers.a;
+				var remainingParsers = parsers.b;
+				var _v1 = parse(s0);
+				if (!_v1.$) {
+					var step = _v1;
+					return step;
+				} else {
+					var step = _v1;
+					var p = step.a;
+					var x = step.b;
+					if (p) {
+						return step;
+					} else {
+						var $temp$s0 = s0,
+							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
+							$temp$parsers = remainingParsers;
+						s0 = $temp$s0;
+						bag = $temp$bag;
+						parsers = $temp$parsers;
+						continue oneOfHelp;
+					}
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
+	return function (s) {
+		return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
+	};
+};
+var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
+var $elm$parser$Parser$ExpectingSymbol = function (a) {
+	return {$: 8, a: a};
+};
+var $elm$parser$Parser$Advanced$Token = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $elm$core$String$isEmpty = function (string) {
+	return string === '';
+};
+var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Basics$not = _Basics_not;
+var $elm$parser$Parser$Advanced$token = function (_v0) {
+	var str = _v0.a;
+	var expecting = _v0.b;
+	var progress = !$elm$core$String$isEmpty(str);
+	return function (s) {
+		var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.b, s.aA, s.U, s.a);
+		var newOffset = _v1.a;
+		var newRow = _v1.b;
+		var newCol = _v1.c;
+		return _Utils_eq(newOffset, -1) ? A2(
+			$elm$parser$Parser$Advanced$Bad,
+			false,
+			A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+			$elm$parser$Parser$Advanced$Good,
+			progress,
+			0,
+			{U: newCol, c: s.c, d: s.d, b: newOffset, aA: newRow, a: s.a});
+	};
+};
+var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
+var $elm$parser$Parser$symbol = function (str) {
+	return $elm$parser$Parser$Advanced$symbol(
+		A2(
+			$elm$parser$Parser$Advanced$Token,
+			str,
+			$elm$parser$Parser$ExpectingSymbol(str)));
+};
+var $author$project$ElmServe$Options$argumentEnd = $elm$parser$Parser$oneOf(
+	_List_fromArray(
+		[
+			$elm$parser$Parser$symbol('\u0000'),
+			$elm$parser$Parser$end
+		]));
+var $elm$parser$Parser$Advanced$map = F2(
 	function (func, _v0) {
 		var parse = _v0;
 		return function (s0) {
 			var _v1 = parse(s0);
-			if (_v1.$ === 1) {
-				var p = _v1.a;
-				var x = _v1.b;
-				return A2($elm$parser$Parser$Advanced$Bad, p, x);
-			} else {
+			if (!_v1.$) {
 				var p = _v1.a;
 				var a = _v1.b;
 				var s1 = _v1.c;
 				return A3(
 					$elm$parser$Parser$Advanced$Good,
 					p,
-					A2(
-						func,
-						A3($elm$core$String$slice, s0.b, s1.b, s0.a),
-						a),
+					func(a),
 					s1);
-			}
-		};
-	});
-var $elm$parser$Parser$Advanced$getChompedString = function (parser) {
-	return A2($elm$parser$Parser$Advanced$mapChompedString, $elm$core$Basics$always, parser);
-};
-var $elm$parser$Parser$getChompedString = $elm$parser$Parser$Advanced$getChompedString;
-var $elm$parser$Parser$Advanced$map2 = F3(
-	function (func, _v0, _v1) {
-		var parseA = _v0;
-		var parseB = _v1;
-		return function (s0) {
-			var _v2 = parseA(s0);
-			if (_v2.$ === 1) {
-				var p = _v2.a;
-				var x = _v2.b;
-				return A2($elm$parser$Parser$Advanced$Bad, p, x);
 			} else {
-				var p1 = _v2.a;
-				var a = _v2.b;
-				var s1 = _v2.c;
-				var _v3 = parseB(s1);
-				if (_v3.$ === 1) {
-					var p2 = _v3.a;
-					var x = _v3.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
-				} else {
-					var p2 = _v3.a;
-					var b = _v3.b;
-					var s2 = _v3.c;
-					return A3(
-						$elm$parser$Parser$Advanced$Good,
-						p1 || p2,
-						A2(func, a, b),
-						s2);
-				}
+				var p = _v1.a;
+				var x = _v1.b;
+				return A2($elm$parser$Parser$Advanced$Bad, p, x);
 			}
 		};
 	});
-var $elm$parser$Parser$Advanced$ignorer = F2(
-	function (keepParser, ignoreParser) {
-		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$always, keepParser, ignoreParser);
-	});
-var $elm$parser$Parser$ignorer = $elm$parser$Parser$Advanced$ignorer;
+var $elm$parser$Parser$map = $elm$parser$Parser$Advanced$map;
+var $author$project$ElmServe$Options$flag = function (name) {
+	return A2(
+		$elm$parser$Parser$andThen,
+		function (x) {
+			return A2(
+				$elm$parser$Parser$map,
+				function (_v0) {
+					return x;
+				},
+				$author$project$ElmServe$Options$argumentEnd);
+		},
+		$elm$parser$Parser$symbol('--' + name));
+};
 var $elm$parser$Parser$ExpectingInt = {$: 1};
 var $elm$parser$Parser$Advanced$consumeBase = _Parser_consumeBase;
 var $elm$parser$Parser$Advanced$consumeBase16 = _Parser_consumeBase16;
 var $elm$parser$Parser$Advanced$bumpOffset = F2(
 	function (newOffset, s) {
-		return {Y: s.Y + (newOffset - s.b), c: s.c, d: s.d, b: newOffset, aB: s.aB, a: s.a};
+		return {U: s.U + (newOffset - s.b), c: s.c, d: s.d, b: newOffset, aA: s.aA, a: s.a};
 	});
 var $elm$parser$Parser$Advanced$chompBase10 = _Parser_chompBase10;
 var $elm$parser$Parser$Advanced$isAsciiCode = _Parser_isAsciiCode;
@@ -3496,6 +3598,7 @@ var $elm$parser$Parser$Advanced$fromInfo = F4(
 			$elm$parser$Parser$Advanced$Empty,
 			A4($elm$parser$Parser$Advanced$DeadEnd, row, col, x, context));
 	});
+var $elm$core$String$slice = _String_slice;
 var $elm$core$String$toFloat = _String_toFloat;
 var $elm$parser$Parser$Advanced$finalizeFloat = F6(
 	function (invalid, expecting, intSettings, floatSettings, intPair, s) {
@@ -3505,7 +3608,7 @@ var $elm$parser$Parser$Advanced$finalizeFloat = F6(
 			return A2(
 				$elm$parser$Parser$Advanced$Bad,
 				true,
-				A4($elm$parser$Parser$Advanced$fromInfo, s.aB, s.Y - (floatOffset + s.b), invalid, s.c));
+				A4($elm$parser$Parser$Advanced$fromInfo, s.aA, s.U - (floatOffset + s.b), invalid, s.c));
 		} else {
 			if (_Utils_eq(s.b, floatOffset)) {
 				return A2(
@@ -3551,37 +3654,37 @@ var $elm$parser$Parser$Advanced$number = function (c) {
 			var baseOffset = zeroOffset + 1;
 			return A3($elm$parser$Parser$Advanced$isAsciiCode, 120, zeroOffset, s.a) ? A5(
 				$elm$parser$Parser$Advanced$finalizeInt,
-				c.bf,
-				c.aj,
+				c.bc,
+				c.ai,
 				baseOffset,
 				A2($elm$parser$Parser$Advanced$consumeBase16, baseOffset, s.a),
 				s) : (A3($elm$parser$Parser$Advanced$isAsciiCode, 111, zeroOffset, s.a) ? A5(
 				$elm$parser$Parser$Advanced$finalizeInt,
-				c.bf,
-				c.aq,
+				c.bc,
+				c.ap,
 				baseOffset,
 				A3($elm$parser$Parser$Advanced$consumeBase, 8, baseOffset, s.a),
 				s) : (A3($elm$parser$Parser$Advanced$isAsciiCode, 98, zeroOffset, s.a) ? A5(
 				$elm$parser$Parser$Advanced$finalizeInt,
-				c.bf,
-				c.V,
+				c.bc,
+				c.R,
 				baseOffset,
 				A3($elm$parser$Parser$Advanced$consumeBase, 2, baseOffset, s.a),
 				s) : A6(
 				$elm$parser$Parser$Advanced$finalizeFloat,
-				c.bf,
-				c.ae,
-				c.am,
-				c.ag,
+				c.bc,
+				c.ad,
+				c.al,
+				c.af,
 				_Utils_Tuple2(zeroOffset, 0),
 				s)));
 		} else {
 			return A6(
 				$elm$parser$Parser$Advanced$finalizeFloat,
-				c.bf,
-				c.ae,
-				c.am,
-				c.ag,
+				c.bc,
+				c.ad,
+				c.al,
+				c.af,
 				A3($elm$parser$Parser$Advanced$consumeBase, 10, s.b, s.a),
 				s);
 		}
@@ -3591,16 +3694,48 @@ var $elm$parser$Parser$Advanced$int = F2(
 	function (expecting, invalid) {
 		return $elm$parser$Parser$Advanced$number(
 			{
-				V: $elm$core$Result$Err(invalid),
-				ae: expecting,
-				ag: $elm$core$Result$Err(invalid),
-				aj: $elm$core$Result$Err(invalid),
-				am: $elm$core$Result$Ok($elm$core$Basics$identity),
-				bf: invalid,
-				aq: $elm$core$Result$Err(invalid)
+				R: $elm$core$Result$Err(invalid),
+				ad: expecting,
+				af: $elm$core$Result$Err(invalid),
+				ai: $elm$core$Result$Err(invalid),
+				al: $elm$core$Result$Ok($elm$core$Basics$identity),
+				bc: invalid,
+				ap: $elm$core$Result$Err(invalid)
 			});
 	});
 var $elm$parser$Parser$int = A2($elm$parser$Parser$Advanced$int, $elm$parser$Parser$ExpectingInt, $elm$parser$Parser$ExpectingInt);
+var $elm$parser$Parser$Advanced$map2 = F3(
+	function (func, _v0, _v1) {
+		var parseA = _v0;
+		var parseB = _v1;
+		return function (s0) {
+			var _v2 = parseA(s0);
+			if (_v2.$ === 1) {
+				var p = _v2.a;
+				var x = _v2.b;
+				return A2($elm$parser$Parser$Advanced$Bad, p, x);
+			} else {
+				var p1 = _v2.a;
+				var a = _v2.b;
+				var s1 = _v2.c;
+				var _v3 = parseB(s1);
+				if (_v3.$ === 1) {
+					var p2 = _v3.a;
+					var x = _v3.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+				} else {
+					var p2 = _v3.a;
+					var b = _v3.b;
+					var s2 = _v3.c;
+					return A3(
+						$elm$parser$Parser$Advanced$Good,
+						p1 || p2,
+						A2(func, a, b),
+						s2);
+				}
+			}
+		};
+	});
 var $elm$parser$Parser$Advanced$keeper = F2(
 	function (parseFunc, parseArg) {
 		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$apL, parseFunc, parseArg);
@@ -3645,28 +3780,6 @@ var $elm$parser$Parser$Advanced$loop = F2(
 			return A4($elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
 		};
 	});
-var $elm$parser$Parser$Advanced$map = F2(
-	function (func, _v0) {
-		var parse = _v0;
-		return function (s0) {
-			var _v1 = parse(s0);
-			if (!_v1.$) {
-				var p = _v1.a;
-				var a = _v1.b;
-				var s1 = _v1.c;
-				return A3(
-					$elm$parser$Parser$Advanced$Good,
-					p,
-					func(a),
-					s1);
-			} else {
-				var p = _v1.a;
-				var x = _v1.b;
-				return A2($elm$parser$Parser$Advanced$Bad, p, x);
-			}
-		};
-	});
-var $elm$parser$Parser$map = $elm$parser$Parser$Advanced$map;
 var $elm$parser$Parser$Advanced$Done = function (a) {
 	return {$: 1, a: a};
 };
@@ -3694,49 +3807,35 @@ var $elm$parser$Parser$loop = F2(
 					callback(s));
 			});
 	});
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$parser$Parser$Advanced$Append = F2(
-	function (a, b) {
-		return {$: 2, a: a, b: b};
+var $author$project$ElmServe$Options$namedArgument = F2(
+	function (name, a) {
+		return A2(
+			$elm$parser$Parser$andThen,
+			function (x) {
+				return A2(
+					$elm$parser$Parser$map,
+					function (_v2) {
+						return x;
+					},
+					$author$project$ElmServe$Options$argumentEnd);
+			},
+			A2(
+				$elm$parser$Parser$andThen,
+				function (_v1) {
+					return a;
+				},
+				A2(
+					$elm$parser$Parser$andThen,
+					function (_v0) {
+						return $elm$parser$Parser$oneOf(
+							_List_fromArray(
+								[
+									$elm$parser$Parser$symbol('='),
+									$elm$parser$Parser$symbol('\u0000')
+								]));
+					},
+					$elm$parser$Parser$symbol('--' + name))));
 	});
-var $elm$parser$Parser$Advanced$oneOfHelp = F3(
-	function (s0, bag, parsers) {
-		oneOfHelp:
-		while (true) {
-			if (!parsers.b) {
-				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
-			} else {
-				var parse = parsers.a;
-				var remainingParsers = parsers.b;
-				var _v1 = parse(s0);
-				if (!_v1.$) {
-					var step = _v1;
-					return step;
-				} else {
-					var step = _v1;
-					var p = step.a;
-					var x = step.b;
-					if (p) {
-						return step;
-					} else {
-						var $temp$s0 = s0,
-							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
-							$temp$parsers = remainingParsers;
-						s0 = $temp$s0;
-						bag = $temp$bag;
-						parsers = $temp$parsers;
-						continue oneOfHelp;
-					}
-				}
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
-	return function (s) {
-		return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
-	};
-};
-var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
 var $elm$parser$Parser$Problem = function (a) {
 	return {$: 12, a: a};
 };
@@ -3752,266 +3851,310 @@ var $elm$parser$Parser$problem = function (msg) {
 	return $elm$parser$Parser$Advanced$problem(
 		$elm$parser$Parser$Problem(msg));
 };
+var $elm$parser$Parser$UnexpectedChar = {$: 11};
+var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
+var $elm$parser$Parser$Advanced$chompIf = F2(
+	function (isGood, expecting) {
+		return function (s) {
+			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, s.b, s.a);
+			return _Utils_eq(newOffset, -1) ? A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : (_Utils_eq(newOffset, -2) ? A3(
+				$elm$parser$Parser$Advanced$Good,
+				true,
+				0,
+				{U: 1, c: s.c, d: s.d, b: s.b + 1, aA: s.aA + 1, a: s.a}) : A3(
+				$elm$parser$Parser$Advanced$Good,
+				true,
+				0,
+				{U: s.U + 1, c: s.c, d: s.d, b: newOffset, aA: s.aA, a: s.a}));
+		};
+	});
+var $elm$parser$Parser$chompIf = function (isGood) {
+	return A2($elm$parser$Parser$Advanced$chompIf, isGood, $elm$parser$Parser$UnexpectedChar);
+};
+var $elm$parser$Parser$Advanced$chompUntilEndOr = function (str) {
+	return function (s) {
+		var _v0 = A5(_Parser_findSubString, str, s.b, s.aA, s.U, s.a);
+		var newOffset = _v0.a;
+		var newRow = _v0.b;
+		var newCol = _v0.c;
+		var adjustedOffset = (newOffset < 0) ? $elm$core$String$length(s.a) : newOffset;
+		return A3(
+			$elm$parser$Parser$Advanced$Good,
+			_Utils_cmp(s.b, adjustedOffset) < 0,
+			0,
+			{U: newCol, c: s.c, d: s.d, b: adjustedOffset, aA: newRow, a: s.a});
+	};
+};
+var $elm$parser$Parser$chompUntilEndOr = $elm$parser$Parser$Advanced$chompUntilEndOr;
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$parser$Parser$Advanced$mapChompedString = F2(
+	function (func, _v0) {
+		var parse = _v0;
+		return function (s0) {
+			var _v1 = parse(s0);
+			if (_v1.$ === 1) {
+				var p = _v1.a;
+				var x = _v1.b;
+				return A2($elm$parser$Parser$Advanced$Bad, p, x);
+			} else {
+				var p = _v1.a;
+				var a = _v1.b;
+				var s1 = _v1.c;
+				return A3(
+					$elm$parser$Parser$Advanced$Good,
+					p,
+					A2(
+						func,
+						A3($elm$core$String$slice, s0.b, s1.b, s0.a),
+						a),
+					s1);
+			}
+		};
+	});
+var $elm$parser$Parser$Advanced$getChompedString = function (parser) {
+	return A2($elm$parser$Parser$Advanced$mapChompedString, $elm$core$Basics$always, parser);
+};
+var $elm$parser$Parser$getChompedString = $elm$parser$Parser$Advanced$getChompedString;
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$ElmServe$Options$stringArgument = A2(
+	$elm$parser$Parser$andThen,
+	function (x) {
+		return A2(
+			$elm$parser$Parser$map,
+			function (_v1) {
+				return x;
+			},
+			$author$project$ElmServe$Options$argumentEnd);
+	},
+	$elm$parser$Parser$getChompedString(
+		A2(
+			$elm$parser$Parser$andThen,
+			function (_v0) {
+				return $elm$parser$Parser$chompUntilEndOr('\u0000');
+			},
+			$elm$parser$Parser$chompIf(
+				function (x) {
+					return x !== '\u0000';
+				}))));
 var $elm$parser$Parser$Advanced$succeed = function (a) {
 	return function (s) {
 		return A3($elm$parser$Parser$Advanced$Good, false, a, s);
 	};
 };
 var $elm$parser$Parser$succeed = $elm$parser$Parser$Advanced$succeed;
-var $elm$parser$Parser$ExpectingSymbol = function (a) {
-	return {$: 8, a: a};
-};
-var $elm$parser$Parser$Advanced$Token = F2(
-	function (a, b) {
-		return {$: 0, a: a, b: b};
-	});
-var $elm$core$String$isEmpty = function (string) {
-	return string === '';
-};
-var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
-var $elm$core$Basics$not = _Basics_not;
-var $elm$parser$Parser$Advanced$token = function (_v0) {
-	var str = _v0.a;
-	var expecting = _v0.b;
-	var progress = !$elm$core$String$isEmpty(str);
-	return function (s) {
-		var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.b, s.aB, s.Y, s.a);
-		var newOffset = _v1.a;
-		var newRow = _v1.b;
-		var newCol = _v1.c;
-		return _Utils_eq(newOffset, -1) ? A2(
-			$elm$parser$Parser$Advanced$Bad,
-			false,
-			A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
-			$elm$parser$Parser$Advanced$Good,
-			progress,
-			0,
-			{Y: newCol, c: s.c, d: s.d, b: newOffset, aB: newRow, a: s.a});
-	};
-};
-var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
-var $elm$parser$Parser$symbol = function (str) {
-	return $elm$parser$Parser$Advanced$symbol(
-		A2(
-			$elm$parser$Parser$Advanced$Token,
-			str,
-			$elm$parser$Parser$ExpectingSymbol(str)));
-};
 var $author$project$ElmServe$Options$parser = function () {
-	var argEnd = $elm$parser$Parser$oneOf(
-		_List_fromArray(
-			[
-				$elm$parser$Parser$symbol('\u0000'),
-				$elm$parser$Parser$end
-			]));
-	var argument = A2(
-		$elm$parser$Parser$ignorer,
-		$elm$parser$Parser$getChompedString(
-			A2(
-				$elm$parser$Parser$ignorer,
+	var map2 = F3(
+		function (fn, a, b) {
+			return A2(
+				$elm$parser$Parser$keeper,
 				A2(
-					$elm$parser$Parser$ignorer,
-					$elm$parser$Parser$succeed(0),
-					$elm$parser$Parser$chompIf(
-						function (v) {
-							return (v !== '-') && (v !== '\u0000');
-						})),
-				$elm$parser$Parser$chompUntilEndOr('\u0000'))),
-		argEnd);
-	var stringArg = function (name) {
-		return A2(
-			$elm$parser$Parser$keeper,
-			A2(
-				$elm$parser$Parser$ignorer,
-				A2(
-					$elm$parser$Parser$ignorer,
-					$elm$parser$Parser$succeed($elm$core$Basics$identity),
-					$elm$parser$Parser$symbol('--' + name)),
-				$elm$parser$Parser$oneOf(
-					_List_fromArray(
-						[
-							$elm$parser$Parser$symbol('='),
-							$elm$parser$Parser$symbol('\u0000')
-						]))),
-			argument);
-	};
-	var boolArg = function (name) {
-		return A2(
-			$elm$parser$Parser$ignorer,
-			A2(
-				$elm$parser$Parser$ignorer,
-				$elm$parser$Parser$succeed(true),
-				$elm$parser$Parser$symbol('--' + name)),
-			argEnd);
-	};
-	var intArg = function (name) {
-		return A2(
-			$elm$parser$Parser$keeper,
-			A2(
-				$elm$parser$Parser$ignorer,
-				A2(
-					$elm$parser$Parser$ignorer,
-					$elm$parser$Parser$succeed($elm$core$Basics$identity),
-					$elm$parser$Parser$symbol('--' + name)),
-				$elm$parser$Parser$oneOf(
-					_List_fromArray(
-						[
-							$elm$parser$Parser$symbol('='),
-							$elm$parser$Parser$symbol('\u0000')
-						]))),
-			A2($elm$parser$Parser$ignorer, $elm$parser$Parser$int, argEnd));
-	};
+					$elm$parser$Parser$keeper,
+					$elm$parser$Parser$succeed(fn),
+					a),
+				b);
+		});
 	var loop = function (acc) {
 		return $elm$parser$Parser$oneOf(
 			_List_fromArray(
 				[
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{ak: v}));
-						}),
-					stringArg('host')),
+					$elm$parser$Parser$map,
+					function (x) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									aD: function (x2) {
+										return _Utils_update(
+											x2,
+											{a8: x});
+									}(acc.aD)
+								}));
+					},
+					A2($author$project$ElmServe$Options$namedArgument, 'host', $author$project$ElmServe$Options$stringArgument)),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{at: v}));
-						}),
-					intArg('port')),
+					$elm$parser$Parser$map,
+					function (x) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									aD: function (x2) {
+										return _Utils_update(
+											x2,
+											{bo: x});
+									}(acc.aD)
+								}));
+					},
+					A2($author$project$ElmServe$Options$namedArgument, 'port', $elm$parser$Parser$int)),
 					A2(
-					$elm$parser$Parser$keeper,
-					A2(
-						$elm$parser$Parser$keeper,
-						$elm$parser$Parser$succeed(
-							F2(
-								function (v1, v2) {
-									return $elm$parser$Parser$Loop(
-										_Utils_update(
-											acc,
+					$elm$parser$Parser$map,
+					function (x) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									aD: function (x2) {
+										return _Utils_update(
+											x2,
 											{
-												aF: $elm$core$Maybe$Just(
-													{a$: v1, bg: v2})
-											}));
-								})),
-						stringArg('ssl')),
-					argument),
+												bv: $elm$core$Maybe$Just(x)
+											});
+									}(acc.aD)
+								}));
+					},
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{aA: v}));
-						}),
-					stringArg('root')),
+						$author$project$ElmServe$Options$namedArgument,
+						'ssl',
+						A3(
+							map2,
+							F2(
+								function (x, x2) {
+									return {aZ: x, bd: x2};
+								}),
+							$author$project$ElmServe$Options$stringArgument,
+							$author$project$ElmServe$Options$stringArgument))),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (_v0) {
-							return $elm$parser$Parser$Loop(acc);
-						}),
+					$elm$parser$Parser$map,
+					function (x) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									_: function (x2) {
+										return _Utils_update(
+											x2,
+											{aa: x});
+									}(acc._)
+								}));
+					},
+					A2($author$project$ElmServe$Options$namedArgument, 'elm', $author$project$ElmServe$Options$stringArgument)),
 					A2(
-						$elm$parser$Parser$ignorer,
-						boolArg('dir'),
-						$elm$parser$Parser$problem('Option --dir is renamed to --root.'))),
+					$elm$parser$Parser$map,
+					function (_v0) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									_: function (x2) {
+										return _Utils_update(
+											x2,
+											{W: true});
+									}(acc._)
+								}));
+					},
+					$author$project$ElmServe$Options$flag('debug')),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{bo: v}));
-						}),
-					boolArg('open')),
+					$elm$parser$Parser$map,
+					function (_v1) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									_: function (x2) {
+										return _Utils_update(
+											x2,
+											{aq: true});
+									}(acc._)
+								}));
+					},
+					$author$project$ElmServe$Options$flag('optimize')),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{bk: v}));
-						}),
-					boolArg('no-404')),
+					$elm$parser$Parser$map,
+					function (x) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									_: function (x2) {
+										return _Utils_update(
+											x2,
+											{ar: x});
+									}(acc._)
+								}));
+					},
+					A2($author$project$ElmServe$Options$namedArgument, 'output', $author$project$ElmServe$Options$stringArgument)),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{a8: v}));
-						}),
-					stringArg('elm')),
+					$elm$parser$Parser$map,
+					function (x) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{az: x}));
+					},
+					A2($author$project$ElmServe$Options$namedArgument, 'root', $author$project$ElmServe$Options$stringArgument)),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{a4: v}));
-						}),
-					boolArg('debug')),
+					$elm$parser$Parser$andThen,
+					function (_v2) {
+						return $elm$parser$Parser$problem('Option --dir is renamed to --root.');
+					},
+					$author$project$ElmServe$Options$flag('dir')),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{bp: v}));
-						}),
-					boolArg('optimize')),
+					$elm$parser$Parser$map,
+					function (_v3) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{bl: true}));
+					},
+					$author$project$ElmServe$Options$flag('open')),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{O: v}));
-						}),
-					stringArg('output')),
+					$elm$parser$Parser$map,
+					function (_v4) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{bh: true}));
+					},
+					$author$project$ElmServe$Options$flag('no-404')),
 					A2(
-					$elm$parser$Parser$keeper,
-					$elm$parser$Parser$succeed(
-						function (v) {
-							return $elm$parser$Parser$Loop(
-								_Utils_update(
-									acc,
-									{
-										be: A2($elm$core$List$cons, v, acc.be)
-									}));
-						}),
-					argument),
+					$elm$parser$Parser$map,
+					function (x) {
+						return $elm$parser$Parser$Loop(
+							_Utils_update(
+								acc,
+								{
+									_: function (x2) {
+										return _Utils_update(
+											x2,
+											{
+												ak: A2($elm$core$List$cons, x, acc._.ak)
+											});
+									}(acc._)
+								}));
+					},
+					$author$project$ElmServe$Options$stringArgument),
 					A2(
-					$elm$parser$Parser$ignorer,
-					$elm$parser$Parser$succeed(
-						$elm$parser$Parser$Done(acc)),
+					$elm$parser$Parser$map,
+					function (_v5) {
+						return $elm$parser$Parser$Done(acc);
+					},
 					$elm$parser$Parser$end)
 				]));
 	};
 	return A2(
 		$elm$parser$Parser$loop,
-		{a4: false, a8: 'elm', ak: 'localhost', be: _List_Nil, bk: false, bo: false, bp: false, O: 'elm.js', at: 8000, aA: '.', aF: $elm$core$Maybe$Nothing},
+		A5(
+			$author$project$ElmServe$Options$Options,
+			A3($author$project$HttpServer$Options, 'localhost', 8000, $elm$core$Maybe$Nothing),
+			A5($author$project$Elm$Compiler$Options, 'elm', false, false, _List_Nil, 'elm.js'),
+			'.',
+			false,
+			false),
 		loop);
 }();
 var $elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
-		return {Y: col, br: problem, aB: row};
+		return {U: col, bq: problem, aA: row};
 	});
 var $elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3($elm$parser$Parser$DeadEnd, p.aB, p.Y, p.br);
+	return A3($elm$parser$Parser$DeadEnd, p.aA, p.U, p.bq);
 };
 var $elm$parser$Parser$Advanced$bagToList = F2(
 	function (bag, list) {
@@ -4043,7 +4186,7 @@ var $elm$parser$Parser$Advanced$run = F2(
 	function (_v0, src) {
 		var parse = _v0;
 		var _v1 = parse(
-			{Y: 1, c: _List_Nil, d: 1, b: 0, aB: 1, a: src});
+			{U: 1, c: _List_Nil, d: 1, b: 0, aA: 1, a: src});
 		if (!_v1.$) {
 			var value = _v1.b;
 			return $elm$core$Result$Ok(value);
@@ -4071,174 +4214,23 @@ var $author$project$ElmServe$Options$parse = function (a) {
 		$author$project$ElmServe$Options$parser,
 		A2($elm$core$String$join, '\u0000', a));
 };
-var $author$project$JavaScript$DecodeError = function (a) {
-	return {$: 2, a: a};
-};
-var $author$project$JavaScript$ErrorCode = $elm$core$Basics$identity;
-var $author$project$JavaScript$ErrorMessage = $elm$core$Basics$identity;
-var $author$project$JavaScript$ErrorName = $elm$core$Basics$identity;
-var $author$project$JavaScript$Exception = F3(
-	function (a, b, c) {
-		return {$: 1, a: a, b: b, c: c};
-	});
-var $author$project$JavaScript$FileNotPatched = {$: 0};
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$json$Json$Decode$map = _Json_map1;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$core$Result$withDefault = F2(
-	function (def, result) {
-		if (!result.$) {
-			var a = result.a;
-			return a;
-		} else {
-			return def;
-		}
-	});
-var $author$project$JavaScript$run = F3(
-	function (code, arg, decoder) {
-		var toException = function (b) {
-			return A3(
-				$author$project$JavaScript$Exception,
-				A2(
-					$elm$core$Result$withDefault,
-					'',
-					A2(
-						$elm$json$Json$Decode$decodeValue,
-						A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
-						b)),
-				A2(
-					$elm$core$Result$withDefault,
-					'',
-					A2(
-						$elm$json$Json$Decode$decodeValue,
-						A2(
-							$elm$json$Json$Decode$field,
-							'code',
-							$elm$json$Json$Decode$oneOf(
-								_List_fromArray(
-									[
-										$elm$json$Json$Decode$string,
-										A2($elm$json$Json$Decode$map, $elm$core$String$fromInt, $elm$json$Json$Decode$int)
-									]))),
-						b)),
-				A2(
-					$elm$core$Result$withDefault,
-					'',
-					A2(
-						$elm$json$Json$Decode$decodeValue,
-						$elm$json$Json$Decode$oneOf(
-							_List_fromArray(
-								[
-									$elm$json$Json$Decode$string,
-									A2($elm$json$Json$Decode$field, 'message', $elm$json$Json$Decode$string)
-								])),
-						b)));
-		};
-		
-var task = function(arg_) {
-  return _Scheduler_binding(function(callback) {
-    var canceled = false
-    var cancelFn = undefined
-
-    function onCancel(a) {
-      cancelFn = a
-    }
-
-    function try_(fn) {
-      try       { return { $: 0, a: fn() } }
-      catch (e) { return { $: 1, a: e    } }
-    }
-
-    function ok(a) {
-      if (canceled === false) callback(_Scheduler_succeed(_Json_wrap(a)))
-    }
-
-    function err(a) {
-      if (canceled === false) callback(_Scheduler_fail(toException(_Json_wrap(a))))
-    }
-
-    var a = try_(function() { return code(_Json_unwrap(arg_), onCancel) })
-
-    if (a.$ === 0) {
-      if (typeof Promise !== "undefined" && a.a instanceof Promise) {
-        a.a.then(ok).catch(err)
-      }
-      else {
-        ok(a.a)
-      }
-    }
-    else {
-      err(a.a)
-    }
-
-    return function() {
-      if (cancelFn) {
-        var a = try_(cancelFn)
-        if (a.$ === 1) err(a.a)
-      }
-      canceled = true
-    }
-  })
-};
-    
-		return A2(
-			$elm$core$Task$andThen,
-			function (v) {
-				var _v0 = A2($elm$json$Json$Decode$decodeValue, decoder, v);
-				if (!_v0.$) {
-					var b = _v0.a;
-					return $elm$core$Task$succeed(b);
-				} else {
-					var b = _v0.a;
-					return $elm$core$Task$fail(
-						$author$project$JavaScript$DecodeError(b));
-				}
-			},
-			task(arg));
-	});
-var $author$project$ElmServe$Main$getOptions = A2(
-	$elm$core$Task$andThen,
-	function (v) {
-		var _v0 = $author$project$ElmServe$Options$parse(
-			A2($elm$core$List$drop, 2, v));
-		if (!_v0.$) {
-			var vv = _v0.a;
-			return $elm$core$Task$succeed(vv);
-		} else {
-			var vv = _v0.a;
-			return $elm$core$Task$fail(
-				$author$project$ElmServe$Main$CannotParseOptions(vv));
-		}
-	},
-	A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$InternalError,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return process.argv },
-			$elm$json$Json$Encode$null,
-			$elm$json$Json$Decode$list($elm$json$Json$Decode$string))));
-var $author$project$ElmServe$Main$CannotReadProject = function (a) {
-	return {$: 1, a: a};
-};
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$json$Json$Decode$succeed = _Json_succeed;
-var $author$project$ElmServe$Main$decodeJson = function (decoder) {
+var $author$project$ElmServe$Utils$Utils$decodeJson = function (decoder) {
 	return A2(
 		$elm$json$Json$Decode$andThen,
-		function (v) {
-			var _v0 = A2($elm$json$Json$Decode$decodeString, decoder, v);
+		function (x) {
+			var _v0 = A2($elm$json$Json$Decode$decodeString, decoder, x);
 			if (!_v0.$) {
-				var vv = _v0.a;
-				return $elm$json$Json$Decode$succeed(vv);
+				var x2 = _v0.a;
+				return $elm$json$Json$Decode$succeed(x2);
 			} else {
-				var vv = _v0.a;
+				var x2 = _v0.a;
 				return $elm$json$Json$Decode$fail(
-					$elm$json$Json$Decode$errorToString(vv));
+					$elm$json$Json$Decode$errorToString(x2));
 			}
 		},
 		$elm$json$Json$Decode$string);
@@ -4251,11 +4243,7 @@ var $elm$project_metadata_utils$Elm$Project$Package = function (a) {
 };
 var $elm$project_metadata_utils$Elm$Project$ApplicationInfo = F6(
 	function (elm, dirs, depsDirect, depsIndirect, testDepsDirect, testDepsIndirect) {
-		return {aa: depsDirect, ab: depsIndirect, a5: dirs, a8: elm, aK: testDepsDirect, aL: testDepsIndirect};
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+		return {Y: depsDirect, Z: depsIndirect, a3: dirs, _: elm, aJ: testDepsDirect, aK: testDepsIndirect};
 	});
 var $elm$project_metadata_utils$Elm$Version$Version = F3(
 	function (a, b, c) {
@@ -4391,9 +4379,10 @@ var $elm$project_metadata_utils$Elm$Project$applicationDecoder = A7(
 		_List_fromArray(
 			['test-dependencies', 'indirect']),
 		$elm$project_metadata_utils$Elm$Project$depsDecoder($elm$project_metadata_utils$Elm$Version$decoder)));
+var $elm$json$Json$Decode$map = _Json_map1;
 var $elm$project_metadata_utils$Elm$Project$PackageInfo = F8(
 	function (name, summary, license, version, exposed, deps, testDeps, elm) {
-		return {_: deps, a8: elm, af: exposed, ao: license, bj: name, aH: summary, aJ: testDeps, aO: version};
+		return {X: deps, _: elm, ae: exposed, an: license, bg: name, aG: summary, aI: testDeps, aN: version};
 	});
 var $elm$project_metadata_utils$Elm$Constraint$Constraint = F4(
 	function (a, b, c, d) {
@@ -4903,6 +4892,7 @@ var $elm$project_metadata_utils$Elm$Module$decoderHelp = function (string) {
 	}
 };
 var $elm$project_metadata_utils$Elm$Module$decoder = A2($elm$json$Json$Decode$andThen, $elm$project_metadata_utils$Elm$Module$decoderHelp, $elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $elm$project_metadata_utils$Elm$Project$exposedDecoder = $elm$json$Json$Decode$oneOf(
 	_List_fromArray(
 		[
@@ -4956,197 +4946,357 @@ var $elm$project_metadata_utils$Elm$Project$decoder = A2(
 	$elm$json$Json$Decode$andThen,
 	$elm$project_metadata_utils$Elm$Project$decoderHelp,
 	A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-var $author$project$ElmServe$Main$readProject = A2(
-	$elm$core$Task$mapError,
-	$author$project$ElmServe$Main$CannotReadProject,
-	A3(
-		$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').readFile('elm.json', 'utf-8') },
-		$elm$json$Json$Encode$null,
-		$author$project$ElmServe$Main$decodeJson($elm$project_metadata_utils$Elm$Project$decoder)));
-var $author$project$ElmServe$Main$init = function (_v0) {
-	return _Utils_Tuple2(
-		$elm$core$Maybe$Nothing,
-		A2(
-			$elm$core$Task$attempt,
-			$author$project$ElmServe$Main$GotReadyModel,
-			A3(
-				$elm$core$Task$map2,
-				F2(
-					function (v1, v2) {
-						return {J: $elm$core$Maybe$Nothing, E: v1, Q: v2};
-					}),
-				$author$project$ElmServe$Main$getOptions,
-				$author$project$ElmServe$Main$readProject)));
-};
-var $author$project$ElmServe$Main$TaskDone = function (a) {
-	return {$: 4, a: a};
-};
-var $author$project$ElmServe$Main$GotFileChange = function (a) {
-	return {$: 1, a: a};
-};
-var $author$project$ElmServe$Main$GotRequest = function (a) {
-	return {$: 3, a: a};
-};
-var $author$project$ElmServe$Main$Request = F2(
-	function (request, response) {
-		return {K: request, L: response};
-	});
-var $elm$json$Json$Decode$map2 = _Json_map2;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $author$project$ElmServe$Main$decodeMsg = A2(
-	$elm$json$Json$Decode$andThen,
-	function (a) {
-		switch (a) {
-			case 1:
-				return A2(
-					$elm$json$Json$Decode$map,
-					$author$project$ElmServe$Main$GotFileChange,
-					A2(
-						$elm$json$Json$Decode$field,
-						'b',
-						A2(
-							$elm$json$Json$Decode$map,
-							function (v1) {
-								return {ar: v1};
-							},
-							A2($elm$json$Json$Decode$field, 'path', $elm$json$Json$Decode$string))));
-			case 3:
-				return A2(
-					$elm$json$Json$Decode$map,
-					$author$project$ElmServe$Main$GotRequest,
-					A2(
-						$elm$json$Json$Decode$field,
-						'b',
-						A3(
-							$elm$json$Json$Decode$map2,
-							$author$project$ElmServe$Main$Request,
-							A2($elm$json$Json$Decode$field, 'req', $elm$json$Json$Decode$value),
-							A2($elm$json$Json$Decode$field, 'res', $elm$json$Json$Decode$value))));
-			default:
-				return $elm$json$Json$Decode$fail(
-					'I can\'t decode \"Msg\", unknown variant with index ' + ($elm$core$String$fromInt(a) + '.'));
-		}
-	},
-	A2($elm$json$Json$Decode$field, 'a', $elm$json$Json$Decode$int));
-var $author$project$ElmServe$Main$sendMsg = _Platform_incomingPort('sendMsg', $elm$json$Json$Decode$value);
-var $author$project$ElmServe$Main$sendMsgSubscription = function () {
-	var decoder = function (b) {
-		var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$ElmServe$Main$decodeMsg, b);
-		if (!_v0.$) {
-			var c = _v0.a;
-			return c;
-		} else {
-			var c = _v0.a;
-			return $author$project$ElmServe$Main$TaskDone(
-				$elm$core$Result$Err(
-					$author$project$ElmServe$Main$InternalError(
-						$author$project$JavaScript$DecodeError(c))));
-		}
-	};
-	return $author$project$ElmServe$Main$sendMsg(decoder);
-}();
-var $author$project$ElmServe$Main$subscriptions = function (_v0) {
-	return $author$project$ElmServe$Main$sendMsgSubscription;
-};
-var $author$project$ElmServe$Main$GotCompileProcess = function (a) {
+var $author$project$JavaScript$DecodeError = function (a) {
 	return {$: 2, a: a};
 };
-var $author$project$ElmServe$Main$InternalErrorModelNotReady = {$: 4};
-var $author$project$JavaScript$errorToString = function (a) {
-	var indent = function (b) {
-		return A2(
-			$elm$core$String$join,
-			'\n',
-			A2(
-				$elm$core$List$map,
-				$elm$core$Basics$append('  '),
-				A2($elm$core$String$split, '\n', b)));
-	};
-	switch (a.$) {
-		case 0:
-			return 'Compiled file needs to be processed via elm-ffi command.';
-		case 1:
-			var name = a.a;
-			var code = a.b;
-			var msg = a.c;
-			return 'There was a runtime error. More details:\n' + indent(
-				('name: ' + function (_v1) {
-					var v = _v1;
-					return v;
-				}(name)) + ('\n' + (('code: ' + function (_v2) {
-					var v = _v2;
-					return v;
-				}(code)) + ('\n' + ('message: ' + function (_v3) {
-					var v = _v3;
-					return v;
-				}(msg))))));
-		default:
-			var b = a.a;
-			return 'There was a decode error. More details:\n' + indent(
-				$elm$json$Json$Decode$errorToString(b));
-	}
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
+var $author$project$JavaScript$FileNotPatched = {$: 0};
+var $author$project$JavaScript$ErrorCode = $elm$core$Basics$identity;
+var $author$project$JavaScript$ErrorMessage = $elm$core$Basics$identity;
+var $author$project$JavaScript$ErrorName = $elm$core$Basics$identity;
+var $author$project$JavaScript$Exception = F3(
+	function (a, b, c) {
+		return {$: 1, a: a, b: b, c: c};
+	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$core$Result$withDefault = F2(
+	function (def, result) {
+		if (!result.$) {
+			var a = result.a;
+			return a;
 		} else {
-			return $elm$core$Maybe$Nothing;
+			return def;
 		}
 	});
-var $author$project$ElmServe$Main$errorToString = function (a) {
-	var usage = 'Welcome to Elm Serve.\n\nUsage:\n    elm-serve <elm-files>...\n\nOptions:\n    --host <host>\n        Set server host. Default is localhost.\n\n    --port <port>\n        Set server port. Default is 8000.\n\n    --ssl <cert-file> <key-file>\n        Turn on HTTPS.\n\n    --root <path>\n        Set server root.\n\n    --open\n        Open server URL in browser.\n\n    --no-404\n        Serve /index.html if page not found. Useful for Browser.application.\n\nElm Options:\n    --elm <path>\n        Set path to Elm compiler.\n\n    --debug\n        Turn on Elm debugger.\n\n    --optimize\n        Turn on Elm optimizations.\n\n    --output <path>\n        Set output from Elm compiler. Default is elm.js.\n';
-	switch (a.$) {
-		case 0:
-			var b = a.a;
-			var _v1 = A2(
-				$elm$core$Maybe$map,
-				function ($) {
-					return $.br;
-				},
-				$elm$core$List$head(b));
-			if ((!_v1.$) && (_v1.a.$ === 12)) {
-				var c = _v1.a.a;
-				return c;
+var $author$project$JavaScript$decodeError = function (a) {
+	return A3(
+		$author$project$JavaScript$Exception,
+		A2(
+			$elm$core$Result$withDefault,
+			'',
+			A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+				a)),
+		A2(
+			$elm$core$Result$withDefault,
+			'',
+			A2(
+				$elm$json$Json$Decode$decodeValue,
+				A2(
+					$elm$json$Json$Decode$field,
+					'code',
+					$elm$json$Json$Decode$oneOf(
+						_List_fromArray(
+							[
+								$elm$json$Json$Decode$string,
+								A2($elm$json$Json$Decode$map, $elm$core$String$fromInt, $elm$json$Json$Decode$int)
+							]))),
+				a)),
+		A2(
+			$elm$core$Result$withDefault,
+			'',
+			A2(
+				$elm$json$Json$Decode$decodeValue,
+				$elm$json$Json$Decode$oneOf(
+					_List_fromArray(
+						[
+							$elm$json$Json$Decode$string,
+							A2($elm$json$Json$Decode$field, 'message', $elm$json$Json$Decode$string)
+						])),
+				a)));
+};
+var $author$project$JavaScript$run = F3(
+	function (code, arg, decoder) {
+		var toError = $author$project$JavaScript$decodeError;
+		
+var task = function(arg_) {
+  return _Scheduler_binding(function(callback) {
+    var canceled = false
+    var cancelFn = undefined
+
+    function onCancel(a) {
+      cancelFn = a
+    }
+
+    function try_(fn) {
+      try       { return { $: 0, a: fn() } }
+      catch (e) { return { $: 1, a: e    } }
+    }
+
+    function ok(a) {
+      if (canceled === false) callback(_Scheduler_succeed(_Json_wrap(a)))
+    }
+
+    function err(a) {
+      if (canceled === false) callback(_Scheduler_fail(toError(_Json_wrap(a))))
+    }
+
+    var a = try_(function() { return code(_Json_unwrap(arg_), onCancel) })
+
+    if (a.$ === 0) {
+      if (typeof Promise !== "undefined" && a.a instanceof Promise) {
+        a.a.then(ok).catch(err)
+      }
+      else {
+        ok(a.a)
+      }
+    }
+    else {
+      err(a.a)
+    }
+
+    return function() {
+      if (cancelFn) {
+        var a = try_(cancelFn)
+        if (a.$ === 1) err(a.a)
+      }
+      canceled = true
+    }
+  })
+};
+    
+		return A2(
+			$elm$core$Task$andThen,
+			function (x) {
+				var _v0 = A2($elm$json$Json$Decode$decodeValue, decoder, x);
+				if (!_v0.$) {
+					var b = _v0.a;
+					return $elm$core$Task$succeed(b);
+				} else {
+					var b = _v0.a;
+					return $elm$core$Task$fail(
+						$author$project$JavaScript$DecodeError(b));
+				}
+			},
+			task(arg));
+	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$ElmServe$Utils$Utils$readProject = function (a) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').readFile(a, 'utf-8') },
+		$elm$json$Json$Encode$string(a),
+		$author$project$ElmServe$Utils$Utils$decodeJson($elm$project_metadata_utils$Elm$Project$decoder));
+};
+var $author$project$ElmServe$Model$Update$initModel = F2(
+	function (flags, _v0) {
+		var options = function (x) {
+			var _v1 = $author$project$ElmServe$Options$parse(
+				A2($elm$core$List$drop, 2, x));
+			if (!_v1.$) {
+				var x2 = _v1.a;
+				return $elm$core$Task$succeed(x2);
 			} else {
-				return usage;
+				var x2 = _v1.a;
+				return $elm$core$Task$fail(
+					$author$project$ElmServe$Error$OptionsError(x2));
 			}
-		case 1:
-			var b = a.a;
-			if ((b.$ === 1) && (b.b === 'ENOENT')) {
-				return 'Cannot find elm.json.';
-			} else {
-				return 'Cannot read elm.json. ' + $author$project$JavaScript$errorToString(b);
-			}
-		case 2:
-			var b = a.a;
-			return 'Cannot compile Elm. ' + $author$project$JavaScript$errorToString(b);
-		case 3:
-			var b = a.a;
-			if ((b.$ === 1) && (b.b === 'EADDRINUSE')) {
-				return 'There is somebody already listening on same port!';
-			} else {
-				return 'Cannot start server. ' + $author$project$JavaScript$errorToString(b);
-			}
-		case 4:
-			return 'Internal error. Model is not ready.';
-		default:
-			var b = a.a;
-			return 'Internal error. ' + $author$project$JavaScript$errorToString(b);
-	}
+		}(
+			A2(
+				$elm$core$Result$withDefault,
+				_List_Nil,
+				A2(
+					$elm$json$Json$Decode$decodeValue,
+					A2(
+						$elm$json$Json$Decode$at,
+						_List_fromArray(
+							['global', 'process', 'argv']),
+						$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
+					flags)));
+		var cmd = A2(
+			$elm$core$Task$attempt,
+			$author$project$ElmServe$Msg$ModelReceived,
+			A4(
+				$elm$core$Task$map3,
+				$author$project$ElmServe$Model$Ready,
+				options,
+				A2(
+					$elm$core$Task$mapError,
+					$author$project$ElmServe$Error$ProjectError,
+					$author$project$ElmServe$Utils$Utils$readProject('elm.json')),
+				$elm$core$Task$succeed($elm$core$Maybe$Nothing)));
+		return _Utils_Tuple2(
+			$elm$core$Result$Err($author$project$ElmServe$Model$Loading),
+			cmd);
+	});
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$ElmServe$Model$Update$init = function (flags) {
+	return A2(
+		$author$project$Platform$Extra$andThen,
+		$author$project$ElmServe$Model$Update$initModel(flags),
+		_Utils_Tuple2(
+			$elm$core$Result$Err($author$project$ElmServe$Model$NotAsked),
+			$elm$core$Platform$Cmd$none));
+};
+var $author$project$ElmServe$Msg$FileChanged = function (a) {
+	return {$: 2, a: a};
+};
+var $author$project$ElmServe$Msg$RequestReceived = function (a) {
+	return {$: 4, a: a};
+};
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$FileWatch$fileWatch = _Platform_incomingPort('fileWatch', $elm$json$Json$Decode$value);
+var $author$project$FileWatch$subscription = function (fn) {
+	var decoder = $elm$json$Json$Decode$string;
+	return $author$project$FileWatch$fileWatch(
+		function (x) {
+			return fn(
+				A2($elm$json$Json$Decode$decodeValue, decoder, x));
+		});
+};
+var $author$project$HttpServer$Request = F2(
+	function (request, response) {
+		return {L: request, M: response};
+	});
+var $author$project$HttpServer$httpServer = _Platform_incomingPort('httpServer', $elm$json$Json$Decode$value);
+var $elm$json$Json$Decode$index = _Json_decodeIndex;
+var $elm$json$Json$Decode$map2 = _Json_map2;
+var $author$project$HttpServer$subscription = function (fn) {
+	var decoder = A3(
+		$elm$json$Json$Decode$map2,
+		$author$project$HttpServer$Request,
+		A2($elm$json$Json$Decode$index, 0, $elm$json$Json$Decode$value),
+		A2($elm$json$Json$Decode$index, 1, $elm$json$Json$Decode$value));
+	return $author$project$HttpServer$httpServer(
+		function (x) {
+			return fn(
+				A2($elm$json$Json$Decode$decodeValue, decoder, x));
+		});
+};
+var $author$project$ElmServe$Model$Update$subscriptions = function (_v0) {
+	return $elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				$author$project$FileWatch$subscription($author$project$ElmServe$Msg$FileChanged),
+				$author$project$HttpServer$subscription($author$project$ElmServe$Msg$RequestReceived)
+			]));
+};
+var $author$project$ElmServe$Msg$CompileProcessReceived = function (a) {
+	return {$: 3, a: a};
+};
+var $author$project$ElmServe$Error$ConsoleError = function (a) {
+	return {$: 7, a: a};
+};
+var $author$project$ElmServe$Model$Error = function (a) {
+	return {$: 2, a: a};
+};
+var $author$project$ElmServe$Msg$NothingHappened = {$: 0};
+var $author$project$ElmServe$Error$ExitError = function (a) {
+	return {$: 8, a: a};
 };
 var $elm$json$Json$Encode$int = _Json_wrap;
+var $author$project$Process$Extra$hardExit = function (code) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return process.exit(a) },
+		$elm$json$Json$Encode$int(code),
+		$elm$json$Json$Decode$succeed(0));
+};
+var $author$project$Console$logError = function (a) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return console.error(a) },
+		$elm$json$Json$Encode$string(a),
+		$elm$json$Json$Decode$succeed(0));
+};
+var $author$project$ElmServe$Model$Update$consoleErrorAndExit = F2(
+	function (msg, code) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v0) {
+				return A2(
+					$elm$core$Task$mapError,
+					$author$project$ElmServe$Error$ExitError,
+					$author$project$Process$Extra$hardExit(code));
+			},
+			A2(
+				$elm$core$Task$mapError,
+				$author$project$ElmServe$Error$ConsoleError,
+				$author$project$Console$logError(msg)));
+	});
+var $elm$core$Process$kill = _Scheduler_kill;
+var $author$project$Console$log = function (a) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return console.log(a) },
+		$elm$json$Json$Encode$string(a),
+		$elm$json$Json$Decode$succeed(0));
+};
+var $author$project$ElmServe$Error$CompileError = function (a) {
+	return {$: 2, a: a};
+};
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(0),
+				entries));
+	});
+var $author$project$Process$Extra$spawn = F2(
+	function (a, args) {
+		return A3(
+			$author$project$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject) => {
+            function err(code, msg) {
+                var e = new Error(msg)
+                e.code = code
+                return e
+            }
+    
+            var b = require('child_process').spawn(a[0], a[1]);
+            var stdout = '';
+            var stderr = '';
+            b.on('error', reject)
+            b.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
+            b.stdout.on('data', b => { stdout += b })
+            b.stderr.on('data', b => { stderr += b })
+            onCancel(() => b.kill())
+        }) },
+			A2(
+				$elm$json$Json$Encode$list,
+				$elm$core$Basics$identity,
+				_List_fromArray(
+					[
+						$elm$json$Json$Encode$string(a),
+						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, args)
+					])),
+			$elm$json$Json$Decode$string);
+	});
+var $author$project$Elm$Compiler$compile = function (opt) {
+	var args = A2(
+		$elm$core$List$cons,
+		'make',
+		A2(
+			$elm$core$List$cons,
+			'--output=' + opt.ar,
+			function (acc) {
+				return opt.W ? A2($elm$core$List$cons, '--debug', acc) : acc;
+			}(
+				function (acc) {
+					return opt.aq ? A2($elm$core$List$cons, '--optimize', acc) : acc;
+				}(opt.ak))));
+	return A2($author$project$Process$Extra$spawn, opt.aa, args);
+};
+var $author$project$ElmServe$Utils$Utils$jsLibrary = '\n(function(){\n    function init() {\n        elmServe = {\n            compileError: function(a) {\n                console.error(\'Elm Serve\\n\', a)\n                elmServe.showUi(a)\n            },\n            disconnected: function() {\n                var msg = \'We are disconnected.\'\n                console.error(\'Elm Serve\\n\', msg)\n                elmServe.showUi(msg)\n            },\n            clear: function() {\n                elmServe.hideUi()\n            },\n\n            //\n\n            showUi: function(a) {\n                if (elmServe.ui.parentElement === null) {\n                    if (document.body) document.body.appendChild(elmServe.ui)\n                    else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })\n                }\n                elmServe.ui.textContent = a\n            },\n            hideUi: function() {\n                elmServe.ui.remove()\n            },\n            ui: (function() {\n                a = document.createElement(\'div\')\n                a.id = \'elmServeUi\'\n                a.style.position = \'fixed\'\n                a.style.zIndex = \'9999999\'\n                a.style.left = \'0\'\n                a.style.right = \'0\'\n                a.style.top = \'0\'\n                a.style.bottom = \'0\'\n\n                a.style.font = \'14px/1 monospace\'\n                a.style.padding = \'16px\'\n                a.style.whiteSpace = \'pre\'\n                a.style.color = \'white\'\n                a.style.backgroundColor = \'rgba(0, 0, 0, 0.6)\'\n                a.style.overflow = \'auto\'\n\n                return a\n            })()\n        }\n\n        module = {\n            hot: {\n                data: null,\n                verbose: false,\n                disposeCallback : null,\n\n                //\n\n                accept: function () {},\n                dispose: function (a) { module.hot.disposeCallback = a },\n                apply: function () {\n                    if (module.hot.disposeCallback === null) {\n                        location.reload()\n                        return\n                    }\n                    var data = {}\n                    module.hot.disposeCallback(data)\n                    module.hot.data = data\n                    delete Elm\n                }\n            }\n        }\n    }\n\n    function reload() {\n        elmServe.clear()\n        module.hot.apply()\n    }\n\n    function listen() {\n        var src = document.currentScript.src\n\n        function onLoad() {\n            var script = document.createElement(\'script\')\n            script.src = src\n            document.head.appendChild(script)\n        }\n\n        function onError() {\n            elmServe.disconnected()\n        }\n\n        fetch("/elm-serve-client-lib.js")\n            .then(onLoad)\n            .catch(onError)\n    }\n\n    typeof elmServe === "undefined" ? init() : reload()\n    listen()\n})();\n';
+var $author$project$ElmServe$Utils$Utils$patchElm = function (a) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return require('./resources/patch.js').inject(a) },
+		$elm$json$Json$Encode$string(a),
+		$elm$json$Json$Decode$string);
+};
+var $author$project$FileSystem$read = function (_v0) {
+	var a = _v0;
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').readFile(a, 'utf-8') },
+		$elm$json$Json$Encode$string(a),
+		$elm$json$Json$Decode$string);
+};
+var $author$project$ElmServe$Utils$Utils$reportCompileErrorJs = function (a) {
+	return 'elmServe.compileError(' + (A2(
+		$elm$json$Json$Encode$encode,
+		0,
+		$elm$json$Json$Encode$string(a)) + ');');
+};
+var $author$project$FileSystem$Path = $elm$core$Basics$identity;
+var $author$project$FileSystem$stringToPath = $elm$core$Basics$identity;
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -5160,35 +5310,155 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			_Json_emptyObject(0),
 			pairs));
 };
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$ElmServe$Main$exitWithMessageAndCode = F2(
-	function (msg, code) {
-		return A2(
-			$elm$core$Task$mapError,
-			$author$project$ElmServe$Main$InternalError,
-			A3(
-				$author$project$JavaScript$run, function(a, onCancel) { return (() => { console.error(a.msg); process.exit(a.code); })() },
-				$elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'msg',
-							$elm$json$Json$Encode$string(msg)),
-							_Utils_Tuple2(
-							'code',
-							$elm$json$Json$Encode$int(code))
-						])),
-				$elm$json$Json$Decode$succeed(0)));
+var $author$project$FileSystem$write = F2(
+	function (_v0, data) {
+		var a = _v0;
+		return A3(
+			$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').writeFile(a.path, a.data) },
+			$elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'path',
+						$elm$json$Json$Encode$string(a)),
+						_Utils_Tuple2(
+						'data',
+						$elm$json$Json$Encode$string(data))
+					])),
+			$elm$json$Json$Decode$succeed(0));
 	});
-var $elm$core$Result$fromMaybe = F2(
-	function (err, maybe) {
-		if (!maybe.$) {
-			var v = maybe.a;
-			return $elm$core$Result$Ok(v);
+var $author$project$ElmServe$Model$Update$makeOutputFile = function (options) {
+	var recoverFromCompileError = function (b) {
+		if ((b.$ === 1) && (b.b === 'ENONZERO')) {
+			var c = b.c;
+			return $elm$core$Task$succeed(
+				$author$project$ElmServe$Utils$Utils$reportCompileErrorJs(c));
 		} else {
-			return $elm$core$Result$Err(err);
+			return $elm$core$Task$fail(b);
+		}
+	};
+	var outputPath = $author$project$FileSystem$stringToPath(options._.ar);
+	return A2(
+		$elm$core$Task$mapError,
+		$author$project$ElmServe$Error$CompileError,
+		A2(
+			$elm$core$Task$andThen,
+			$author$project$FileSystem$write(outputPath),
+			A2(
+				$elm$core$Task$map,
+				function (x) {
+					return _Utils_ap($author$project$ElmServe$Utils$Utils$jsLibrary, x);
+				},
+				A2(
+					$elm$core$Task$onError,
+					recoverFromCompileError,
+					A2(
+						$elm$core$Task$andThen,
+						function (x) {
+							return $author$project$ElmServe$Utils$Utils$patchElm(x);
+						},
+						A2(
+							$elm$core$Task$andThen,
+							function (_v0) {
+								return $author$project$FileSystem$read(outputPath);
+							},
+							$author$project$Elm$Compiler$compile(options._)))))));
+};
+var $elm$core$Result$map = F2(
+	function (func, ra) {
+		if (!ra.$) {
+			var a = ra.a;
+			return $elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return $elm$core$Result$Err(e);
 		}
 	});
+var $author$project$Platform$Extra$noOperation = function (model) {
+	return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+};
+var $elm$core$Task$perform = F2(
+	function (toMessage, task) {
+		return $elm$core$Task$command(
+			A2($elm$core$Task$map, toMessage, task));
+	});
+var $author$project$ElmServe$Error$QueueError = function (a) {
+	return {$: 6, a: a};
+};
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$ElmServe$Model$Update$resolveQueue = A2(
+	$elm$core$Task$mapError,
+	$author$project$ElmServe$Error$QueueError,
+	A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return (() => { if (!global.queue) global.queue = []; queue.forEach(a => a.res.end()); queue = []; })() },
+		$elm$json$Json$Encode$null,
+		$elm$json$Json$Decode$succeed(0)));
+var $elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === -2) {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3($elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var $elm$json$Json$Encode$dict = F3(
+	function (toKey, toValue, dictionary) {
+		return _Json_wrap(
+			A3(
+				$elm$core$Dict$foldl,
+				F3(
+					function (key, value, obj) {
+						return A3(
+							_Json_addField,
+							toKey(key),
+							toValue(value),
+							obj);
+					}),
+				_Json_emptyObject(0),
+				dictionary));
+	});
+var $author$project$ElmServe$Model$Update$send = F4(
+	function (status, headers, data, _v0) {
+		var response = _v0.M;
+		return A3(
+			$author$project$JavaScript$run, function(a, onCancel) { return a.res.writeHead(a.status, a.headers).end(a.data) },
+			$elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'status',
+						$elm$json$Json$Encode$int(status)),
+						_Utils_Tuple2(
+						'headers',
+						A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$json$Json$Encode$string, headers)),
+						_Utils_Tuple2(
+						'data',
+						$elm$json$Json$Encode$string(data)),
+						_Utils_Tuple2('res', response)
+					])),
+			$elm$json$Json$Decode$succeed(0));
+	});
+var $author$project$ElmServe$Error$ResponseError = function (a) {
+	return {$: 5, a: a};
+};
 var $author$project$Task$Extra$fromResult = function (a) {
 	if (!a.$) {
 		var b = a.a;
@@ -5198,245 +5468,8 @@ var $author$project$Task$Extra$fromResult = function (a) {
 		return $elm$core$Task$fail(b);
 	}
 };
-var $elm$core$Process$kill = _Scheduler_kill;
-var $author$project$ElmServe$Main$log = function (a) {
-	return A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$InternalError,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return console.log(a) },
-			$elm$json$Json$Encode$string(a),
-			$elm$json$Json$Decode$succeed(0)));
-};
-var $author$project$ElmServe$Main$applyLib = function (a) {
-	var lib = '\n(function(){\n    function init() {\n        elmServe = {\n            compileError: function(a) {\n                console.error(\'Elm Serve\\n\', a)\n                elmServe.showUi(a)\n            },\n            disconnected: function() {\n                var msg = \'We are disconnected.\'\n                console.error(\'Elm Serve\\n\', msg)\n                elmServe.showUi(msg)\n            },\n            clear: function() {\n                elmServe.hideUi()\n            },\n\n            //\n\n            showUi: function(a) {\n                if (elmServe.ui.parentElement === null) {\n                    if (document.body) document.body.appendChild(elmServe.ui)\n                    else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })\n                }\n                elmServe.ui.textContent = a\n            },\n            hideUi: function() {\n                elmServe.ui.remove()\n            },\n            ui: (function() {\n                a = document.createElement(\'div\')\n                a.id = \'elmServeUi\'\n                a.style.position = \'fixed\'\n                a.style.zIndex = \'9999999\'\n                a.style.left = \'0\'\n                a.style.right = \'0\'\n                a.style.top = \'0\'\n                a.style.bottom = \'0\'\n\n                a.style.font = \'14px/1 monospace\'\n                a.style.padding = \'16px\'\n                a.style.whiteSpace = \'pre\'\n                a.style.color = \'white\'\n                a.style.backgroundColor = \'rgba(0, 0, 0, 0.6)\'\n                a.style.overflow = \'auto\'\n\n                return a\n            })()\n        }\n\n        module = {\n            hot: {\n                data: null,\n                verbose: false,\n                disposeCallback : null,\n\n                //\n\n                accept: function () {},\n                dispose: function (a) { module.hot.disposeCallback = a },\n                apply: function () {\n                    if (module.hot.disposeCallback === null) {\n                        location.reload()\n                        return\n                    }\n                    var data = {}\n                    module.hot.disposeCallback(data)\n                    module.hot.data = data\n                    delete Elm\n                }\n            }\n        }\n    }\n\n    function reload() {\n        elmServe.clear()\n        module.hot.apply()\n    }\n\n    function listen() {\n        var src = document.currentScript.src\n\n        function onLoad() {\n            var script = document.createElement(\'script\')\n            script.src = src\n            document.head.appendChild(script)\n        }\n\n        function onError() {\n            elmServe.disconnected()\n        }\n\n        fetch("/elm-serve-client-lib.js")\n            .then(onLoad)\n            .catch(onError)\n    }\n\n    typeof elmServe === "undefined" ? init() : reload()\n    listen()\n})();\n';
-	return $elm$core$Task$succeed(
-		_Utils_ap(lib, a));
-};
-var $author$project$ElmServe$Main$CannotCompileElm = function (a) {
-	return {$: 2, a: a};
-};
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (!_v0.$) {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(0),
-				entries));
-	});
-var $author$project$ElmServe$Main$compileElm = function (opt) {
-	var boolToArg = F2(
-		function (name, b) {
-			return b ? $elm$core$Maybe$Just(name) : $elm$core$Maybe$Nothing;
-		});
-	var args = _Utils_ap(
-		_List_fromArray(
-			['make', '--output=' + opt.O]),
-		_Utils_ap(
-			A2(
-				$elm$core$List$filterMap,
-				$elm$core$Basics$identity,
-				_List_fromArray(
-					[
-						A2(boolToArg, '--debug', opt.a4),
-						A2(boolToArg, '--optimize', opt.bp)
-					])),
-			opt.be));
-	return A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$CannotCompileElm,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject) => {
-        function err(code, msg) {
-            var e = new Error(msg)
-            e.code = code
-            return e
-        }
-
-        var b = require('child_process').spawn(a.elm, a.args);
-        var stdout = '';
-        var stderr = '';
-        b.on('error', reject)
-        b.on('close', b => { b ? reject(err('ENONZERO', stderr)) : resolve(stdout) })
-        b.stdout.on('data', b => { stdout += b })
-        b.stderr.on('data', b => { stderr += b })
-        onCancel(() => b.kill())
-    }) },
-			$elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'elm',
-						$elm$json$Json$Encode$string(opt.a8)),
-						_Utils_Tuple2(
-						'args',
-						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$string, args))
-					])),
-			$elm$json$Json$Decode$string));
-};
-var $author$project$ElmServe$Main$patchElm = function (a) {
-	return A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$InternalError,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return require('elm-hot').inject(a) },
-			$elm$json$Json$Encode$string(a),
-			$elm$json$Json$Decode$string));
-};
-var $author$project$ElmServe$Main$readFile = function (path) {
-	return A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$InternalError,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').readFile(a, 'utf-8') },
-			$elm$json$Json$Encode$string(path),
-			$elm$json$Json$Decode$string));
-};
-var $author$project$ElmServe$Main$writeFile = F2(
-	function (path, data) {
-		return A2(
-			$elm$core$Task$mapError,
-			$author$project$ElmServe$Main$InternalError,
-			A3(
-				$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').writeFile(a.path, a.data) },
-				$elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'path',
-							$elm$json$Json$Encode$string(path)),
-							_Utils_Tuple2(
-							'data',
-							$elm$json$Json$Encode$string(data))
-						])),
-				$elm$json$Json$Decode$succeed(0)));
-	});
-var $author$project$ElmServe$Main$makeOutputFile = function (opt) {
-	var recoverFromCompileError = function (b) {
-		if (((b.$ === 2) && (b.a.$ === 1)) && (b.a.b === 'ENONZERO')) {
-			var _v2 = b.a;
-			var msg = _v2.c;
-			return $elm$core$Task$succeed(
-				function (v) {
-					return 'elmServe.compileError(' + (v + ');');
-				}(
-					A2(
-						$elm$json$Json$Encode$encode,
-						0,
-						$elm$json$Json$Encode$string(
-							function (_v3) {
-								var v = _v3;
-								return v;
-							}(msg)))));
-		} else {
-			return $elm$core$Task$fail(b);
-		}
-	};
-	return A2(
-		$elm$core$Task$andThen,
-		$author$project$ElmServe$Main$writeFile(opt.O),
-		A2(
-			$elm$core$Task$andThen,
-			$author$project$ElmServe$Main$applyLib,
-			A2(
-				$elm$core$Task$onError,
-				recoverFromCompileError,
-				A2(
-					$elm$core$Task$andThen,
-					$author$project$ElmServe$Main$patchElm,
-					A2(
-						$elm$core$Task$andThen,
-						function (_v0) {
-							return $author$project$ElmServe$Main$readFile(opt.O);
-						},
-						$author$project$ElmServe$Main$compileElm(opt))))));
-};
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$ElmServe$Main$open = function (a) {
-	return A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$InternalError,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return require('open')(a) },
-			$elm$json$Json$Encode$string(a),
-			$elm$json$Json$Decode$succeed(0)));
-};
-var $elm$core$Task$perform = F2(
-	function (toMessage, task) {
-		return $elm$core$Task$command(
-			A2($elm$core$Task$map, toMessage, task));
-	});
-var $author$project$ElmServe$Main$resolveQueue = A2(
-	$elm$core$Task$mapError,
-	$author$project$ElmServe$Main$InternalError,
-	A3(
-		$author$project$JavaScript$run, function(a, onCancel) { return (() => { if (!global.queue) global.queue = []; queue.forEach(a => a.res.end()); queue = []; })() },
-		$elm$json$Json$Encode$null,
-		$elm$json$Json$Decode$succeed(0)));
-var $author$project$ElmServe$Main$InternalError_ = function (a) {
-	return {$: 3, a: a};
-};
-var $author$project$ElmServe$Main$NotFound_ = {$: 2};
-var $author$project$ElmServe$Main$addRequestToQueue = function (a) {
-	return A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$InternalError_,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return (() => { if (!global.queue) global.queue = []; queue.push(a); })() },
-			$elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2('req', a.K),
-						_Utils_Tuple2('res', a.L)
-					])),
-			$elm$json$Json$Decode$succeed(0)));
-};
-var $author$project$ElmServe$Main$Directory = 1;
-var $author$project$ElmServe$Main$File = 0;
-var $author$project$ElmServe$Main$NotFound = 2;
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $author$project$ElmServe$Main$fileStatus = function (path) {
-	return A2(
-		$elm$core$Task$onError,
-		function (v) {
-			if ((v.$ === 1) && (v.b === 'ENOENT')) {
-				return $elm$core$Task$succeed(2);
-			} else {
-				return $elm$core$Task$fail(v);
-			}
-		},
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').stat(a).then(a => a.isDirectory()) },
-			$elm$json$Json$Encode$string(path),
-			A2(
-				$elm$json$Json$Decode$andThen,
-				function (v) {
-					return v ? $elm$json$Json$Decode$succeed(1) : $elm$json$Json$Decode$succeed(0);
-				},
-				$elm$json$Json$Decode$bool)));
-};
-var $author$project$ElmServe$Main$CannotParseUrl = {$: 0};
-var $author$project$ElmServe$Main$ParentFolderPath = {$: 1};
+var $author$project$ElmServe$Model$Update$CannotParseUrl = {$: 0};
+var $author$project$ElmServe$Model$Update$ParentFolderPath = {$: 1};
 var $elm$core$Result$andThen = F2(
 	function (callback, result) {
 		if (!result.$) {
@@ -5449,22 +5482,31 @@ var $elm$core$Result$andThen = F2(
 	});
 var $elm$regex$Regex$Match = F4(
 	function (match, index, number, submatches) {
-		return {bc: index, bh: match, bl: number, bw: submatches};
+		return {ba: index, be: match, bi: number, bw: submatches};
 	});
 var $elm$regex$Regex$contains = _Regex_contains;
 var $elm$core$String$endsWith = _String_endsWith;
+var $elm$core$Result$fromMaybe = F2(
+	function (err, maybe) {
+		if (!maybe.$) {
+			var v = maybe.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			return $elm$core$Result$Err(err);
+		}
+	});
 var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
 var $elm$regex$Regex$fromString = function (string) {
 	return A2(
 		$elm$regex$Regex$fromStringWith,
-		{a_: false, bi: false},
+		{aY: false, bf: false},
 		string);
 };
 var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {ah: fragment, ak: host, ar: path, at: port_, aw: protocol, ax: query};
+		return {ag: fragment, a8: host, bn: path, bo: port_, av: protocol, aw: query};
 	});
 var $elm$core$String$dropLeft = F2(
 	function (n, string) {
@@ -5581,15 +5623,14 @@ var $elm$url$Url$fromString = function (str) {
 		1,
 		A2($elm$core$String$dropLeft, 8, str)) : $elm$core$Maybe$Nothing);
 };
-var $elm$core$Result$map = F2(
-	function (func, ra) {
-		if (!ra.$) {
-			var a = ra.a;
-			return $elm$core$Result$Ok(
-				func(a));
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
 		} else {
-			var e = ra.a;
-			return $elm$core$Result$Err(e);
+			return $elm$core$Maybe$Nothing;
 		}
 	});
 var $elm$regex$Regex$never = _Regex_never;
@@ -5611,114 +5652,97 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$ElmServe$Main$requestPath = function (_v0) {
-	var request = _v0.K;
+var $author$project$ElmServe$Model$Update$requestPath = function (a) {
 	var parentFolderRegex = A2(
 		$elm$core$Maybe$withDefault,
 		$elm$regex$Regex$never,
 		$elm$regex$Regex$fromString('(^|/)\\.\\.(/|$)'));
-	return $author$project$Task$Extra$fromResult(
+	return A2(
+		$elm$core$Result$map,
+		function (x) {
+			return A2($elm$core$String$endsWith, '/', x) ? (x + 'index.html') : x;
+		},
 		A2(
-			$elm$core$Result$map,
-			function (v) {
-				return A2($elm$core$String$endsWith, '/', v) ? (v + 'index.html') : v;
+			$elm$core$Result$andThen,
+			function (x) {
+				return A2($elm$regex$Regex$contains, parentFolderRegex, x) ? $elm$core$Result$Err($author$project$ElmServe$Model$Update$ParentFolderPath) : $elm$core$Result$Ok(x);
 			},
 			A2(
-				$elm$core$Result$andThen,
-				function (v) {
-					return A2($elm$regex$Regex$contains, parentFolderRegex, v) ? $elm$core$Result$Err($author$project$ElmServe$Main$ParentFolderPath) : $elm$core$Result$Ok(v);
-				},
+				$elm$core$Result$fromMaybe,
+				$author$project$ElmServe$Model$Update$CannotParseUrl,
 				A2(
-					$elm$core$Result$fromMaybe,
-					$author$project$ElmServe$Main$CannotParseUrl,
+					$elm$core$Maybe$andThen,
+					$elm$url$Url$percentDecode,
 					A2(
-						$elm$core$Maybe$andThen,
-						$elm$url$Url$percentDecode,
+						$elm$core$Maybe$map,
+						function ($) {
+							return $.bn;
+						},
 						A2(
-							$elm$core$Maybe$map,
-							function ($) {
-								return $.ar;
-							},
-							A2(
-								$elm$core$Maybe$andThen,
-								$elm$url$Url$fromString,
-								$elm$core$Result$toMaybe(
+							$elm$core$Maybe$andThen,
+							$elm$url$Url$fromString,
+							$elm$core$Result$toMaybe(
+								A2(
+									$elm$core$Result$map,
+									function (x) {
+										return 'http://localhost' + x;
+									},
 									A2(
-										$elm$core$Result$map,
-										function (v) {
-											return 'http://localhost' + v;
-										},
-										A2(
-											$elm$json$Json$Decode$decodeValue,
-											A2($elm$json$Json$Decode$field, 'url', $elm$json$Json$Decode$string),
-											request))))))))));
+										$elm$json$Json$Decode$decodeValue,
+										A2($elm$json$Json$Decode$field, 'url', $elm$json$Json$Decode$string),
+										a.L)))))))));
 };
-var $elm$core$Dict$foldl = F3(
-	function (func, acc, dict) {
-		foldl:
-		while (true) {
-			if (dict.$ === -2) {
-				return acc;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$func = func,
-					$temp$acc = A3(
-					func,
-					key,
-					value,
-					A3($elm$core$Dict$foldl, func, acc, left)),
-					$temp$dict = right;
-				func = $temp$func;
-				acc = $temp$acc;
-				dict = $temp$dict;
-				continue foldl;
-			}
-		}
-	});
-var $elm$json$Json$Encode$dict = F3(
-	function (toKey, toValue, dictionary) {
-		return _Json_wrap(
-			A3(
-				$elm$core$Dict$foldl,
-				F3(
-					function (key, value, obj) {
-						return A3(
-							_Json_addField,
-							toKey(key),
-							toValue(value),
-							obj);
-					}),
-				_Json_emptyObject(0),
-				dictionary));
-	});
-var $author$project$ElmServe$Main$send = F4(
-	function (status, headers, data, _v0) {
-		var response = _v0.L;
-		return A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return a.res.writeHead(a.status, a.headers).end(a.data) },
+var $author$project$ElmServe$Model$Update$InternalError = function (a) {
+	return {$: 3, a: a};
+};
+var $author$project$ElmServe$Model$Update$NotFound = {$: 2};
+var $author$project$ElmServe$Model$Update$addRequestToQueue = function (a) {
+	return A2(
+		$elm$core$Task$mapError,
+		$author$project$ElmServe$Model$Update$InternalError,
+		A3(
+			$author$project$JavaScript$run, function(a, onCancel) { return (() => { if (!global.queue) global.queue = []; queue.push(a); })() },
 			$elm$json$Json$Encode$object(
 				_List_fromArray(
 					[
-						_Utils_Tuple2(
-						'status',
-						$elm$json$Json$Encode$int(status)),
-						_Utils_Tuple2(
-						'headers',
-						A3($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $elm$json$Json$Encode$string, headers)),
-						_Utils_Tuple2(
-						'data',
-						$elm$json$Json$Encode$string(data)),
-						_Utils_Tuple2('res', response)
+						_Utils_Tuple2('req', a.L),
+						_Utils_Tuple2('res', a.M)
 					])),
-			$elm$json$Json$Decode$succeed(0));
-	});
-var $author$project$ElmServe$Main$sendFile = F3(
+			$elm$json$Json$Decode$succeed(0)));
+};
+var $author$project$FileStatus$Directory = 1;
+var $author$project$FileStatus$File = 0;
+var $author$project$FileStatus$NotFound = 2;
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $author$project$FileSystem$pathToString = function (_v0) {
+	var a = _v0;
+	return a;
+};
+var $author$project$FileStatus$get = function (path) {
+	return A2(
+		$elm$core$Task$onError,
+		function (x) {
+			if ((x.$ === 1) && (x.b === 'ENOENT')) {
+				return $elm$core$Task$succeed(2);
+			} else {
+				return $elm$core$Task$fail(x);
+			}
+		},
+		A3(
+			$author$project$JavaScript$run, function(a, onCancel) { return require('fs/promises').stat(a).then(a => a.isDirectory()) },
+			$elm$json$Json$Encode$string(
+				$author$project$FileSystem$pathToString(path)),
+			A2(
+				$elm$json$Json$Decode$andThen,
+				function (x) {
+					return x ? $elm$json$Json$Decode$succeed(1) : $elm$json$Json$Decode$succeed(0);
+				},
+				$elm$json$Json$Decode$bool)));
+};
+var $author$project$ElmServe$Model$Update$sendFile = F3(
 	function (opt, path, _v0) {
-		var request = _v0.K;
-		var response = _v0.L;
+		var request = _v0.L;
+		var response = _v0.M;
 		return A3(
 			$author$project$JavaScript$run, function(a, onCancel) { return require('send')(a.req, a.path, { root: a.root }).pipe(a.res) },
 			$elm$json$Json$Encode$object(
@@ -5726,7 +5750,7 @@ var $author$project$ElmServe$Main$sendFile = F3(
 					[
 						_Utils_Tuple2(
 						'root',
-						$elm$json$Json$Encode$string(opt.aA)),
+						$elm$json$Json$Encode$string(opt.az)),
 						_Utils_Tuple2(
 						'path',
 						$elm$json$Json$Encode$string(path)),
@@ -5735,14 +5759,14 @@ var $author$project$ElmServe$Main$sendFile = F3(
 					])),
 			$elm$json$Json$Decode$succeed(0));
 	});
-var $author$project$ElmServe$Main$sendResponse = F2(
-	function (opt, a) {
+var $author$project$ElmServe$Model$Update$resolvePath = F3(
+	function (options, req, a) {
 		var redirect = function (b) {
 			return A2(
 				$elm$core$Task$mapError,
-				$author$project$ElmServe$Main$InternalError_,
+				$author$project$ElmServe$Model$Update$InternalError,
 				A4(
-					$author$project$ElmServe$Main$send,
+					$author$project$ElmServe$Model$Update$send,
 					301,
 					$elm$core$Dict$fromList(
 						_List_fromArray(
@@ -5750,40 +5774,42 @@ var $author$project$ElmServe$Main$sendResponse = F2(
 								_Utils_Tuple2('Location', b)
 							])),
 					'Moved permanently to ' + (b + '.'),
-					a));
+					req));
 		};
-		var resolvePath = function (b) {
-			return (b === '/elm-serve-client-lib.js') ? $author$project$ElmServe$Main$addRequestToQueue(a) : A2(
-				$elm$core$Task$andThen,
-				function (v) {
-					switch (v) {
-						case 0:
-							return A2(
-								$elm$core$Task$mapError,
-								$author$project$ElmServe$Main$InternalError_,
-								A3($author$project$ElmServe$Main$sendFile, opt, b, a));
-						case 1:
-							return redirect(b + '/');
-						default:
-							return opt.bk ? A2(
-								$elm$core$Task$mapError,
-								$author$project$ElmServe$Main$InternalError_,
-								A3($author$project$ElmServe$Main$sendFile, opt, 'index.html', a)) : $elm$core$Task$fail($author$project$ElmServe$Main$NotFound_);
-					}
-				},
-				A2(
-					$elm$core$Task$mapError,
-					$author$project$ElmServe$Main$InternalError_,
-					$author$project$ElmServe$Main$fileStatus(opt.aA + ('/' + b))));
-		};
+		return (a === '/elm-serve-client-lib.js') ? $author$project$ElmServe$Model$Update$addRequestToQueue(req) : A2(
+			$elm$core$Task$andThen,
+			function (v) {
+				switch (v) {
+					case 0:
+						return A2(
+							$elm$core$Task$mapError,
+							$author$project$ElmServe$Model$Update$InternalError,
+							A3($author$project$ElmServe$Model$Update$sendFile, options, a, req));
+					case 1:
+						return redirect(a + '/');
+					default:
+						return options.bh ? A2(
+							$elm$core$Task$mapError,
+							$author$project$ElmServe$Model$Update$InternalError,
+							A3($author$project$ElmServe$Model$Update$sendFile, options, 'index.html', req)) : $elm$core$Task$fail($author$project$ElmServe$Model$Update$NotFound);
+				}
+			},
+			A2(
+				$elm$core$Task$mapError,
+				$author$project$ElmServe$Model$Update$InternalError,
+				$author$project$FileStatus$get(
+					$author$project$FileSystem$stringToPath(options.az + ('/' + a)))));
+	});
+var $author$project$ElmServe$Model$Update$sendResponse = F2(
+	function (opt, a) {
 		var errorResponse = function (b) {
 			switch (b.$) {
 				case 0:
-					return A4($author$project$ElmServe$Main$send, 400, $elm$core$Dict$empty, 'Bad request - cannot parse url.', a);
+					return A4($author$project$ElmServe$Model$Update$send, 400, $elm$core$Dict$empty, 'Bad request - cannot parse url.', a);
 				case 1:
-					return A4($author$project$ElmServe$Main$send, 403, $elm$core$Dict$empty, 'Forbidden - cannot go to parent folder.', a);
+					return A4($author$project$ElmServe$Model$Update$send, 403, $elm$core$Dict$empty, 'Forbidden - cannot go to parent folder.', a);
 				case 2:
-					return A4($author$project$ElmServe$Main$send, 404, $elm$core$Dict$empty, 'Not found.', a);
+					return A4($author$project$ElmServe$Model$Update$send, 404, $elm$core$Dict$empty, 'Not found.', a);
 				default:
 					var c = b.a;
 					return A2(
@@ -5791,90 +5817,109 @@ var $author$project$ElmServe$Main$sendResponse = F2(
 						function (_v1) {
 							return $elm$core$Task$fail(c);
 						},
-						A4($author$project$ElmServe$Main$send, 500, $elm$core$Dict$empty, 'Server error.', a));
+						A4($author$project$ElmServe$Model$Update$send, 500, $elm$core$Dict$empty, 'Server error.', a));
 			}
 		};
 		return A2(
 			$elm$core$Task$mapError,
-			$author$project$ElmServe$Main$InternalError,
+			$author$project$ElmServe$Error$ResponseError,
 			A2(
 				$elm$core$Task$onError,
 				errorResponse,
 				A2(
 					$elm$core$Task$andThen,
-					resolvePath,
-					$author$project$ElmServe$Main$requestPath(a))));
+					A2($author$project$ElmServe$Model$Update$resolvePath, opt, a),
+					$author$project$Task$Extra$fromResult(
+						$author$project$ElmServe$Model$Update$requestPath(a)))));
 	});
-var $author$project$ElmServe$Main$serverUrl = function (a) {
-	return (_Utils_eq(a.aF, $elm$core$Maybe$Nothing) ? 'http://' : 'https://') + (a.ak + (':' + $elm$core$String$fromInt(a.at)));
-};
 var $elm$core$Process$sleep = _Process_sleep;
 var $elm$core$Process$spawn = _Scheduler_spawn;
-var $author$project$ElmServe$Main$CannotStartServer = function (a) {
+var $author$project$ElmServe$Error$ServerError = function (a) {
 	return {$: 3, a: a};
 };
-var $author$project$ElmServe$Main$encodeMaybe = F2(
-	function (encode, a) {
-		if (!a.$) {
-			var b = a.a;
-			return encode(b);
-		} else {
-			return $elm$json$Json$Encode$null;
-		}
-	});
-var $author$project$ElmServe$Main$startServer = function (a) {
-	return A2(
-		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$CannotStartServer,
-		A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject) => {
-        var opt = a.ssl ? { cert: fs.readFileSync(a.ssl.cert), key: fs.readFileSync(a.ssl.key) } : {}
-        var callback = (req, res) => { scope.Elm.Main.init.ports.sendMsg.send({ a: 3, b: { req, res } }) }
-        var server = require(a.ssl ? 'https' : 'http').createServer(opt, callback)
+var $author$project$ElmServe$Utils$Utils$open = function (a) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return require('open')(a) },
+		$elm$json$Json$Encode$string(a),
+		$elm$json$Json$Decode$succeed(0));
+};
+var $author$project$HttpServer$start = function (a) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return new Promise((resolve, reject) => {
+        var opt = a[2] ? { cert: fs.readFileSync(a[2][0]), key: fs.readFileSync(a[2][1]) } : {}
+        var callback = (req, res) => { scope.Elm.Main.init.ports.httpServer.send([req, res]) }
+        var server = require(a[2] ? 'https' : 'http').createServer(opt, callback)
         server.on('error', reject)
         server.on('listening', resolve)
-        server.listen(a.port, a.host)
+        server.listen(a[1], a[0])
     }) },
-			$elm$json$Json$Encode$object(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'host',
-						$elm$json$Json$Encode$string(a.ak)),
-						_Utils_Tuple2(
-						'port',
-						$elm$json$Json$Encode$int(a.at)),
-						_Utils_Tuple2(
-						'ssl',
-						A2(
-							$author$project$ElmServe$Main$encodeMaybe,
-							function (v) {
-								return $elm$json$Json$Encode$object(
-									_List_fromArray(
-										[
-											_Utils_Tuple2(
-											'cert',
-											$elm$json$Json$Encode$string(v.a$)),
-											_Utils_Tuple2(
-											'key',
-											$elm$json$Json$Encode$string(v.bg))
-										]));
-							},
-							a.aF))
-					])),
-			$elm$json$Json$Decode$succeed(0)));
+		A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(a.a8),
+					$elm$json$Json$Encode$int(a.bo),
+					function () {
+					var _v0 = a.bv;
+					if (!_v0.$) {
+						var b = _v0.a;
+						return A2(
+							$elm$json$Json$Encode$list,
+							$elm$json$Json$Encode$string,
+							_List_fromArray(
+								[b.aZ, b.bd]));
+					} else {
+						return $elm$json$Json$Encode$null;
+					}
+				}()
+				])),
+		$elm$json$Json$Decode$succeed(0));
 };
-var $author$project$ElmServe$Main$startWatching = function (a) {
-	var watch = function (b) {
-		return A3(
-			$author$project$JavaScript$run, function(a, onCancel) { return require('fs').watch(a, { recursive: true }, (_, path) => scope.Elm.Main.init.ports.sendMsg.send({ a: 1, b: { path } })) },
-			$elm$json$Json$Encode$string(b),
-			$elm$json$Json$Decode$succeed(0));
-	};
+var $author$project$HttpServer$url = function (a) {
+	return (_Utils_eq(a.bv, $elm$core$Maybe$Nothing) ? 'http://' : 'https://') + (a.a8 + (':' + $elm$core$String$fromInt(a.bo)));
+};
+var $author$project$ElmServe$Model$Update$startServer = function (options) {
+	var url = $author$project$HttpServer$url(options.aD);
+	var open = options.bl ? A2(
+		$elm$core$Task$onError,
+		function (_v2) {
+			return $elm$core$Task$succeed(0);
+		},
+		$author$project$ElmServe$Utils$Utils$open(url)) : $elm$core$Task$succeed(0);
+	return A2(
+		$elm$core$Task$andThen,
+		function (_v1) {
+			return open;
+		},
+		A2(
+			$elm$core$Task$andThen,
+			function (_v0) {
+				return A2(
+					$elm$core$Task$mapError,
+					$author$project$ElmServe$Error$ConsoleError,
+					$author$project$Console$log('Server is running at:\n' + (url + '\n')));
+			},
+			A2(
+				$elm$core$Task$mapError,
+				$author$project$ElmServe$Error$ServerError,
+				$author$project$HttpServer$start(options.aD))));
+};
+var $author$project$ElmServe$Error$WatchFilesError = function (a) {
+	return {$: 4, a: a};
+};
+var $author$project$FileWatch$watch = function (a) {
+	return A3(
+		$author$project$JavaScript$run, function(a, onCancel) { return require('fs').watch(a, { recursive: true }, (_, b) => scope.Elm.Main.init.ports.fileWatch.send(b)) },
+		$elm$json$Json$Encode$string(
+			$author$project$FileSystem$pathToString(a)),
+		$elm$json$Json$Decode$succeed(0));
+};
+var $author$project$ElmServe$Model$Update$startWatching = function (a) {
 	var dirs = function () {
 		if (!a.$) {
 			var b = a.a;
-			return b.a5;
+			return b.a3;
 		} else {
 			return _List_fromArray(
 				['src']);
@@ -5882,198 +5927,281 @@ var $author$project$ElmServe$Main$startWatching = function (a) {
 	}();
 	return A2(
 		$elm$core$Task$mapError,
-		$author$project$ElmServe$Main$InternalError,
+		$author$project$ElmServe$Error$WatchFilesError,
 		A2(
 			$elm$core$Task$map,
 			function (_v0) {
 				return 0;
 			},
 			$elm$core$Task$sequence(
-				A2($elm$core$List$map, watch, dirs))));
-};
-var $author$project$ElmServe$Options$toString = function (a) {
-	var boolToString = function (b) {
-		return b ? 'true' : 'false';
-	};
-	return A2(
-		$elm$core$String$join,
-		'\n',
-		_List_fromArray(
-			[
-				'Host:     ' + a.ak,
-				'Port:     ' + $elm$core$String$fromInt(a.at),
-				'SSL:      ' + A2(
-				$elm$core$Maybe$withDefault,
-				'-',
 				A2(
-					$elm$core$Maybe$map,
-					function (v) {
-						return A2(
-							$elm$core$String$join,
-							', ',
-							_List_fromArray(
-								[v.a$, v.bg]));
+					$elm$core$List$map,
+					function (x) {
+						return $author$project$FileWatch$watch(
+							$author$project$FileSystem$stringToPath(x));
 					},
-					a.aF)),
-				'Root:     ' + a.aA,
-				'Open:     ' + boolToString(a.bo),
-				'No 404:   ' + boolToString(a.bk),
-				'Elm:      ' + a.a8,
-				'Debug:    ' + boolToString(a.a4),
-				'Optimize: ' + boolToString(a.bp),
-				'Input:    ' + A2($elm$core$String$join, ', ', a.be),
-				'Output:   ' + a.O
-			]));
+					dirs))));
 };
-var $author$project$ElmServe$Main$update = F2(
-	function (msg, model) {
-		switch (msg.$) {
-			case 0:
-				var a = msg.a;
-				var task = function () {
-					if (!a.$) {
-						var b = a.a;
-						var opt = b.E;
-						var openServerUrl = opt.bo ? $author$project$ElmServe$Main$open(
-							$author$project$ElmServe$Main$serverUrl(opt)) : $elm$core$Task$succeed(0);
-						return A2(
+var $author$project$JavaScript$errorToString = function (a) {
+	var indent = function (b) {
+		return A2(
+			$elm$core$String$join,
+			'\n',
+			A2(
+				$elm$core$List$map,
+				$elm$core$Basics$append('  '),
+				A2($elm$core$String$split, '\n', b)));
+	};
+	switch (a.$) {
+		case 0:
+			return 'Compiled file needs to be processed via elm-ffi command.';
+		case 1:
+			var name = a.a;
+			var code = a.b;
+			var msg = a.c;
+			return 'There was a runtime error. More details:\n' + indent(
+				('name: ' + function (_v1) {
+					var x = _v1;
+					return x;
+				}(name)) + ('\n' + (('code: ' + function (_v2) {
+					var x = _v2;
+					return x;
+				}(code)) + ('\n' + ('message: ' + function (_v3) {
+					var x = _v3;
+					return x;
+				}(msg))))));
+		default:
+			var b = a.a;
+			return 'There was a decode error. More details:\n' + indent(
+				$elm$json$Json$Decode$errorToString(b));
+	}
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$ElmServe$Error$toString = function (a) {
+	var usage = 'Welcome to Elm Serve.\n\nUsage:\n    elm-serve <elm-files>...\n\nOptions:\n    --host <host>\n        Set server host. Default is localhost.\n\n    --port <port>\n        Set server port. Default is 8000.\n\n    --ssl <cert-file> <key-file>\n        Turn on HTTPS.\n\n    --root <path>\n        Set server root.\n\n    --open\n        Open server URL in browser.\n\n    --no-404\n        Serve /index.html if page not found. Useful for Browser.application.\n\nElm Options:\n    --elm <path>\n        Set path to Elm compiler.\n\n    --debug\n        Turn on Elm debugger.\n\n    --optimize\n        Turn on Elm optimizations.\n\n    --output <path>\n        Set output from Elm compiler. Default is elm.js.\n';
+	switch (a.$) {
+		case 0:
+			var b = a.a;
+			var _v1 = A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.bq;
+				},
+				$elm$core$List$head(b));
+			if ((!_v1.$) && (_v1.a.$ === 12)) {
+				var c = _v1.a.a;
+				return c;
+			} else {
+				return usage;
+			}
+		case 1:
+			var b = a.a;
+			if ((b.$ === 1) && (b.b === 'ENOENT')) {
+				return 'Cannot find elm.json.';
+			} else {
+				return 'Cannot read elm.json. ' + $author$project$JavaScript$errorToString(b);
+			}
+		case 2:
+			var b = a.a;
+			return 'Cannot compile Elm. ' + $author$project$JavaScript$errorToString(b);
+		case 3:
+			var b = a.a;
+			if ((b.$ === 1) && (b.b === 'EADDRINUSE')) {
+				return 'There is somebody already listening on same port!';
+			} else {
+				return 'Cannot start server. ' + $author$project$JavaScript$errorToString(b);
+			}
+		case 4:
+			var b = a.a;
+			return 'Internal error. ' + $author$project$JavaScript$errorToString(b);
+		case 5:
+			var b = a.a;
+			return 'Internal error. ' + $author$project$JavaScript$errorToString(b);
+		case 6:
+			var b = a.a;
+			return 'Internal error. ' + $author$project$JavaScript$errorToString(b);
+		case 7:
+			var b = a.a;
+			return 'Internal error. ' + $author$project$JavaScript$errorToString(b);
+		default:
+			var b = a.a;
+			return 'Internal error. ' + $author$project$JavaScript$errorToString(b);
+	}
+};
+var $author$project$ElmServe$Model$Update$update = function (msg) {
+	switch (msg.$) {
+		case 0:
+			return $author$project$Platform$Extra$noOperation;
+		case 1:
+			var a = msg.a;
+			return function (_v1) {
+				if (!a.$) {
+					var b = a.a;
+					var task = A2(
+						$elm$core$Task$onError,
+						function (x) {
+							return A2(
+								$author$project$ElmServe$Model$Update$consoleErrorAndExit,
+								$author$project$ElmServe$Error$toString(x),
+								1);
+						},
+						A2(
 							$elm$core$Task$andThen,
 							function (_v6) {
-								return openServerUrl;
+								return $author$project$ElmServe$Model$Update$startWatching(b.br);
 							},
 							A2(
 								$elm$core$Task$andThen,
 								function (_v5) {
-									return $author$project$ElmServe$Main$log(
-										'Server is running at:\n' + ($author$project$ElmServe$Main$serverUrl(opt) + '\n'));
+									return $author$project$ElmServe$Model$Update$startServer(b.bm);
 								},
 								A2(
 									$elm$core$Task$andThen,
 									function (_v4) {
-										return $author$project$ElmServe$Main$startServer(opt);
+										return $author$project$ElmServe$Model$Update$makeOutputFile(b.bm);
 									},
 									A2(
-										$elm$core$Task$andThen,
-										function (_v3) {
-											return $author$project$ElmServe$Main$startWatching(b.Q);
-										},
-										A2(
-											$elm$core$Task$andThen,
-											function (_v2) {
-												return $author$project$ElmServe$Main$makeOutputFile(opt);
-											},
-											$author$project$ElmServe$Main$log(
-												'Elm Serve\n\nI got following options:\n' + ($author$project$ElmServe$Options$toString(opt) + '\n')))))));
-					} else {
-						var b = a.a;
-						return $elm$core$Task$fail(b);
-					}
-				}();
-				return _Utils_Tuple2(
-					$elm$core$Result$toMaybe(a),
-					A2($elm$core$Task$attempt, $author$project$ElmServe$Main$TaskDone, task));
-			case 1:
-				var killProcess = function (b) {
-					var _v11 = b.J;
-					if (!_v11.$) {
-						var v = _v11.a;
-						return $elm$core$Process$kill(v);
+										$elm$core$Task$mapError,
+										$author$project$ElmServe$Error$ConsoleError,
+										$author$project$Console$log('Elm Serve\n\n'))))));
+					return _Utils_Tuple2(
+						$elm$core$Result$Ok(b),
+						A2(
+							$elm$core$Task$attempt,
+							function (_v3) {
+								return $author$project$ElmServe$Msg$NothingHappened;
+							},
+							task));
+				} else {
+					var b = a.a;
+					return _Utils_Tuple2(
+						$elm$core$Result$Err(
+							$author$project$ElmServe$Model$Error(b)),
+						A2(
+							$elm$core$Task$attempt,
+							function (_v7) {
+								return $author$project$ElmServe$Msg$NothingHappened;
+							},
+							A2(
+								$author$project$ElmServe$Model$Update$consoleErrorAndExit,
+								$author$project$ElmServe$Error$toString(b),
+								1)));
+				}
+			};
+		case 2:
+			return function (model) {
+				var killCompileProcess = function (b) {
+					var _v13 = b.a1;
+					if (!_v13.$) {
+						var x = _v13.a;
+						return $elm$core$Process$kill(x);
 					} else {
 						return $elm$core$Task$succeed(0);
 					}
 				};
-				var task = A2(
-					$elm$core$Task$andThen,
-					function (c) {
+				var task = function () {
+					if (!model.$) {
+						var b = model.a;
 						return A2(
 							$elm$core$Task$onError,
-							function (v) {
+							function (x) {
 								return A2(
-									$author$project$ElmServe$Main$exitWithMessageAndCode,
-									$author$project$ElmServe$Main$errorToString(v),
+									$author$project$ElmServe$Model$Update$consoleErrorAndExit,
+									$author$project$ElmServe$Error$toString(x),
 									1);
 							},
 							A2(
 								$elm$core$Task$andThen,
-								function (_v10) {
-									return $author$project$ElmServe$Main$resolveQueue;
+								function (_v12) {
+									return $author$project$ElmServe$Model$Update$resolveQueue;
 								},
 								A2(
 									$elm$core$Task$andThen,
-									function (_v9) {
-										return $author$project$ElmServe$Main$makeOutputFile(c.E);
+									function (_v11) {
+										return $author$project$ElmServe$Model$Update$makeOutputFile(b.bm);
 									},
 									A2(
 										$elm$core$Task$andThen,
-										function (_v8) {
-											return $author$project$ElmServe$Main$log('Recompiling...');
+										function (_v10) {
+											return A2(
+												$elm$core$Task$mapError,
+												$author$project$ElmServe$Error$ConsoleError,
+												$author$project$Console$log('Recompiling...'));
 										},
 										A2(
 											$elm$core$Task$andThen,
-											function (_v7) {
-												return $elm$core$Process$sleep(1);
+											function (_v9) {
+												return $elm$core$Process$sleep(0.5);
 											},
-											killProcess(c))))));
-					},
-					$author$project$Task$Extra$fromResult(
-						A2($elm$core$Result$fromMaybe, $author$project$ElmServe$Main$InternalErrorModelNotReady, model)));
+											killCompileProcess(b))))));
+					} else {
+						return $elm$core$Task$succeed(0);
+					}
+				}();
 				return _Utils_Tuple2(
 					model,
 					A2(
 						$elm$core$Task$perform,
-						$author$project$ElmServe$Main$GotCompileProcess,
+						$author$project$ElmServe$Msg$CompileProcessReceived,
 						$elm$core$Process$spawn(task)));
-			case 2:
-				var a = msg.a;
+			};
+		case 3:
+			var a = msg.a;
+			return function (model) {
 				return _Utils_Tuple2(
 					A2(
-						$elm$core$Maybe$map,
+						$elm$core$Result$map,
 						function (v) {
 							return _Utils_update(
 								v,
 								{
-									J: $elm$core$Maybe$Just(a)
+									a1: $elm$core$Maybe$Just(a)
 								});
 						},
 						model),
 					$elm$core$Platform$Cmd$none);
-			case 3:
-				var a = msg.a;
-				var task = A2(
-					$elm$core$Task$andThen,
-					function (c) {
-						return A2($author$project$ElmServe$Main$sendResponse, c.E, a);
-					},
-					$author$project$Task$Extra$fromResult(
-						A2($elm$core$Result$fromMaybe, $author$project$ElmServe$Main$InternalErrorModelNotReady, model)));
-				return _Utils_Tuple2(
-					model,
-					A2($elm$core$Task$attempt, $author$project$ElmServe$Main$TaskDone, task));
-			default:
-				var a = msg.a;
-				var cmd = function () {
-					if (!a.$) {
-						return $elm$core$Platform$Cmd$none;
-					} else {
-						var b = a.a;
-						return A2(
-							$elm$core$Task$attempt,
-							function (_v13) {
-								return $author$project$ElmServe$Main$TaskDone(
-									$elm$core$Result$Ok(0));
-							},
+			};
+		default:
+			var a = msg.a;
+			return function (model) {
+				if (!a.$) {
+					var b = a.a;
+					if (!model.$) {
+						var c = model.a;
+						return _Utils_Tuple2(
+							model,
 							A2(
-								$author$project$ElmServe$Main$exitWithMessageAndCode,
-								$author$project$ElmServe$Main$errorToString(b),
-								1));
+								$elm$core$Task$attempt,
+								function (_v16) {
+									return $author$project$ElmServe$Msg$NothingHappened;
+								},
+								A2($author$project$ElmServe$Model$Update$sendResponse, c.bm, b)));
+					} else {
+						return _Utils_Tuple2(
+							model,
+							A2(
+								$elm$core$Task$attempt,
+								function (_v17) {
+									return $author$project$ElmServe$Msg$NothingHappened;
+								},
+								A4($author$project$ElmServe$Model$Update$send, 500, $elm$core$Dict$empty, 'Server is not ready.', b)));
 					}
-				}();
-				return _Utils_Tuple2(model, cmd);
-		}
-	});
+				} else {
+					return $author$project$Platform$Extra$noOperation(model);
+				}
+			};
+	}
+};
 var $elm$core$Platform$worker = _Platform_worker;
 var $author$project$ElmServe$Main$main = $elm$core$Platform$worker(
-	{bd: $author$project$ElmServe$Main$init, bx: $author$project$ElmServe$Main$subscriptions, bA: $author$project$ElmServe$Main$update});
+	{bb: $author$project$ElmServe$Model$Update$init, bx: $author$project$ElmServe$Model$Update$subscriptions, bA: $author$project$ElmServe$Model$Update$update});
 var $author$project$Main$main = $author$project$ElmServe$Main$main;
-_Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(0))(0)()}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)({ flags: { global: this } })}});}(this));
