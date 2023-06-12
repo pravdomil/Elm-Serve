@@ -78,7 +78,7 @@ parser =
         boolArg name =
             Parser.succeed True
                 |. Parser.symbol ("--" ++ name)
-                |. argEnd
+                |. argumentEnd
 
         intArg : String -> Parser.Parser Int
         intArg name =
@@ -89,7 +89,7 @@ parser =
                     , Parser.symbol "\u{0000}"
                     ]
                 |= Parser.int
-                |. argEnd
+                |. argumentEnd
 
         stringArg : String -> Parser.Parser String
         stringArg name =
@@ -113,10 +113,10 @@ parser =
                     |. Parser.chompIf (\v -> v /= '-' && v /= '\u{0000}')
                     |. Parser.chompUntilEndOr "\u{0000}"
                 )
-                |. argEnd
+                |. argumentEnd
 
-        argEnd : Parser.Parser ()
-        argEnd =
+        argumentEnd : Parser.Parser ()
+        argumentEnd =
             Parser.oneOf
                 [ Parser.symbol "\u{0000}"
                 , Parser.end
