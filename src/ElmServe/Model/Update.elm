@@ -9,6 +9,7 @@ import ElmServe.Model
 import ElmServe.Msg
 import ElmServe.Options
 import ElmServe.Utils.Utils
+import FileStatus
 import FileSystem
 import FileWatch
 import HttpServer
@@ -249,19 +250,19 @@ sendResponse opt a =
                 addRequestToQueue a
 
             else
-                fileStatus (opt.root ++ "/" ++ b)
+                FileStatus.get (FileSystem.stringToPath (opt.root ++ "/" ++ b))
                     |> Task.mapError InternalError_
                     |> Task.andThen
                         (\v ->
                             case v of
-                                File ->
+                                FileStatus.File ->
                                     sendFile opt b a
                                         |> Task.mapError InternalError_
 
-                                Directory ->
+                                FileStatus.Directory ->
                                     redirect (b ++ "/")
 
-                                NotFound ->
+                                FileStatus.NotFound ->
                                     if opt.no404 then
                                         sendFile opt "index.html" a
                                             |> Task.mapError InternalError_
