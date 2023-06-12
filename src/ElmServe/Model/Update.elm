@@ -39,7 +39,7 @@ init flags =
         cmd : Cmd ElmServe.Msg.Msg
         cmd =
             Task.map3
-                ElmServe.Model.ReadyModel
+                ElmServe.Model.Ready
                 options
                 (ElmServe.Utils.Utils.readProject "elm.json" |> Task.mapError ElmServe.Error.CannotReadProject)
                 (Task.succeed Nothing)
@@ -93,7 +93,7 @@ update msg model =
 
         ElmServe.Msg.GotFileChange _ ->
             let
-                killProcess : ElmServe.Model.ReadyModel -> Task.Task x ()
+                killProcess : ElmServe.Model.Ready -> Task.Task x ()
                 killProcess b =
                     case b.compileProcess of
                         Just v ->

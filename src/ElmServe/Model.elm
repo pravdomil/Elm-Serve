@@ -7,14 +7,14 @@ import Process
 
 
 type alias Model =
-    Result Error ReadyModel
+    Result Error Ready
 
 
 
 --
 
 
-type alias ReadyModel =
+type alias Ready =
     { options : ElmServe.Options.Options
     , project : Elm.Project.Project
     , compileProcess : Maybe Process.Id
