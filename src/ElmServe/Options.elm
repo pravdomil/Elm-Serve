@@ -1,23 +1,18 @@
 module ElmServe.Options exposing (..)
 
+import Elm.Compiler
 import HttpServer
 import Parser exposing ((|=))
 
 
 type alias Options =
     { server : HttpServer.Options
+    , elm : Elm.Compiler.Options
 
     --
     , root : String
     , open : Bool
     , no404 : Bool
-
-    --
-    , elm : String
-    , debug : Bool
-    , optimize : Bool
-    , input : List String
-    , output : String
     }
 
 
