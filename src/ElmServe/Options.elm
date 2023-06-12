@@ -89,33 +89,6 @@ parser =
         namedStringArgument name =
             argumentStart name
                 |> Parser.andThen (\() -> argument)
-
-        argumentStart : String -> Parser.Parser ()
-        argumentStart name =
-            Parser.symbol ("--" ++ name)
-                |> Parser.andThen
-                    (\() ->
-                        Parser.oneOf
-                            [ Parser.symbol "="
-                            , Parser.symbol "\u{0000}"
-                            ]
-                    )
-
-        argument : Parser.Parser String
-        argument =
-            Parser.getChompedString
-                (Parser.succeed ()
-                    |. Parser.chompIf (\v -> v /= '-' && v /= '\u{0000}')
-                    |. Parser.chompUntilEndOr "\u{0000}"
-                )
-                |. argumentEnd
-
-        argumentEnd : Parser.Parser ()
-        argumentEnd =
-            Parser.oneOf
-                [ Parser.symbol "\u{0000}"
-                , Parser.end
-                ]
     in
     Parser.loop
         { server = HttpServer.Options "localhost" 8000 Nothing
@@ -133,3 +106,37 @@ parser =
         , output = "elm.js"
         }
         loop
+
+
+
+--
+
+
+argumentStart : String -> Parser.Parser ()
+argumentStart a =
+    Parser.symbol ("--" ++ a)
+        |> Parser.andThen
+            (\() ->
+                Parser.oneOf
+                    [ Parser.symbol "="
+                    , Parser.symbol "\u{0000}"
+                    ]
+            )
+
+
+argument : Parser.Parser String
+argument =
+    Parser.getChompedString
+        (Parser.succeed ()
+            |. Parser.chompIf (\v -> v /= '-' && v /= '\u{0000}')
+            |. Parser.chompUntilEndOr "\u{0000}"
+        )
+        |. argumentEnd
+
+
+argumentEnd : Parser.Parser ()
+argumentEnd =
+    Parser.oneOf
+        [ Parser.symbol "\u{0000}"
+        , Parser.end
+        ]
