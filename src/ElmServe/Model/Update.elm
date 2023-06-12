@@ -150,7 +150,10 @@ update msg =
 
 subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
 subscriptions _ =
-    HttpServer.requestSubscription ElmServe.Msg.RequestReceived
+    Sub.batch
+        [ FileWatch.subscription ElmServe.Msg.FileChanged
+        , HttpServer.requestSubscription ElmServe.Msg.RequestReceived
+        ]
 
 
 
