@@ -44,16 +44,6 @@ parser =
                     |> Parser.map (\x -> Parser.Loop { acc | server = (\x2 -> { x2 | ssl = Just x }) acc.server })
 
                 --
-                , namedArgument "root" stringArgument
-                    |> Parser.map (\x -> Parser.Loop { acc | root = x })
-                , flag "dir"
-                    |> Parser.andThen (\() -> Parser.problem "Option --dir is renamed to --root.")
-                , flag "open"
-                    |> Parser.map (\() -> Parser.Loop { acc | open = True })
-                , flag "no-404"
-                    |> Parser.map (\() -> Parser.Loop { acc | no404 = True })
-
-                --
                 , namedArgument "elm" stringArgument
                     |> Parser.map (\x -> Parser.Loop { acc | elm = (\x2 -> { x2 | elmPath = x }) acc.elm })
                 , flag "debug"
@@ -62,6 +52,16 @@ parser =
                     |> Parser.map (\() -> Parser.Loop { acc | elm = (\x2 -> { x2 | optimize = True }) acc.elm })
                 , namedArgument "output" stringArgument
                     |> Parser.map (\x -> Parser.Loop { acc | elm = (\x2 -> { x2 | output = x }) acc.elm })
+
+                --
+                , namedArgument "root" stringArgument
+                    |> Parser.map (\x -> Parser.Loop { acc | root = x })
+                , flag "dir"
+                    |> Parser.andThen (\() -> Parser.problem "Option --dir is renamed to --root.")
+                , flag "open"
+                    |> Parser.map (\() -> Parser.Loop { acc | open = True })
+                , flag "no-404"
+                    |> Parser.map (\() -> Parser.Loop { acc | no404 = True })
 
                 --
                 , stringArgument
