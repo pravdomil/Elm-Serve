@@ -90,10 +90,18 @@ Elm Options:
                 _ ->
                     "Cannot start server. " ++ JavaScript.errorToString b
 
-        --
-        InternalErrorModelNotReady ->
-            "Internal error. Model is not ready."
+        WatchFilesError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+        ResponseError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+        QueueError b ->
+            "Internal error. " ++ JavaScript.errorToString b
 
         --
-        InternalError b ->
+        ConsoleError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+        ExitError b ->
             "Internal error. " ++ JavaScript.errorToString b
