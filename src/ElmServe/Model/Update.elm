@@ -82,8 +82,8 @@ update msg =
                             task =
                                 (Console.log "Elm Serve\n\n" |> Task.mapError ElmServe.Error.ConsoleError)
                                     |> Task.andThen (\_ -> makeOutputFile b.options)
-                                    |> Task.andThen (\_ -> startWatching b.project)
                                     |> Task.andThen (\_ -> startServer b.options)
+                                    |> Task.andThen (\_ -> startWatching b.project)
                         in
                         ( Ok b
                         , task
