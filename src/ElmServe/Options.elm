@@ -114,7 +114,6 @@ namedArgument name a =
                     ]
             )
         |> Parser.andThen (\() -> a)
-        |> Parser.andThen (\x -> argumentEnd |> Parser.map (\() -> x))
 
 
 argumentEnd : Parser.Parser ()
