@@ -69,8 +69,8 @@ type alias Request =
 port httpServer : (Json.Decode.Value -> msg) -> Sub msg
 
 
-requestSubscription : (Result Json.Decode.Error Request -> msg) -> Sub msg
-requestSubscription fn =
+subscription : (Result Json.Decode.Error Request -> msg) -> Sub msg
+subscription fn =
     let
         decoder : Json.Decode.Decoder Request
         decoder =

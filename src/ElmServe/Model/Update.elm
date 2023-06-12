@@ -152,7 +152,7 @@ subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
 subscriptions _ =
     Sub.batch
         [ FileWatch.subscription ElmServe.Msg.FileChanged
-        , HttpServer.requestSubscription ElmServe.Msg.RequestReceived
+        , HttpServer.subscription ElmServe.Msg.RequestReceived
         ]
 
 
