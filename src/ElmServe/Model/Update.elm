@@ -134,18 +134,23 @@ update msg =
 
         ElmServe.Msg.RequestReceived a ->
             \model ->
-                case model of
+                case a of
                     Ok b ->
-                        ( model
-                        , sendResponse b.options a
-                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                        )
+                        case model of
+                            Ok c ->
+                                ( model
+                                , sendResponse c.options b
+                                    |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                                )
+
+                            Err _ ->
+                                ( model
+                                , send 500 Dict.empty "Server is not ready." b
+                                    |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                                )
 
                     Err _ ->
-                        ( model
-                        , send 500 Dict.empty "Server is not ready." a
-                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                        )
+                        Platform.Extra.noOperation model
 
 
 subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
