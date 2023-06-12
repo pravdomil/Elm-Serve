@@ -260,11 +260,9 @@ startWatching a =
                 (Json.Encode.string b)
                 (Json.Decode.succeed ())
     in
-    dirs
-        |> List.map watch
-        |> Task.sequence
+    Task.sequence (List.map watch dirs)
         |> Task.map (\_ -> ())
-        |> Task.mapError ElmServe.Error.InternalError
+        |> Task.mapError ElmServe.Error.CannotWatchFiles
 
 
 
