@@ -2,12 +2,12 @@
   "name": "elm-serve",
   "bin": "bin/elm-serve",
   "dependencies": {
-    "elm-hot": "github:pravdomil/elm-hot",
     "open": "^8.2.1",
     "send": "^0.17.1"
   },
   "devDependencies": {
     "elm-ffi": "github:pravdomil/elm-ffi",
+    "elm-ffi-node": "github:pravdomil/elm-ffi-node",
     "elm-utils": "github:pravdomil/elm-utils"
   }
 }
