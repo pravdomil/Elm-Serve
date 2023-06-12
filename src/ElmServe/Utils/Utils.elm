@@ -4,6 +4,7 @@ import Elm.Project
 import JavaScript
 import Json.Decode
 import Json.Encode
+import Process.Extra
 import Task
 
 
@@ -37,6 +38,15 @@ open a =
     JavaScript.run "require('open')(a)"
         (Json.Encode.string a)
         (Json.Decode.succeed ())
+
+
+
+--
+
+
+elmFfi : String -> Task.Task JavaScript.Error String
+elmFfi a =
+    Process.Extra.spawn "elm-ffi" [ a ]
 
 
 
