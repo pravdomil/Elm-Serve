@@ -158,7 +158,7 @@ jsLibrary =
             elmServe.disconnected()
         }
 
-        fetch("/elm-serve-client-lib.js")
+        fetch(src + "/../elm-serve-client-lib.js")
             .then(onLoad)
             .catch(onError)
     }
