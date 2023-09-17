@@ -366,7 +366,7 @@ addRequestToQueue a =
 
 resolveQueue : Task.Task ElmServe.Error.Error ()
 resolveQueue =
-    JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.forEach(a => a.res.end()); queue = []; })()"
+    JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.forEach(a => { a.res.setHeader('Access-Control-Allow-Origin', '*'); a.res.end(); }); queue = []; })()"
         Json.Encode.null
         (Json.Decode.succeed ())
         |> Task.mapError ElmServe.Error.QueueError
