@@ -6,9 +6,9 @@ import Elm.Compiler
 import Elm.Project
 import ElmServe.Error
 import ElmServe.Model
+import ElmServe.Model.Utils
 import ElmServe.Msg
 import ElmServe.Options
-import ElmServe.Utils.Utils
 import FileStatus
 import FileSystem
 import FileWatch
@@ -122,7 +122,7 @@ loadProject model =
     ( { model | project = Err ElmServe.Model.Loading }
     , Task.attempt
         ElmServe.Msg.ProjectReceived
-        (ElmServe.Utils.Utils.readProject "elm.json")
+        (ElmServe.Model.Utils.readProject "elm.json")
     )
 
 
@@ -182,17 +182,17 @@ makeOutputFile options =
         recoverFromCompileError b =
             case b of
                 JavaScript.Exception _ (JavaScript.ErrorCode "ENONZERO") (JavaScript.ErrorMessage c) ->
-                    Task.succeed (ElmServe.Utils.Utils.reportCompileErrorJs c)
+                    Task.succeed (ElmServe.Model.Utils.reportCompileErrorJs c)
 
                 _ ->
                     Task.fail b
     in
     Elm.Compiler.compile options.elm
-        |> Task.andThen (\_ -> ElmServe.Utils.Utils.elmFfi options.elm.output |> Task.onError (\_ -> Task.succeed ""))
+        |> Task.andThen (\_ -> ElmServe.Model.Utils.elmFfi options.elm.output |> Task.onError (\_ -> Task.succeed ""))
         |> Task.andThen (\_ -> FileSystem.read outputPath)
-        |> Task.andThen (\x -> ElmServe.Utils.Utils.elmHot x)
+        |> Task.andThen (\x -> ElmServe.Model.Utils.elmHot x)
         |> Task.onError recoverFromCompileError
-        |> Task.map (\x -> ElmServe.Utils.Utils.jsLibrary ++ x)
+        |> Task.map (\x -> ElmServe.Model.Utils.jsLibrary ++ x)
         |> Task.andThen (FileSystem.write outputPath)
         |> Task.mapError ElmServe.Error.CompileError
 
@@ -207,7 +207,7 @@ startServer options =
         open : Task.Task x ()
         open =
             if options.open then
-                ElmServe.Utils.Utils.open url
+                ElmServe.Model.Utils.open url
                     |> Task.onError (\_ -> Task.succeed ())
 
             else

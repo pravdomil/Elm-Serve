@@ -1,4 +1,4 @@
-module ElmServe.Utils.Utils exposing (..)
+module ElmServe.Model.Utils exposing (..)
 
 import Elm.Project
 import JavaScript
