@@ -290,14 +290,14 @@ startWatching a =
 --
 
 
-type RespondError
+type PathError
     = CannotParseUrl
     | ParentFolderPath
     | NotFound
     | InternalError JavaScript.Error
 
 
-requestPath : HttpServer.Request -> Result RespondError String
+requestPath : HttpServer.Request -> Result PathError String
 requestPath a =
     let
         parentFolderRegex : Regex.Regex
@@ -334,10 +334,10 @@ requestPath a =
 --
 
 
-resolvePath : ElmServe.Options.Options -> HttpServer.Request -> String -> Task.Task RespondError ()
+resolvePath : ElmServe.Options.Options -> HttpServer.Request -> String -> Task.Task PathError ()
 resolvePath options req a =
     let
-        redirect : String -> Task.Task RespondError ()
+        redirect : String -> Task.Task PathError ()
         redirect b =
             send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") req
                 |> Task.mapError InternalError
@@ -385,7 +385,7 @@ send status headers data { response } =
         (Json.Decode.succeed ())
 
 
-addRequestToQueue : HttpServer.Request -> Task.Task RespondError ()
+addRequestToQueue : HttpServer.Request -> Task.Task PathError ()
 addRequestToQueue a =
     JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.push(a); })()"
         (Json.Encode.object
