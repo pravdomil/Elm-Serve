@@ -161,15 +161,17 @@ maybeRecompile model =
 
 projectCompiled : Result ElmServe.Model.Error () -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 projectCompiled a model =
-    ( { model | compiler = ElmServe.Model.CompilerReady }
-    , case a of
+    case a of
         Ok _ ->
-            Task.attempt
+            ( { model | compiler = ElmServe.Model.CompilerReady, queue = [] }
+            , Task.attempt
                 (\_ -> ElmServe.Msg.NothingHappened)
                 (Task.sequence (List.map (\x -> send 200 (Dict.singleton "Access-Control-Allow-Origin" "*") "" x) model.queue))
+            )
 
         Err b ->
-            Task.attempt
+            ( model
+            , Task.attempt
                 (\_ -> ElmServe.Msg.NothingHappened)
                 (consoleErrorAndExit 1 (ElmServe.Model.Utils.errorToString b))
     )
