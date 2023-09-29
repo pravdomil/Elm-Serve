@@ -152,7 +152,7 @@ function init() {
             try {
                 var b = JSON.parse(a)
                 b.errors.forEach(c => c.problems.forEach(d =>
-                    console.error(c.name + " " + d.title + "\\n", d.message.map(fn).join("\\n"))
+                    console.error(c.name + " " + d.title + "\\n", d.message.map(fn).join(""))
                 ))
                 elmServe.showUi(b.errors.map(c => c.problems.map(d =>
                      c.name + " " + d.title + "\\n\\n" + d.message.map(fn).join("").split("\\n").map(e => "\\t" + e).join("\\n")
