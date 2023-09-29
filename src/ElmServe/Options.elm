@@ -2,6 +2,7 @@ module ElmServe.Options exposing (..)
 
 import Elm.Compiler
 import HttpServer
+import Json.Decode
 import Parser exposing ((|=))
 
 
@@ -18,6 +19,19 @@ type alias Options =
 
 
 --
+
+
+fromFlags : Json.Decode.Value -> Result (List Parser.DeadEnd) Options
+fromFlags a =
+    parse
+        (List.drop 2
+            (Result.withDefault []
+                (Json.Decode.decodeValue
+                    (Json.Decode.at [ "global", "process", "argv" ] (Json.Decode.list Json.Decode.string))
+                    a
+                )
+            )
+        )
 
 
 parse : List String -> Result (List Parser.DeadEnd) Options
