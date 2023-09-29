@@ -143,10 +143,7 @@ maybeRecompile model =
                             ( { model | compiler = ElmServe.Model.CompilerBusy, state = ElmServe.Model.NoRecompile }
                             , Task.attempt
                                 ElmServe.Msg.ProjectCompiled
-                                (Task.mapError ElmServe.Model.ConsoleError (Console.log "Recompiling...")
-                                    |> Task.andThen (\_ -> makeOutputFile b)
-                                    |> Task.andThen (\_ -> resolveQueue)
-                                )
+                                (makeOutputFile b)
                             )
 
                         Err _ ->
