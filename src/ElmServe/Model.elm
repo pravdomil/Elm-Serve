@@ -1,22 +1,14 @@
 module ElmServe.Model exposing (..)
 
 import Elm.Project
-import ElmServe.Error
 import ElmServe.Options
+import Parser
 import Process
 
 
 type alias Model =
-    Result Error Ready
-
-
-
---
-
-
-type alias Ready =
-    { options : ElmServe.Options.Options
-    , project : Elm.Project.Project
+    { options : Result (List Parser.DeadEnd) ElmServe.Options.Options
+    , project : Result ProjectError Elm.Project.Project
     , compileProcess : Maybe Process.Id
     }
 
@@ -25,7 +17,7 @@ type alias Ready =
 --
 
 
-type Error
+type ProjectError
     = NotAsked
     | Loading
-    | Error ElmServe.Error.Error
+    | ParseError (List Parser.DeadEnd)
