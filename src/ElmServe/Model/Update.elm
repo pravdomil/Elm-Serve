@@ -158,18 +158,16 @@ requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.
 requestReceived a model =
     case a of
         Ok b ->
-            case model of
-                Ok c ->
-                    ( model
-                    , sendResponse c.options b
-                        |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                    )
+            ( model
+            , Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                (case model.options of
+                    Ok c ->
+                        sendResponse c b
 
-                Err _ ->
-                    ( model
-                    , send 500 Dict.empty "Server is not ready." b
-                        |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                    )
+                    Err _ ->
+                        send 500 Dict.empty "Server is not ready." b
+                )
+            )
 
         Err _ ->
             Platform.Extra.noOperation model
