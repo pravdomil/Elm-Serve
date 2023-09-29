@@ -86,19 +86,23 @@ projectReceived : Result JavaScript.Error Elm.Project.Project -> ElmServe.Model.
 projectReceived a model =
     case a of
         Ok b ->
-            ( { model | project = Ok b }
-            , Task.attempt
-                (\_ -> ElmServe.Msg.NothingHappened)
-                (case model.options of
-                    Ok c ->
-                        Task.mapError ElmServe.Error.ConsoleError (Console.log "Elm Serve")
+            case model.options of
+                Ok c ->
+                    ( { model | project = Ok b, compiler = ElmServe.Model.CompilerBusy, state = ElmServe.Model.NoRecompile }
+                    , Task.attempt
+                        ElmServe.Msg.ProjectCompiled
+                        (Task.mapError ElmServe.Model.ConsoleError (Console.log "Elm Serve")
                             |> Task.andThen (\_ -> makeOutputFile c)
                             |> Task.andThen (\_ -> startServer c)
                             |> Task.andThen (\_ -> startWatching b)
-                            |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
+                        )
+                    )
 
-                    Err c ->
-                        consoleErrorAndExit 1
+                Err c ->
+                    ( { model | project = Ok b }
+                    , Task.attempt
+                        (\_ -> ElmServe.Msg.NothingHappened)
+                        (consoleErrorAndExit 1
                             (case Maybe.map .problem (List.head c) of
                                 Just (Parser.Problem d) ->
                                     d
@@ -106,8 +110,8 @@ projectReceived a model =
                                 _ ->
                                     ElmServe.Model.Utils.usage
                             )
-                )
-            )
+                        )
+                    )
 
         Err b ->
             ( { model | project = Err (ElmServe.Model.JavaScriptError b) }
