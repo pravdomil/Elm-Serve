@@ -217,16 +217,16 @@ startServer options =
 startWatching : Elm.Project.Project -> Task.Task ElmServe.Error.Error ()
 startWatching a =
     let
-        dirs : List String
-        dirs =
+        paths : List String
+        paths =
             case a of
                 Elm.Project.Application b ->
-                    b.dirs
+                    "elm.json" :: b.dirs
 
                 Elm.Project.Package _ ->
-                    [ "src" ]
+                    [ "elm.json", "src" ]
     in
-    Task.sequence (List.map (\x -> FileWatch.watch (FileSystem.stringToPath x)) dirs)
+    Task.sequence (List.map (\x -> FileWatch.watch (FileSystem.stringToPath x)) paths)
         |> Task.map (\_ -> ())
         |> Task.mapError ElmServe.Error.WatchFilesError
 
