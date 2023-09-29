@@ -27,42 +27,13 @@ import Url
 
 init : Json.Decode.Value -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 init flags =
-    ( Err ElmServe.Model.NotAsked
+    ( ElmServe.Model.Model
+        (ElmServe.Options.fromFlags flags)
+        (Err ElmServe.Model.NotAsked)
+        Nothing
     , Cmd.none
     )
-        |> Platform.Extra.andThen (initModel flags)
-
-
-initModel : Json.Decode.Value -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
-initModel flags _ =
-    let
-        options : Task.Task ElmServe.Error.Error ElmServe.Options.Options
-        options =
-            Json.Decode.decodeValue
-                (Json.Decode.at [ "global", "process", "argv" ] (Json.Decode.list Json.Decode.string))
-                flags
-                |> Result.withDefault []
-                |> (\x ->
-                        case ElmServe.Options.parse (List.drop 2 x) of
-                            Ok x2 ->
-                                Task.succeed x2
-
-                            Err x2 ->
-                                Task.fail (ElmServe.Error.OptionsError x2)
-                   )
-
-        cmd : Cmd ElmServe.Msg.Msg
-        cmd =
-            Task.map3
-                ElmServe.Model.Ready
-                options
-                (ElmServe.Utils.Utils.readProject "elm.json" |> Task.mapError ElmServe.Error.ProjectError)
-                (Task.succeed Nothing)
-                |> Task.attempt ElmServe.Msg.ModelReceived
-    in
-    ( Err ElmServe.Model.Loading
-    , cmd
-    )
+        |> Platform.Extra.andThen loadProject
 
 
 
