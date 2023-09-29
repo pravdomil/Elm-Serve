@@ -181,11 +181,6 @@ projectCompiled a model =
 
 requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 requestReceived a model =
-    let
-        redirect : String -> HttpServer.Request -> Task.Task JavaScript.Error ()
-        redirect b c =
-            send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") c
-    in
     case a of
         Ok b ->
             case ElmServe.Path.fromRequest b of
@@ -277,6 +272,10 @@ makeOutputFile options =
         |> Task.andThen (FileSystem.write outputPath)
 
 
+
+--
+
+
 startServer : ElmServe.Options.Options -> Task.Task ElmServe.Model.Error ()
 startServer options =
     let
@@ -344,6 +343,11 @@ sendFile options path { request, response } =
             ]
         )
         (Json.Decode.succeed ())
+
+
+redirect : String -> HttpServer.Request -> Task.Task JavaScript.Error ()
+redirect path a =
+    send 301 (Dict.fromList [ ( "Location", path ) ]) ("Moved permanently to " ++ path ++ ".") a
 
 
 consoleErrorAndExit : Int -> String -> Task.Task x ()
