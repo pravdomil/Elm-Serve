@@ -198,21 +198,26 @@ requestReceived a model =
                                     , Task.attempt
                                         (\_ -> ElmServe.Msg.NothingHappened)
                                         (FileStatus.get (FileSystem.stringToPath (options.root ++ "/" ++ path))
-                                            |> Task.andThen
+                                            |> Task.Extra.andAlwaysThen
                                                 (\x ->
                                                     case x of
-                                                        FileStatus.File ->
-                                                            sendFile options path b
+                                                        Ok x2 ->
+                                                            case x2 of
+                                                                FileStatus.File ->
+                                                                    sendFile options path b
 
-                                                        FileStatus.Directory ->
-                                                            redirect (path ++ "/") b
+                                                                FileStatus.Directory ->
+                                                                    redirect (path ++ "/") b
 
-                                                        FileStatus.NotFound ->
-                                                            if options.no404 then
-                                                                sendFile options "index.html" b
+                                                                FileStatus.NotFound ->
+                                                                    if options.no404 then
+                                                                        sendFile options "index.html" b
 
-                                                            else
-                                                                send 404 Dict.empty "Not found." b
+                                                                    else
+                                                                        send 404 Dict.empty "Not found." b
+
+                                                        Err _ ->
+                                                            send 500 Dict.empty "Server error." b
                                                 )
                                         )
                                     )
