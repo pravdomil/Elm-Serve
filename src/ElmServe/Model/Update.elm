@@ -386,26 +386,6 @@ send status headers data { response } =
         (Json.Decode.succeed ())
 
 
-addRequestToQueue : HttpServer.Request -> Task.Task PathError ()
-addRequestToQueue a =
-    JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.push(a); })()"
-        (Json.Encode.object
-            [ ( "req", a.request )
-            , ( "res", a.response )
-            ]
-        )
-        (Json.Decode.succeed ())
-        |> Task.mapError InternalError
-
-
-resolveQueue : Task.Task ElmServe.Model.Error ()
-resolveQueue =
-    JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.forEach(a => { a.res.setHeader('Access-Control-Allow-Origin', '*'); a.res.end(); }); queue = []; })()"
-        Json.Encode.null
-        (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Model.QueueError
-
-
 sendFile : ElmServe.Options.Options -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
 sendFile options path { request, response } =
     JavaScript.run "require('send')(a.req, a.path, { root: a.root }).pipe(a.res)"
