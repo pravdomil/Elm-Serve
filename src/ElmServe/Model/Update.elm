@@ -54,8 +54,6 @@ update msg =
         ElmServe.Msg.FileChanged a ->
             fileChanged a
 
-        ElmServe.Msg.CompileProcessReceived a ->
-            \x -> ( { x | compileProcess = Just a }, Cmd.none )
 
         ElmServe.Msg.RequestReceived a ->
             requestReceived a
