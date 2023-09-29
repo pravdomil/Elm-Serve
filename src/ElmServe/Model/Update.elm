@@ -44,7 +44,7 @@ init flags =
 
 update : ElmServe.Msg.Msg -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 update msg =
-    case msg of
+    (case msg of
         ElmServe.Msg.NothingHappened ->
             Platform.Extra.noOperation
 
@@ -59,6 +59,8 @@ update msg =
 
         ElmServe.Msg.RequestReceived a ->
             requestReceived a
+    )
+        >> Platform.Extra.andThen maybeRecompile
 
 
 subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
