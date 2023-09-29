@@ -28,3 +28,14 @@ type ProjectError
     = NotAsked
     | Loading
     | JavaScriptError JavaScript.Error
+
+
+type Error
+    = CompileError JavaScript.Error
+    | ServerError JavaScript.Error
+    | WatchFilesError JavaScript.Error
+    | ResponseError JavaScript.Error
+    | QueueError JavaScript.Error
+      --
+    | ConsoleError JavaScript.Error
+    | ExitError JavaScript.Error
