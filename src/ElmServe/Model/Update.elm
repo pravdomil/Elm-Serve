@@ -200,7 +200,7 @@ startServer options =
         |> Task.andThen (\_ -> open)
 
 
-startWatching : Elm.Project.Project -> Task.Task ElmServe.Error.Error ()
+startWatching : Elm.Project.Project -> Task.Task ElmServe.Model.Error ()
 startWatching a =
     let
         paths : List String
@@ -214,7 +214,7 @@ startWatching a =
     in
     Task.sequence (List.map (\x -> FileWatch.watch (FileSystem.stringToPath x)) paths)
         |> Task.map (\_ -> ())
-        |> Task.mapError ElmServe.Error.WatchFilesError
+        |> Task.mapError ElmServe.Model.WatchFilesError
 
 
 
@@ -349,12 +349,12 @@ addRequestToQueue a =
         |> Task.mapError InternalError
 
 
-resolveQueue : Task.Task ElmServe.Error.Error ()
+resolveQueue : Task.Task ElmServe.Model.Error ()
 resolveQueue =
     JavaScript.run "(() => { if (!global.queue) global.queue = []; queue.forEach(a => { a.res.setHeader('Access-Control-Allow-Origin', '*'); a.res.end(); }); queue = []; })()"
         Json.Encode.null
         (Json.Decode.succeed ())
-        |> Task.mapError ElmServe.Error.QueueError
+        |> Task.mapError ElmServe.Model.QueueError
 
 
 sendFile : ElmServe.Options.Options -> String -> HttpServer.Request -> Task.Task JavaScript.Error ()
