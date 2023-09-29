@@ -1,11 +1,88 @@
 module ElmServe.Model.Utils exposing (..)
 
 import Elm.Project
+import ElmServe.Model
 import JavaScript
 import Json.Decode
 import Json.Encode
 import Process.Extra
 import Task
+
+
+errorToString : ElmServe.Model.Error -> String
+errorToString a =
+    case a of
+        ElmServe.Model.CompileError b ->
+            "Cannot compile Elm. " ++ JavaScript.errorToString b
+
+        ElmServe.Model.ServerError b ->
+            case b of
+                JavaScript.Exception _ (JavaScript.ErrorCode "EADDRINUSE") _ ->
+                    "There is somebody already listening on same port!"
+
+                _ ->
+                    "Cannot start server. " ++ JavaScript.errorToString b
+
+        ElmServe.Model.WatchFilesError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+        ElmServe.Model.ResponseError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+        ElmServe.Model.QueueError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+        --
+        ElmServe.Model.ConsoleError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+        ElmServe.Model.ExitError b ->
+            "Internal error. " ++ JavaScript.errorToString b
+
+
+usage : String
+usage =
+    """Elm Serve
+
+Usage:
+    elm-serve <elm-files>...
+
+Options:
+    --host <host>
+        Set server host. Default is localhost.
+
+    --port <port>
+        Set server port. Default is 8000.
+
+    --ssl <cert-file> <key-file>
+        Turn on HTTPS.
+
+    --root <path>
+        Set server root.
+
+    --open
+        Open server URL in browser.
+
+    --no-404
+        Serve /index.html if page not found. Useful for Browser.application.
+
+Elm Options:
+    --elm <path>
+        Set path to Elm compiler.
+
+    --debug
+        Turn on Elm debugger.
+
+    --optimize
+        Turn on Elm optimizations.
+
+    --output <path>
+        Set output from Elm compiler. Default is elm.js.
+"""
+
+
+
+--
 
 
 readProject : String -> Task.Task JavaScript.Error Elm.Project.Project
