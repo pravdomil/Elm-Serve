@@ -104,7 +104,7 @@ projectReceived a model =
                                     d
 
                                 _ ->
-                                    ElmServe.Error.usage
+                                    ElmServe.Model.Utils.usage
                             )
                 )
             )
