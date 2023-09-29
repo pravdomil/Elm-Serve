@@ -36,9 +36,6 @@ errorToString a =
         ElmServe.Model.ConsoleError b ->
             "Internal error. " ++ JavaScript.errorToString b
 
-        ElmServe.Model.ExitError b ->
-            "Internal error. " ++ JavaScript.errorToString b
-
 
 usage : String
 usage =

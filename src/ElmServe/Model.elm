@@ -38,4 +38,3 @@ type Error
     | QueueError JavaScript.Error
       --
     | ConsoleError JavaScript.Error
-    | ExitError JavaScript.Error
