@@ -11,6 +11,7 @@ cd "${0%/*}/.."
 
 # Have dependencies from npm ready.
 npm i
+export PATH="$PWD/node_modules/.bin:$PATH"
 
 # Compile application.
 elm make src/Main.elm --output bin/elm-serve.js --optimize
