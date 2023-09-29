@@ -129,19 +129,15 @@ projectReceived : Result JavaScript.Error Elm.Project.Project -> ElmServe.Model.
 projectReceived a model =
     case a of
         Ok b ->
-            let
-                task : Task.Task ElmServe.Error.Error ()
-                task =
-                    (Console.log "Elm Serve" |> Task.mapError ElmServe.Error.ConsoleError)
-                        |> Task.andThen (\_ -> makeOutputFile b.options)
-                        |> Task.andThen (\_ -> startServer b.options)
-                        |> Task.andThen (\_ -> startWatching b.project)
-                        |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
-            in
             ( { model | project = Ok b }
             , Task.attempt
                 (\_ -> ElmServe.Msg.NothingHappened)
-                task
+                ((Console.log "Elm Serve" |> Task.mapError ElmServe.Error.ConsoleError)
+                    |> Task.andThen (\_ -> makeOutputFile b.options)
+                    |> Task.andThen (\_ -> startServer b.options)
+                    |> Task.andThen (\_ -> startWatching b.project)
+                    |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
+                )
             )
 
         Err b ->
