@@ -215,9 +215,9 @@ startWatching a =
 fileChanged : Result Json.Decode.Error String -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 fileChanged _ model =
     let
-        killCompileProcess : ElmServe.Model.Ready -> Task.Task x ()
-        killCompileProcess b =
-            case b.compileProcess of
+        killCompileProcess : Task.Task x ()
+        killCompileProcess =
+            case model.compileProcess of
                 Just x ->
                     Process.kill x
 
@@ -226,21 +226,17 @@ fileChanged _ model =
 
         task : Task.Task ElmServe.Error.Error ()
         task =
-            case model of
-                Ok b ->
-                    killCompileProcess b
-                        |> Task.andThen (\_ -> Process.sleep 1)
-                        |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
-                        |> Task.andThen (\_ -> makeOutputFile b.options)
-                        |> Task.andThen (\_ -> resolveQueue)
-                        |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
-
-                Err _ ->
-                    Task.succeed ()
+            killCompileProcess
+                |> Task.andThen (\_ -> Process.sleep 1)
+                |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
+                |> Task.andThen (\_ -> makeOutputFile b.options)
+                |> Task.andThen (\_ -> resolveQueue)
+                |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
     in
     ( model
-    , Process.spawn task
-        |> Task.perform ElmServe.Msg.CompileProcessReceived
+    , Task.perform
+        ElmServe.Msg.CompileProcessReceived
+        (Process.spawn task)
     )
 
 
