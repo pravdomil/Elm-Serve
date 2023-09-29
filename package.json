@@ -8,6 +8,7 @@
   "devDependencies": {
     "elm-ffi": "github:pravdomil/elm-ffi",
     "elm-ffi-node": "github:pravdomil/elm-ffi-node",
+    "elm-minify": "github:pravdomil/elm-minify",
     "elm-utils": "github:pravdomil/elm-utils"
   }
 }
