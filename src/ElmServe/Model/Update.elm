@@ -8,6 +8,7 @@ import ElmServe.Model
 import ElmServe.Model.Utils
 import ElmServe.Msg
 import ElmServe.Options
+import ElmServe.Path
 import FileStatus
 import FileSystem
 import FileWatch
@@ -181,14 +182,13 @@ projectCompiled a model =
 requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 requestReceived a model =
     let
-        redirect : String -> HttpServer.Request -> Task.Task PathError ()
+        redirect : String -> HttpServer.Request -> Task.Task JavaScript.Error ()
         redirect b c =
             send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") c
-                |> Task.mapError InternalError
     in
     case a of
         Ok b ->
-            case requestPath b of
+            case ElmServe.Path.fromRequest b of
                 Ok path ->
                     case model.options of
                         Ok options ->
@@ -203,13 +203,11 @@ requestReceived a model =
                                     , Task.attempt
                                         (\_ -> ElmServe.Msg.NothingHappened)
                                         (FileStatus.get (FileSystem.stringToPath (options.root ++ "/" ++ path))
-                                            |> Task.mapError InternalError
                                             |> Task.andThen
                                                 (\x ->
                                                     case x of
                                                         FileStatus.File ->
                                                             sendFile options path b
-                                                                |> Task.mapError InternalError
 
                                                         FileStatus.Directory ->
                                                             redirect (path ++ "/") b
@@ -217,10 +215,9 @@ requestReceived a model =
                                                         FileStatus.NotFound ->
                                                             if options.no404 then
                                                                 sendFile options "index.html" b
-                                                                    |> Task.mapError InternalError
 
                                                             else
-                                                                Task.fail NotFound
+                                                                send 404 Dict.empty "Not found." b
                                                 )
                                         )
                                     )
@@ -237,17 +234,11 @@ requestReceived a model =
                     , Task.attempt
                         (\_ -> ElmServe.Msg.NothingHappened)
                         (case c of
-                            CannotParseUrl ->
+                            ElmServe.Path.CannotParseUrl ->
                                 send 400 Dict.empty "Bad request - cannot parse url." b
 
-                            ParentFolderPath ->
+                            ElmServe.Path.ParentFolderPath ->
                                 send 403 Dict.empty "Forbidden - cannot go to parent folder." b
-
-                            NotFound ->
-                                send 404 Dict.empty "Not found." b
-
-                            InternalError _ ->
-                                send 500 Dict.empty "Server error." b
                         )
                     )
 
