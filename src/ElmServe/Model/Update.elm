@@ -3,6 +3,7 @@ module ElmServe.Model.Update exposing (..)
 import Console
 import Dict
 import Elm.Compiler
+import Elm.Error
 import Elm.Project
 import ElmServe.Model
 import ElmServe.Model.Utils
@@ -21,6 +22,7 @@ import Platform.Extra
 import Process.Extra
 import Task
 import Task.Extra
+import Url
 
 
 init : Json.Decode.Value -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
@@ -251,15 +253,40 @@ requestReceived a model =
 makeOutputFile : ElmServe.Options.Options -> Task.Task JavaScript.Error ()
 makeOutputFile options =
     let
+        link : String -> String
+        link b =
+            "file://" ++ String.replace "%2F" "/" (Url.percentEncode b)
+
         outputPath : FileSystem.Path
         outputPath =
             FileSystem.stringToPath options.elm.output
+
+        reportCompileErrorToConsole : String -> Task.Task JavaScript.Error ()
+        reportCompileErrorToConsole b =
+            case Json.Decode.decodeString Elm.Error.decoder b of
+                Ok c ->
+                    case c of
+                        Elm.Error.GeneralProblem d ->
+                            case d.path of
+                                Just e ->
+                                    Console.logError (link e)
+
+                                Nothing ->
+                                    Console.logError d.title
+
+                        Elm.Error.ModuleProblems d ->
+                            Task.sequence
+                                (List.map (\x -> Console.logError (link x.path)) d)
+                                |> Task.map (\_ -> ())
+
+                Err _ ->
+                    Console.logError b
 
         recoverFromCompileError : JavaScript.Error -> Task.Task JavaScript.Error String
         recoverFromCompileError b =
             case b of
                 JavaScript.Exception _ (JavaScript.ErrorCode "ENONZERO") (JavaScript.ErrorMessage c) ->
-                    Console.log c
+                    reportCompileErrorToConsole c
                         |> Task.Extra.andAlwaysThen (\_ -> Task.succeed (ElmServe.Model.Utils.reportCompileErrorJs c))
 
                 _ ->
