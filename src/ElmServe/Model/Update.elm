@@ -143,6 +143,38 @@ projectReceived a model =
 --
 
 
+fileChanged : Result Json.Decode.Error String -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+fileChanged _ model =
+    let
+        killCompileProcess : Task.Task x ()
+        killCompileProcess =
+            case model.compileProcess of
+                Just x ->
+                    Process.kill x
+
+                Nothing ->
+                    Task.succeed ()
+
+        task : Task.Task ElmServe.Error.Error ()
+        task =
+            killCompileProcess
+                |> Task.andThen (\_ -> Process.sleep 1)
+                |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
+                |> Task.andThen (\_ -> makeOutputFile b.options)
+                |> Task.andThen (\_ -> resolveQueue)
+                |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
+    in
+    ( model
+    , Task.perform
+        ElmServe.Msg.CompileProcessReceived
+        (Process.spawn task)
+    )
+
+
+
+--
+
+
 makeOutputFile : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
 makeOutputFile options =
     let
@@ -206,38 +238,6 @@ startWatching a =
     Task.sequence (List.map (\x -> FileWatch.watch (FileSystem.stringToPath x)) paths)
         |> Task.map (\_ -> ())
         |> Task.mapError ElmServe.Error.WatchFilesError
-
-
-
---
-
-
-fileChanged : Result Json.Decode.Error String -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
-fileChanged _ model =
-    let
-        killCompileProcess : Task.Task x ()
-        killCompileProcess =
-            case model.compileProcess of
-                Just x ->
-                    Process.kill x
-
-                Nothing ->
-                    Task.succeed ()
-
-        task : Task.Task ElmServe.Error.Error ()
-        task =
-            killCompileProcess
-                |> Task.andThen (\_ -> Process.sleep 1)
-                |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
-                |> Task.andThen (\_ -> makeOutputFile b.options)
-                |> Task.andThen (\_ -> resolveQueue)
-                |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
-    in
-    ( model
-    , Task.perform
-        ElmServe.Msg.CompileProcessReceived
-        (Process.spawn task)
-    )
 
 
 
