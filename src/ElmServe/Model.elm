@@ -2,6 +2,7 @@ module ElmServe.Model exposing (..)
 
 import Elm.Project
 import ElmServe.Options
+import HttpServer
 import JavaScript
 import Parser
 
@@ -11,6 +12,7 @@ type alias Model =
     , project : Result ProjectError Elm.Project.Project
     , compiler : Compiler
     , state : State
+    , queue : List HttpServer.Request
     }
 
 
