@@ -259,7 +259,7 @@ type RespondError
     | InternalError JavaScript.Error
 
 
-sendResponse : ElmServe.Options.Options -> HttpServer.Request -> Task.Task ElmServe.Error.Error ()
+sendResponse : ElmServe.Options.Options -> HttpServer.Request -> Task.Task JavaScript.Error ()
 sendResponse options a =
     let
         errorResponse : RespondError -> Task.Task JavaScript.Error ()
@@ -282,7 +282,6 @@ sendResponse options a =
         |> Task.Extra.fromResult
         |> Task.andThen (resolvePath options a)
         |> Task.onError errorResponse
-        |> Task.mapError ElmServe.Error.ResponseError
 
 
 requestPath : HttpServer.Request -> Result RespondError String
