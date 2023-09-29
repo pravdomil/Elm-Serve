@@ -373,7 +373,7 @@ sendFile options path { request, response } =
 --
 
 
-consoleErrorAndExit : String -> Int -> Task.Task ElmServe.Error.Error ()
+consoleErrorAndExit : String -> Int -> Task.Task JavaScript.Error ()
 consoleErrorAndExit msg code =
-    (Console.logError msg |> Task.mapError ElmServe.Error.ConsoleError)
-        |> Task.andThen (\() -> Process.Extra.hardExit code |> Task.mapError ElmServe.Error.ExitError)
+    Console.logError msg
+        |> Task.andThen (\() -> Process.Extra.hardExit code)
