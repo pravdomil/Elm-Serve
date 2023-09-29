@@ -146,8 +146,17 @@ jsLibrary =
 function init() {
     elmServe = {
         compileError: function(a) {
-            console.error('Elm Serve\\n', a)
-            elmServe.showUi(a)
+            var fn = function (b) {
+                return typeof b === "string" ? b : b.string
+            }
+            try {
+                var b = JSON.parse(a)
+                b.errors.forEach(c => c.problems.forEach(d => console.error(c.name + " " + d.title, d.message.map(fn).join("\\n"))))
+                elmServe.showUi(b.errors.map(c => c.problems.map(d => c.name + " " + d.title + "\\n" + d.message.map(fn).join("\\n")).join("\\n\\n\\n\\n")).join("\\n\\n\\n\\n"))
+            } catch (e) {
+                console.error('Elm Serve\\n', a)
+                elmServe.showUi(a)
+            }
         },
         disconnected: function() {
             var msg = 'We are disconnected.'
@@ -165,7 +174,7 @@ function init() {
                 if (document.body) document.body.appendChild(elmServe.ui)
                 else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })
             }
-            elmServe.ui.textContent = a
+            elmServe.ui.replaceChildren(a)
         },
         hideUi: function() {
             elmServe.ui.remove()
