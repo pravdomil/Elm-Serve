@@ -142,103 +142,105 @@ jsLibrary : String
 jsLibrary =
     """
 (function(){
-    function init() {
-        elmServe = {
-            compileError: function(a) {
-                console.error('Elm Serve\\n', a)
-                elmServe.showUi(a)
-            },
-            disconnected: function() {
-                var msg = 'We are disconnected.'
-                console.error('Elm Serve\\n', msg)
-                elmServe.showUi(msg)
-            },
-            clear: function() {
-                elmServe.hideUi()
-            },
+
+function init() {
+    elmServe = {
+        compileError: function(a) {
+            console.error('Elm Serve\\n', a)
+            elmServe.showUi(a)
+        },
+        disconnected: function() {
+            var msg = 'We are disconnected.'
+            console.error('Elm Serve\\n', msg)
+            elmServe.showUi(msg)
+        },
+        clear: function() {
+            elmServe.hideUi()
+        },
+
+        //
+
+        showUi: function(a) {
+            if (elmServe.ui.parentElement === null) {
+                if (document.body) document.body.appendChild(elmServe.ui)
+                else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })
+            }
+            elmServe.ui.textContent = a
+        },
+        hideUi: function() {
+            elmServe.ui.remove()
+        },
+        ui: (function() {
+            a = document.createElement('div')
+            a.id = 'elmServeUi'
+            a.style.position = 'fixed'
+            a.style.zIndex = '9999999'
+            a.style.left = '0'
+            a.style.right = '0'
+            a.style.top = '0'
+            a.style.bottom = '0'
+
+            a.style.font = '14px/1 monospace'
+            a.style.padding = '16px'
+            a.style.whiteSpace = 'pre'
+            a.style.color = 'white'
+            a.style.backgroundColor = 'rgba(0, 0, 0, 0.6)'
+            a.style.overflow = 'auto'
+
+            return a
+        })()
+    }
+
+    module = {
+        hot: {
+            data: null,
+            verbose: false,
+            disposeCallback : null,
 
             //
 
-            showUi: function(a) {
-                if (elmServe.ui.parentElement === null) {
-                    if (document.body) document.body.appendChild(elmServe.ui)
-                    else addEventListener("DOMContentLoaded", function() { document.body.appendChild(elmServe.ui) })
+            accept: function () {},
+            dispose: function (a) { module.hot.disposeCallback = a },
+            apply: function () {
+                if (module.hot.disposeCallback === null) {
+                    location.reload()
+                    return
                 }
-                elmServe.ui.textContent = a
-            },
-            hideUi: function() {
-                elmServe.ui.remove()
-            },
-            ui: (function() {
-                a = document.createElement('div')
-                a.id = 'elmServeUi'
-                a.style.position = 'fixed'
-                a.style.zIndex = '9999999'
-                a.style.left = '0'
-                a.style.right = '0'
-                a.style.top = '0'
-                a.style.bottom = '0'
-
-                a.style.font = '14px/1 monospace'
-                a.style.padding = '16px'
-                a.style.whiteSpace = 'pre'
-                a.style.color = 'white'
-                a.style.backgroundColor = 'rgba(0, 0, 0, 0.6)'
-                a.style.overflow = 'auto'
-
-                return a
-            })()
-        }
-
-        module = {
-            hot: {
-                data: null,
-                verbose: false,
-                disposeCallback : null,
-
-                //
-
-                accept: function () {},
-                dispose: function (a) { module.hot.disposeCallback = a },
-                apply: function () {
-                    if (module.hot.disposeCallback === null) {
-                        location.reload()
-                        return
-                    }
-                    var data = {}
-                    module.hot.disposeCallback(data)
-                    module.hot.data = data
-                    delete Elm
-                }
+                var data = {}
+                module.hot.disposeCallback(data)
+                module.hot.data = data
+                delete Elm
             }
         }
     }
+}
 
-    function reload() {
-        elmServe.clear()
-        module.hot.apply()
+function reload() {
+    elmServe.clear()
+    module.hot.apply()
+}
+
+function listen() {
+    var src = document.currentScript.src
+
+    function onLoad() {
+        var script = document.createElement('script')
+        script.src = src
+        document.head.appendChild(script)
     }
 
-    function listen() {
-        var src = document.currentScript.src
-
-        function onLoad() {
-            var script = document.createElement('script')
-            script.src = src
-            document.head.appendChild(script)
-        }
-
-        function onError() {
-            elmServe.disconnected()
-        }
-
-        fetch(src + "/../elm-serve-client-lib.js")
-            .then(onLoad)
-            .catch(onError)
+    function onError() {
+        elmServe.disconnected()
     }
 
-    typeof elmServe === "undefined" ? init() : reload()
-    listen()
+    fetch(src + "/../elm-serve-client-lib.js")
+        .then(onLoad)
+        .catch(onError)
+}
+
+typeof elmServe === "undefined" ? init() : reload()
+listen()
+
 })();
 """
 
