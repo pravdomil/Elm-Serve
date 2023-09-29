@@ -159,7 +159,7 @@ fileChanged _ model =
         task =
             killCompileProcess
                 |> Task.andThen (\_ -> Process.sleep 1)
-                |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
+                |> Task.andThen (\_ -> Task.mapError ElmServe.Error.ConsoleError (Console.log "Recompiling..."))
                 |> Task.andThen (\_ -> makeOutputFile b.options)
                 |> Task.andThen (\_ -> resolveQueue)
                 |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
