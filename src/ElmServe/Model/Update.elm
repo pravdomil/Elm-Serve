@@ -181,10 +181,10 @@ requestReceived a model =
     case a of
         Ok b ->
             case requestPath b of
-                Ok c ->
+                Ok path ->
                     case model.options of
                         Ok options ->
-                            resolvePath options c
+                            resolvePath options path
 
                         Err _ ->
                             ( model
