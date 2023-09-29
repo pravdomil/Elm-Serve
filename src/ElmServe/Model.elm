@@ -2,6 +2,7 @@ module ElmServe.Model exposing (..)
 
 import Elm.Project
 import ElmServe.Options
+import JavaScript
 import Parser
 import Process
 
@@ -20,4 +21,4 @@ type alias Model =
 type ProjectError
     = NotAsked
     | Loading
-    | ParseError (List Parser.DeadEnd)
+    | JavaScriptError JavaScript.Error
