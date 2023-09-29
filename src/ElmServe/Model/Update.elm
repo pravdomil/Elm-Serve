@@ -399,20 +399,12 @@ sendFile options path { request, response } =
         (Json.Decode.succeed ())
 
 
-
---
-
-
 consoleErrorAndExit : Int -> String -> Task.Task x ()
 consoleErrorAndExit code a =
     taskTwo
         (Console.logError a)
         (Process.Extra.hardExit code)
         |> Task.map (\_ -> ())
-
-
-
---
 
 
 taskTwo : Task.Task x a -> Task.Task x b -> Task.Task y ( Result x a, Result x b )
