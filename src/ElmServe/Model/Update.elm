@@ -139,10 +139,10 @@ projectReceived a model =
                             |> Task.andThen (\_ -> makeOutputFile c)
                             |> Task.andThen (\_ -> startServer c)
                             |> Task.andThen (\_ -> startWatching b)
-                            |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
+                            |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
 
                     Err c ->
-                        consoleErrorAndExit
+                        consoleErrorAndExit 1
                             (case Maybe.map .problem (List.head c) of
                                 Just (Parser.Problem d) ->
                                     d
@@ -150,7 +150,6 @@ projectReceived a model =
                                 _ ->
                                     ElmServe.Error.usage
                             )
-                            1
                 )
             )
 
@@ -160,10 +159,10 @@ projectReceived a model =
                 (\_ -> ElmServe.Msg.NothingHappened)
                 (case b of
                     JavaScript.Exception _ (JavaScript.ErrorCode "ENOENT") _ ->
-                        consoleErrorAndExit "Cannot find elm.json." 1
+                        consoleErrorAndExit 1 "Cannot find elm.json."
 
                     _ ->
-                        consoleErrorAndExit ("Cannot read elm.json. " ++ JavaScript.errorToString b) 1
+                        consoleErrorAndExit 1 ("Cannot read elm.json. " ++ JavaScript.errorToString b)
                 )
             )
 
