@@ -194,7 +194,8 @@ makeOutputFile options =
         recoverFromCompileError b =
             case b of
                 JavaScript.Exception _ (JavaScript.ErrorCode "ENONZERO") (JavaScript.ErrorMessage c) ->
-                    Task.succeed (ElmServe.Model.Utils.reportCompileErrorJs c)
+                    Console.log c
+                        |> Task.Extra.andAlwaysThen (\_ -> Task.succeed (ElmServe.Model.Utils.reportCompileErrorJs c))
 
                 _ ->
                     Task.fail b
