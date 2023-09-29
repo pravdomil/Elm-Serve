@@ -82,7 +82,7 @@ update msg =
                 )
 
         ElmServe.Msg.CompileProcessReceived a ->
-            \model -> ( model |> Result.map (\x -> { x | compileProcess = Just a }), Cmd.none )
+            \x -> ( { x | compileProcess = Just a }, Cmd.none )
 
         ElmServe.Msg.RequestReceived a ->
             \model ->
