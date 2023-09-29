@@ -57,24 +57,7 @@ update msg =
             \x -> ( { x | compileProcess = Just a }, Cmd.none )
 
         ElmServe.Msg.RequestReceived a ->
-            \model ->
-                case a of
-                    Ok b ->
-                        case model of
-                            Ok c ->
-                                ( model
-                                , sendResponse c.options b
-                                    |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                                )
-
-                            Err _ ->
-                                ( model
-                                , send 500 Dict.empty "Server is not ready." b
-                                    |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                                )
-
-                    Err _ ->
-                        Platform.Extra.noOperation model
+            requestReceived a
 
 
 subscriptions : ElmServe.Model.Model -> Sub ElmServe.Msg.Msg
@@ -169,6 +152,27 @@ fileChanged _ model =
         ElmServe.Msg.CompileProcessReceived
         (Process.spawn task)
     )
+
+
+requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+requestReceived a model =
+    case a of
+        Ok b ->
+            case model of
+                Ok c ->
+                    ( model
+                    , sendResponse c.options b
+                        |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                    )
+
+                Err _ ->
+                    ( model
+                    , send 500 Dict.empty "Server is not ready." b
+                        |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+                    )
+
+        Err _ ->
+            Platform.Extra.noOperation model
 
 
 
