@@ -182,7 +182,7 @@ function init() {
 
             a.style.font = '14px/1 monospace'
             a.style.padding = '16px'
-            a.style.whiteSpace = 'pre'
+            a.style.whiteSpace = 'pre-wrap'
             a.style.color = 'white'
             a.style.backgroundColor = 'rgba(0, 0, 0, 0.6)'
             a.style.overflow = 'auto'
