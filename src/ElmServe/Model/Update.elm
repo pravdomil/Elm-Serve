@@ -151,7 +151,7 @@ requestReceived a model =
 --
 
 
-makeOutputFile : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
+makeOutputFile : ElmServe.Options.Options -> Task.Task ElmServe.Model.Error ()
 makeOutputFile options =
     let
         outputPath : FileSystem.Path
@@ -175,10 +175,10 @@ makeOutputFile options =
         |> Task.onError recoverFromCompileError
         |> Task.map (\x -> ElmServe.Model.Utils.jsLibrary ++ x)
         |> Task.andThen (FileSystem.write outputPath)
-        |> Task.mapError ElmServe.Error.CompileError
+        |> Task.mapError ElmServe.Model.CompileError
 
 
-startServer : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
+startServer : ElmServe.Options.Options -> Task.Task ElmServe.Model.Error ()
 startServer options =
     let
         url : String
