@@ -155,7 +155,7 @@ function init() {
                     console.error(c.name + " " + d.title + "\\n", d.message.map(fn).join("\\n"))
                 ))
                 elmServe.showUi(b.errors.map(c => c.problems.map(d =>
-                    c.name + " " + d.title + "\\n" + d.message.map(fn).join("\\n")
+                     c.name + " " + d.title + "\\n\\n" + d.message.map(fn).join("\\n").split("\\n").map(e => "\\t" + e).join("\\n")
                 ).join("\\n\\n\\n\\n")).join("\\n\\n\\n\\n"))
             } catch (e) {
                 console.error('Elm Serve\\n', a)
