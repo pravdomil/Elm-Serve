@@ -9,6 +9,7 @@ type alias Options =
     { elmPath : String
     , debug : Bool
     , optimize : Bool
+    , jsonReport : Bool
     , input : List String
     , output : String
     }
@@ -35,7 +36,15 @@ compile opt =
                         else
                             acc
                      )
-                        opt.input
+                        ((\acc ->
+                            if opt.jsonReport then
+                                "--report=json" :: acc
+
+                            else
+                                acc
+                         )
+                            opt.input
+                        )
                     )
     in
     Process.Extra.spawn opt.elmPath args
