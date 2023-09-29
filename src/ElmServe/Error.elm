@@ -5,10 +5,7 @@ import Parser
 
 
 type Error
-    = OptionsError (List Parser.DeadEnd)
-    | ProjectError JavaScript.Error
-      --
-    | CompileError JavaScript.Error
+    = CompileError JavaScript.Error
     | ServerError JavaScript.Error
     | WatchFilesError JavaScript.Error
     | ResponseError JavaScript.Error
@@ -21,23 +18,6 @@ type Error
 toString : Error -> String
 toString a =
     case a of
-        OptionsError b ->
-            case Maybe.map .problem (List.head b) of
-                Just (Parser.Problem c) ->
-                    c
-
-                _ ->
-                    usage
-
-        ProjectError b ->
-            case b of
-                JavaScript.Exception _ (JavaScript.ErrorCode "ENOENT") _ ->
-                    "Cannot find elm.json."
-
-                _ ->
-                    "Cannot read elm.json. " ++ JavaScript.errorToString b
-
-        --
         CompileError b ->
             "Cannot compile Elm. " ++ JavaScript.errorToString b
 
