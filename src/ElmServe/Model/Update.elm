@@ -46,7 +46,7 @@ update msg =
         ElmServe.Msg.NothingHappened ->
             Platform.Extra.noOperation
 
-        ElmServe.Msg.ModelReceived a ->
+        ElmServe.Msg.ProjectReceived a ->
             \_ ->
                 case a of
                     Ok b ->

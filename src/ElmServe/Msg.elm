@@ -1,8 +1,8 @@
 module ElmServe.Msg exposing (..)
 
-import ElmServe.Error
-import ElmServe.Model
+import Elm.Project
 import HttpServer
+import JavaScript
 import Json.Decode
 import Process
 
@@ -10,7 +10,7 @@ import Process
 type Msg
     = NothingHappened
       --
-    | ModelReceived (Result ElmServe.Error.Error ElmServe.Model.Ready)
+    | ProjectReceived (Result JavaScript.Error Elm.Project.Project)
       --
     | FileChanged (Result Json.Decode.Error String)
     | CompileProcessReceived Process.Id
