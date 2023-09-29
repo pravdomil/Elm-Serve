@@ -171,7 +171,7 @@ projectCompiled a model =
             , Task.attempt
                 (\_ -> ElmServe.Msg.NothingHappened)
                 (consoleErrorAndExit 1 (ElmServe.Model.Utils.errorToString b))
-    )
+            )
 
 
 
@@ -180,13 +180,50 @@ projectCompiled a model =
 
 requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 requestReceived a model =
+    let
+        redirect : String -> HttpServer.Request -> Task.Task PathError ()
+        redirect b c =
+            send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") c
+                |> Task.mapError InternalError
+    in
     case a of
         Ok b ->
             case requestPath b of
                 Ok path ->
                     case model.options of
                         Ok options ->
-                            resolvePath options path
+                            case path of
+                                "/elm-serve-client-lib.js" ->
+                                    ( { model | queue = b :: model.queue }
+                                    , Cmd.none
+                                    )
+
+                                _ ->
+                                    ( model
+                                    , Task.attempt
+                                        (\_ -> ElmServe.Msg.NothingHappened)
+                                        (FileStatus.get (FileSystem.stringToPath (options.root ++ "/" ++ path))
+                                            |> Task.mapError InternalError
+                                            |> Task.andThen
+                                                (\x ->
+                                                    case x of
+                                                        FileStatus.File ->
+                                                            sendFile options path b
+                                                                |> Task.mapError InternalError
+
+                                                        FileStatus.Directory ->
+                                                            redirect (path ++ "/") b
+
+                                                        FileStatus.NotFound ->
+                                                            if options.no404 then
+                                                                sendFile options "index.html" b
+                                                                    |> Task.mapError InternalError
+
+                                                            else
+                                                                Task.fail NotFound
+                                                )
+                                        )
+                                    )
 
                         Err _ ->
                             ( model
@@ -330,44 +367,6 @@ requestPath a =
                 else
                     x
             )
-
-
-
---
-
-
-resolvePath : ElmServe.Options.Options -> HttpServer.Request -> String -> Task.Task PathError ()
-resolvePath options req a =
-    let
-        redirect : String -> Task.Task PathError ()
-        redirect b =
-            send 301 (Dict.fromList [ ( "Location", b ) ]) ("Moved permanently to " ++ b ++ ".") req
-                |> Task.mapError InternalError
-    in
-    if a == "/elm-serve-client-lib.js" then
-        addRequestToQueue req
-
-    else
-        FileStatus.get (FileSystem.stringToPath (options.root ++ "/" ++ a))
-            |> Task.mapError InternalError
-            |> Task.andThen
-                (\x ->
-                    case x of
-                        FileStatus.File ->
-                            sendFile options a req
-                                |> Task.mapError InternalError
-
-                        FileStatus.Directory ->
-                            redirect (a ++ "/")
-
-                        FileStatus.NotFound ->
-                            if options.no404 then
-                                sendFile options "index.html" req
-                                    |> Task.mapError InternalError
-
-                            else
-                                Task.fail NotFound
-                )
 
 
 
