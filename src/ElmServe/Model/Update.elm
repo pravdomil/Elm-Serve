@@ -140,12 +140,17 @@ fileChanged _ model =
 
         task : Task.Task ElmServe.Error.Error ()
         task =
-            killCompileProcess
-                |> Task.andThen (\_ -> Process.sleep 1)
-                |> Task.andThen (\_ -> Task.mapError ElmServe.Error.ConsoleError (Console.log "Recompiling..."))
-                |> Task.andThen (\_ -> makeOutputFile b.options)
-                |> Task.andThen (\_ -> resolveQueue)
-                |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
+            case model.options of
+                Ok b ->
+                    killCompileProcess
+                        |> Task.andThen (\_ -> Process.sleep 1)
+                        |> Task.andThen (\_ -> Task.mapError ElmServe.Error.ConsoleError (Console.log "Recompiling..."))
+                        |> Task.andThen (\_ -> makeOutputFile b)
+                        |> Task.andThen (\_ -> resolveQueue)
+                        |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
+
+                Err _ ->
+                    Task.succeed ()
     in
     ( model
     , Task.perform
