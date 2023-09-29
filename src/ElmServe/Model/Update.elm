@@ -180,19 +180,36 @@ requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.
 requestReceived a model =
     case a of
         Ok b ->
-            case model.options of
+            case requestPath b of
                 Ok c ->
-                    ( model
-                    , Task.attempt
-                        (\_ -> ElmServe.Msg.NothingHappened)
-                        (sendResponse c b)
-                    )
+                    case model.options of
+                        Ok options ->
+                            resolvePath options c
 
-                Err _ ->
+                        Err _ ->
+                            ( model
+                            , Task.attempt
+                                (\_ -> ElmServe.Msg.NothingHappened)
+                                (send 500 Dict.empty "Server is not ready." b)
+                            )
+
+                Err c ->
                     ( model
                     , Task.attempt
                         (\_ -> ElmServe.Msg.NothingHappened)
-                        (send 500 Dict.empty "Server is not ready." b)
+                        (case c of
+                            CannotParseUrl ->
+                                send 400 Dict.empty "Bad request - cannot parse url." b
+
+                            ParentFolderPath ->
+                                send 403 Dict.empty "Forbidden - cannot go to parent folder." b
+
+                            NotFound ->
+                                send 404 Dict.empty "Not found." b
+
+                            InternalError _ ->
+                                send 500 Dict.empty "Server error." b
+                        )
                     )
 
         Err _ ->
@@ -278,31 +295,6 @@ type RespondError
     | ParentFolderPath
     | NotFound
     | InternalError JavaScript.Error
-
-
-sendResponse : ElmServe.Options.Options -> HttpServer.Request -> Task.Task JavaScript.Error ()
-sendResponse options a =
-    let
-        errorResponse : RespondError -> Task.Task JavaScript.Error ()
-        errorResponse b =
-            case b of
-                CannotParseUrl ->
-                    send 400 Dict.empty "Bad request - cannot parse url." a
-
-                ParentFolderPath ->
-                    send 403 Dict.empty "Forbidden - cannot go to parent folder." a
-
-                NotFound ->
-                    send 404 Dict.empty "Not found." a
-
-                InternalError c ->
-                    send 500 Dict.empty "Server error." a
-                        |> Task.andThen (\_ -> Task.fail c)
-    in
-    requestPath a
-        |> Task.Extra.fromResult
-        |> Task.andThen (resolvePath options a)
-        |> Task.onError errorResponse
 
 
 requestPath : HttpServer.Request -> Result RespondError String
