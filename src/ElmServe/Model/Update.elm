@@ -31,6 +31,7 @@ init flags =
         (Err ElmServe.Model.NotAsked)
         ElmServe.Model.CompilerReady
         ElmServe.Model.NeedsRecompile
+        []
     , Cmd.none
     )
         |> Platform.Extra.andThen loadProject
