@@ -22,26 +22,26 @@ compile opt =
         args =
             "make"
                 :: ("--output=" ++ opt.output)
-                :: (\acc ->
+                :: (\x ->
                         if opt.debug then
-                            "--debug" :: acc
+                            "--debug" :: x
 
                         else
-                            acc
+                            x
                    )
-                    ((\acc ->
+                    ((\x ->
                         if opt.optimize then
-                            "--optimize" :: acc
+                            "--optimize" :: x
 
                         else
-                            acc
+                            x
                      )
-                        ((\acc ->
+                        ((\x ->
                             if opt.jsonReport then
-                                "--report=json" :: acc
+                                "--report=json" :: x
 
                             else
-                                acc
+                                x
                          )
                             opt.input
                         )
