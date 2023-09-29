@@ -164,7 +164,8 @@ requestReceived a model =
     case a of
         Ok b ->
             ( model
-            , Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
+            , Task.attempt
+                (\_ -> ElmServe.Msg.NothingHappened)
                 (case model.options of
                     Ok c ->
                         sendResponse c b
