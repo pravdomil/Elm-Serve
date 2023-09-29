@@ -19,10 +19,8 @@ import Json.Encode
 import Parser
 import Platform.Extra
 import Process.Extra
-import Regex
 import Task
 import Task.Extra
-import Url
 
 
 init : Json.Decode.Value -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
