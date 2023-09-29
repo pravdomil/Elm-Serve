@@ -195,8 +195,8 @@ startServer options =
                 Task.succeed ()
     in
     HttpServer.start options.server
-        |> Task.mapError ElmServe.Error.ServerError
-        |> Task.andThen (\_ -> Console.log ("Server is running at:\n" ++ url) |> Task.mapError ElmServe.Error.ConsoleError)
+        |> Task.mapError ElmServe.Model.ServerError
+        |> Task.andThen (\_ -> Task.mapError ElmServe.Model.ConsoleError (Console.log ("Server is running at:\n" ++ url)))
         |> Task.andThen (\_ -> open)
 
 
