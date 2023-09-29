@@ -137,6 +137,19 @@ subscriptions _ =
 --
 
 
+loadProject : ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+loadProject model =
+    ( { model | project = Err ElmServe.Model.Loading }
+    , Task.attempt
+        ElmServe.Msg.ProjectReceived
+        (ElmServe.Utils.Utils.readProject "elm.json")
+    )
+
+
+
+--
+
+
 makeOutputFile : ElmServe.Options.Options -> Task.Task ElmServe.Error.Error ()
 makeOutputFile options =
     let
