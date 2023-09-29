@@ -16,6 +16,7 @@ import HttpServer
 import JavaScript
 import Json.Decode
 import Json.Encode
+import Parser
 import Platform.Extra
 import Process
 import Process.Extra
@@ -132,11 +133,24 @@ projectReceived a model =
             ( { model | project = Ok b }
             , Task.attempt
                 (\_ -> ElmServe.Msg.NothingHappened)
-                ((Console.log "Elm Serve" |> Task.mapError ElmServe.Error.ConsoleError)
-                    |> Task.andThen (\_ -> makeOutputFile b.options)
-                    |> Task.andThen (\_ -> startServer b.options)
-                    |> Task.andThen (\_ -> startWatching b.project)
-                    |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
+                (case model.options of
+                    Ok c ->
+                        Task.mapError ElmServe.Error.ConsoleError (Console.log "Elm Serve")
+                            |> Task.andThen (\_ -> makeOutputFile c)
+                            |> Task.andThen (\_ -> startServer c)
+                            |> Task.andThen (\_ -> startWatching b)
+                            |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
+
+                    Err c ->
+                        consoleErrorAndExit
+                            (case Maybe.map .problem (List.head c) of
+                                Just (Parser.Problem d) ->
+                                    d
+
+                                _ ->
+                                    ElmServe.Error.usage
+                            )
+                            1
                 )
             )
 
