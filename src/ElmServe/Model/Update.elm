@@ -127,18 +127,8 @@ projectReceived a model =
             )
 
 
-projectCompiled : Result ElmServe.Model.Error () -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
-projectCompiled a model =
-    ( { model | compiler = ElmServe.Model.CompilerReady }
-    , case a of
-        Ok _ ->
-            Cmd.none
 
-        Err b ->
-            Task.attempt
-                (\_ -> ElmServe.Msg.NothingHappened)
-                (consoleErrorAndExit 1 (ElmServe.Model.Utils.errorToString b))
-    )
+--
 
 
 maybeRecompile : ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
@@ -166,6 +156,20 @@ maybeRecompile model =
 
         ElmServe.Model.NoRecompile ->
             Platform.Extra.noOperation model
+
+
+projectCompiled : Result ElmServe.Model.Error () -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+projectCompiled a model =
+    ( { model | compiler = ElmServe.Model.CompilerReady }
+    , case a of
+        Ok _ ->
+            Cmd.none
+
+        Err b ->
+            Task.attempt
+                (\_ -> ElmServe.Msg.NothingHappened)
+                (consoleErrorAndExit 1 (ElmServe.Model.Utils.errorToString b))
+    )
 
 
 
