@@ -93,7 +93,7 @@ projectReceived a model =
                     , Task.attempt
                         ElmServe.Msg.ProjectCompiled
                         (Task.mapError ElmServe.Model.ConsoleError (Console.log "Elm Serve")
-                            |> Task.andThen (\_ -> makeOutputFile c)
+                            |> Task.andThen (\_ -> Task.mapError ElmServe.Model.CompileError (makeOutputFile c))
                             |> Task.andThen (\_ -> startServer c)
                             |> Task.andThen (\_ -> startWatching b)
                         )
@@ -143,7 +143,7 @@ maybeRecompile model =
                             ( { model | compiler = ElmServe.Model.CompilerBusy, state = ElmServe.Model.NoRecompile }
                             , Task.attempt
                                 ElmServe.Msg.ProjectCompiled
-                                (makeOutputFile b)
+                                (Task.mapError ElmServe.Model.CompileError (makeOutputFile b))
                             )
 
                         Err _ ->
