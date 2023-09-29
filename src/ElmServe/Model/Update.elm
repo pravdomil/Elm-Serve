@@ -129,39 +129,6 @@ projectReceived a model =
 --
 
 
-fileChanged : Result Json.Decode.Error String -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
-fileChanged _ model =
-    let
-        killCompileProcess : Task.Task x ()
-        killCompileProcess =
-            case model.compileProcess of
-                Just x ->
-                    Process.kill x
-
-                Nothing ->
-                    Task.succeed ()
-
-        task : Task.Task ElmServe.Error.Error ()
-        task =
-            case model.options of
-                Ok b ->
-                    killCompileProcess
-                        |> Task.andThen (\_ -> Process.sleep 1)
-                        |> Task.andThen (\_ -> Task.mapError ElmServe.Error.ConsoleError (Console.log "Recompiling..."))
-                        |> Task.andThen (\_ -> makeOutputFile b)
-                        |> Task.andThen (\_ -> resolveQueue)
-                        |> Task.onError (\x -> consoleErrorAndExit 1 (ElmServe.Error.toString x))
-
-                Err _ ->
-                    Task.succeed ()
-    in
-    ( model
-    , Task.perform
-        ElmServe.Msg.CompileProcessReceived
-        (Process.spawn task)
-    )
-
-
 requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
 requestReceived a model =
     case a of
