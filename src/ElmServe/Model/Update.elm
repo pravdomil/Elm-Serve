@@ -4,7 +4,6 @@ import Console
 import Dict
 import Elm.Compiler
 import Elm.Project
-import ElmServe.Error
 import ElmServe.Model
 import ElmServe.Model.Utils
 import ElmServe.Msg
@@ -18,7 +17,6 @@ import Json.Decode
 import Json.Encode
 import Parser
 import Platform.Extra
-import Process
 import Process.Extra
 import Regex
 import Task
