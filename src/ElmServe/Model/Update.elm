@@ -164,7 +164,9 @@ projectCompiled a model =
     ( { model | compiler = ElmServe.Model.CompilerReady }
     , case a of
         Ok _ ->
-            Cmd.none
+            Task.attempt
+                (\_ -> ElmServe.Msg.NothingHappened)
+                (Task.sequence (List.map (\x -> send 200 (Dict.singleton "Access-Control-Allow-Origin" "*") "" x) model.queue))
 
         Err b ->
             Task.attempt
