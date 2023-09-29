@@ -123,6 +123,47 @@ projectReceived a model =
             )
 
 
+projectCompiled : Result ElmServe.Model.Error () -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+projectCompiled a model =
+    ( { model | compiler = ElmServe.Model.CompilerReady }
+    , case a of
+        Ok _ ->
+            Cmd.none
+
+        Err b ->
+            Task.attempt
+                (\_ -> ElmServe.Msg.NothingHappened)
+                (consoleErrorAndExit 1 (ElmServe.Model.Utils.errorToString b))
+    )
+
+
+maybeRecompile : ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+maybeRecompile model =
+    case model.state of
+        ElmServe.Model.NeedsRecompile ->
+            case model.compiler of
+                ElmServe.Model.CompilerReady ->
+                    case model.options of
+                        Ok b ->
+                            ( { model | compiler = ElmServe.Model.CompilerBusy, state = ElmServe.Model.NoRecompile }
+                            , Task.attempt
+                                ElmServe.Msg.ProjectCompiled
+                                (Task.mapError ElmServe.Model.ConsoleError (Console.log "Recompiling...")
+                                    |> Task.andThen (\_ -> makeOutputFile b)
+                                    |> Task.andThen (\_ -> resolveQueue)
+                                )
+                            )
+
+                        Err _ ->
+                            Platform.Extra.noOperation model
+
+                ElmServe.Model.CompilerBusy ->
+                    Platform.Extra.noOperation model
+
+        ElmServe.Model.NoRecompile ->
+            Platform.Extra.noOperation model
+
+
 
 --
 
