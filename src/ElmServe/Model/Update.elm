@@ -47,28 +47,7 @@ update msg =
             Platform.Extra.noOperation
 
         ElmServe.Msg.ProjectReceived a ->
-            \_ ->
-                case a of
-                    Ok b ->
-                        let
-                            task : Task.Task ElmServe.Error.Error ()
-                            task =
-                                (Console.log "Elm Serve" |> Task.mapError ElmServe.Error.ConsoleError)
-                                    |> Task.andThen (\_ -> makeOutputFile b.options)
-                                    |> Task.andThen (\_ -> startServer b.options)
-                                    |> Task.andThen (\_ -> startWatching b.project)
-                                    |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
-                        in
-                        ( Ok b
-                        , task
-                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                        )
-
-                    Err b ->
-                        ( Err (ElmServe.Model.Error b)
-                        , consoleErrorAndExit (ElmServe.Error.toString b) 1
-                            |> Task.attempt (\_ -> ElmServe.Msg.NothingHappened)
-                        )
+            projectReceived a
 
         ElmServe.Msg.FileChanged _ ->
             \model ->
@@ -144,6 +123,39 @@ loadProject model =
         ElmServe.Msg.ProjectReceived
         (ElmServe.Utils.Utils.readProject "elm.json")
     )
+
+
+projectReceived : Result JavaScript.Error Elm.Project.Project -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+projectReceived a model =
+    case a of
+        Ok b ->
+            let
+                task : Task.Task ElmServe.Error.Error ()
+                task =
+                    (Console.log "Elm Serve" |> Task.mapError ElmServe.Error.ConsoleError)
+                        |> Task.andThen (\_ -> makeOutputFile b.options)
+                        |> Task.andThen (\_ -> startServer b.options)
+                        |> Task.andThen (\_ -> startWatching b.project)
+                        |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
+            in
+            ( { model | project = Ok b }
+            , Task.attempt
+                (\_ -> ElmServe.Msg.NothingHappened)
+                task
+            )
+
+        Err b ->
+            ( { model | project = Err (ElmServe.Model.JavaScriptError b) }
+            , Task.attempt
+                (\_ -> ElmServe.Msg.NothingHappened)
+                (case b of
+                    JavaScript.Exception _ (JavaScript.ErrorCode "ENOENT") _ ->
+                        consoleErrorAndExit "Cannot find elm.json." 1
+
+                    _ ->
+                        consoleErrorAndExit ("Cannot read elm.json. " ++ JavaScript.errorToString b) 1
+                )
+            )
 
 
 
