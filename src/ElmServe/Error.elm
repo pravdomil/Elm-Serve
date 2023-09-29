@@ -20,47 +20,6 @@ type Error
 
 toString : Error -> String
 toString a =
-    let
-        usage : String
-        usage =
-            """Elm Serve
-
-Usage:
-    elm-serve <elm-files>...
-
-Options:
-    --host <host>
-        Set server host. Default is localhost.
-
-    --port <port>
-        Set server port. Default is 8000.
-
-    --ssl <cert-file> <key-file>
-        Turn on HTTPS.
-
-    --root <path>
-        Set server root.
-
-    --open
-        Open server URL in browser.
-
-    --no-404
-        Serve /index.html if page not found. Useful for Browser.application.
-
-Elm Options:
-    --elm <path>
-        Set path to Elm compiler.
-
-    --debug
-        Turn on Elm debugger.
-
-    --optimize
-        Turn on Elm optimizations.
-
-    --output <path>
-        Set output from Elm compiler. Default is elm.js.
-"""
-    in
     case a of
         OptionsError b ->
             case b |> List.head |> Maybe.map .problem of
@@ -105,3 +64,44 @@ Elm Options:
 
         ExitError b ->
             "Internal error. " ++ JavaScript.errorToString b
+
+
+usage : String
+usage =
+    """Elm Serve
+
+Usage:
+    elm-serve <elm-files>...
+
+Options:
+    --host <host>
+        Set server host. Default is localhost.
+
+    --port <port>
+        Set server port. Default is 8000.
+
+    --ssl <cert-file> <key-file>
+        Turn on HTTPS.
+
+    --root <path>
+        Set server root.
+
+    --open
+        Open server URL in browser.
+
+    --no-404
+        Serve /index.html if page not found. Useful for Browser.application.
+
+Elm Options:
+    --elm <path>
+        Set path to Elm compiler.
+
+    --debug
+        Turn on Elm debugger.
+
+    --optimize
+        Turn on Elm optimizations.
+
+    --output <path>
+        Set output from Elm compiler. Default is elm.js.
+"""
