@@ -51,6 +51,8 @@ update msg =
         ElmServe.Msg.ProjectReceived a ->
             projectReceived a
 
+        ElmServe.Msg.ProjectCompiled a ->
+            projectCompiled a
 
         ElmServe.Msg.FileChanged _ ->
             \x -> ( { x | state = ElmServe.Model.NeedsRecompile }, Cmd.none )
