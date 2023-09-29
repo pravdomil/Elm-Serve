@@ -50,36 +50,8 @@ update msg =
         ElmServe.Msg.ProjectReceived a ->
             projectReceived a
 
-        ElmServe.Msg.FileChanged _ ->
-            \model ->
-                let
-                    killCompileProcess : ElmServe.Model.Ready -> Task.Task x ()
-                    killCompileProcess b =
-                        case b.compileProcess of
-                            Just x ->
-                                Process.kill x
-
-                            Nothing ->
-                                Task.succeed ()
-
-                    task : Task.Task ElmServe.Error.Error ()
-                    task =
-                        case model of
-                            Ok b ->
-                                killCompileProcess b
-                                    |> Task.andThen (\_ -> Process.sleep 1)
-                                    |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
-                                    |> Task.andThen (\_ -> makeOutputFile b.options)
-                                    |> Task.andThen (\_ -> resolveQueue)
-                                    |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
-
-                            Err _ ->
-                                Task.succeed ()
-                in
-                ( model
-                , Process.spawn task
-                    |> Task.perform ElmServe.Msg.CompileProcessReceived
-                )
+        ElmServe.Msg.FileChanged a ->
+            fileChanged a
 
         ElmServe.Msg.CompileProcessReceived a ->
             \x -> ( { x | compileProcess = Just a }, Cmd.none )
@@ -234,6 +206,42 @@ startWatching a =
     Task.sequence (List.map (\x -> FileWatch.watch (FileSystem.stringToPath x)) paths)
         |> Task.map (\_ -> ())
         |> Task.mapError ElmServe.Error.WatchFilesError
+
+
+
+--
+
+
+fileChanged : Result Json.Decode.Error String -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+fileChanged _ model =
+    let
+        killCompileProcess : ElmServe.Model.Ready -> Task.Task x ()
+        killCompileProcess b =
+            case b.compileProcess of
+                Just x ->
+                    Process.kill x
+
+                Nothing ->
+                    Task.succeed ()
+
+        task : Task.Task ElmServe.Error.Error ()
+        task =
+            case model of
+                Ok b ->
+                    killCompileProcess b
+                        |> Task.andThen (\_ -> Process.sleep 1)
+                        |> Task.andThen (\_ -> Console.log "Recompiling..." |> Task.mapError ElmServe.Error.ConsoleError)
+                        |> Task.andThen (\_ -> makeOutputFile b.options)
+                        |> Task.andThen (\_ -> resolveQueue)
+                        |> Task.onError (\x -> consoleErrorAndExit (ElmServe.Error.toString x) 1)
+
+                Err _ ->
+                    Task.succeed ()
+    in
+    ( model
+    , Process.spawn task
+        |> Task.perform ElmServe.Msg.CompileProcessReceived
+    )
 
 
 
