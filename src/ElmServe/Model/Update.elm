@@ -266,7 +266,7 @@ makeOutputFile options =
                     Task.fail b
     in
     Console.log "Compiling..."
-        |> Task.andThen (\_ -> Elm.Compiler.compile options.elm)
+        |> Task.andThen (\_ -> Elm.Compiler.compile ((\x -> { x | jsonReport = True }) options.elm))
         |> Task.andThen (\_ -> Task.onError (\_ -> Task.succeed "") (ElmServe.Model.Utils.elmFfi options.elm.output))
         |> Task.andThen (\_ -> FileSystem.read outputPath)
         |> Task.andThen (\x -> ElmServe.Model.Utils.elmHot x)
