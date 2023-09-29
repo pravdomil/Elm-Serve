@@ -395,7 +395,7 @@ sendFile options path { request, response } =
 --
 
 
-consoleErrorAndExit : String -> Int -> Task.Task JavaScript.Error ()
-consoleErrorAndExit msg code =
-    Console.logError msg
+consoleErrorAndExit : Int -> String -> Task.Task JavaScript.Error ()
+consoleErrorAndExit code a =
+    Console.logError a
         |> Task.andThen (\() -> Process.Extra.hardExit code)
