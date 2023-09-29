@@ -222,7 +222,7 @@ requestReceived a model =
 --
 
 
-makeOutputFile : ElmServe.Options.Options -> Task.Task ElmServe.Model.Error ()
+makeOutputFile : ElmServe.Options.Options -> Task.Task JavaScript.Error ()
 makeOutputFile options =
     let
         outputPath : FileSystem.Path
@@ -239,14 +239,14 @@ makeOutputFile options =
                 _ ->
                     Task.fail b
     in
-    Elm.Compiler.compile options.elm
+    Console.log "Compiling..."
+        |> Task.andThen (\_ -> Elm.Compiler.compile options.elm)
         |> Task.andThen (\_ -> Task.onError (\_ -> Task.succeed "") (ElmServe.Model.Utils.elmFfi options.elm.output))
         |> Task.andThen (\_ -> FileSystem.read outputPath)
         |> Task.andThen (\x -> ElmServe.Model.Utils.elmHot x)
         |> Task.onError recoverFromCompileError
         |> Task.map (\x -> ElmServe.Model.Utils.jsLibrary ++ x)
         |> Task.andThen (FileSystem.write outputPath)
-        |> Task.mapError ElmServe.Model.CompileError
 
 
 startServer : ElmServe.Options.Options -> Task.Task ElmServe.Model.Error ()
