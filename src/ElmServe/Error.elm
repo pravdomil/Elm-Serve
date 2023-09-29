@@ -22,7 +22,7 @@ toString : Error -> String
 toString a =
     case a of
         OptionsError b ->
-            case b |> List.head |> Maybe.map .problem of
+            case Maybe.map .problem (List.head b) of
                 Just (Parser.Problem c) ->
                     c
 
