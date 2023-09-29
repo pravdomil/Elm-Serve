@@ -89,7 +89,7 @@ parser =
     Parser.loop
         (Options
             (HttpServer.Options "localhost" 8000 Nothing)
-            (Elm.Compiler.Options "elm" False False [] "elm.js")
+            (Elm.Compiler.Options "elm" False False False [] "elm.js")
             --
             "."
             False
