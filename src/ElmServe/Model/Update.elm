@@ -323,6 +323,7 @@ makeOutputFile options =
         |> Task.onError recoverFromCompileError
         |> Task.map (\x -> ElmServe.Model.Utils.jsLibrary ++ x)
         |> Task.andThen (FileSystem.write outputPath)
+        |> Task.andThen (\_ -> Console.log "Done.")
 
 
 
