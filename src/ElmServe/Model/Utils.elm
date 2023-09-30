@@ -239,6 +239,7 @@ function listen() {
     function onLoad() {
         var script = document.createElement('script')
         script.src = src
+        script.onerror = function() { elmServe.disconnected() }
         document.head.appendChild(script)
     }
 
