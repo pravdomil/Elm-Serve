@@ -265,9 +265,17 @@ requestReceived a model =
 makeOutputFile : ElmServe.Options.Options -> Task.Task JavaScript.Error ()
 makeOutputFile options =
     let
-        link : String -> String
-        link b =
-            "file://" ++ String.replace "%2F" "/" (Url.percentEncode b)
+        link : String -> Maybe Elm.Error.Region -> String
+        link b c =
+            "file://"
+                ++ String.replace "%2F" "/" (Url.percentEncode b)
+                ++ (case c of
+                        Just d ->
+                            ":" ++ String.fromInt d.start.line ++ ":" ++ String.fromInt d.start.column
+
+                        Nothing ->
+                            ""
+                   )
 
         outputPath : FileSystem.Path
         outputPath =
@@ -281,14 +289,17 @@ makeOutputFile options =
                         Elm.Error.GeneralProblem d ->
                             case d.path of
                                 Just e ->
-                                    Console.logError (link e)
+                                    Console.logError (link e Nothing)
 
                                 Nothing ->
                                     Console.logError d.title
 
                         Elm.Error.ModuleProblems d ->
                             Task.sequence
-                                (List.map (\x -> Console.logError (link x.path)) d)
+                                (List.concatMap
+                                    (\x -> List.map (\x2 -> Console.logError (link x.path (Just x2.region))) x.problems)
+                                    d
+                                )
                                 |> Task.map (\_ -> ())
 
                 Err _ ->
