@@ -54,8 +54,8 @@ update msg =
         ElmServe.Msg.ProjectCompiled a ->
             projectCompiled a
 
-        ElmServe.Msg.FileChanged _ ->
-            \x -> ( { x | state = ElmServe.Model.NeedsRecompile }, Cmd.none )
+        ElmServe.Msg.FileChanged a ->
+            fileChanged a
 
         ElmServe.Msg.RequestReceived a ->
             requestReceived a
@@ -175,8 +175,20 @@ projectCompiled a model =
             )
 
 
+fileChanged : Result Json.Decode.Error String -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
+fileChanged a model =
+    case a of
+        Ok b ->
+            if b == "elm.json" || String.endsWith ".elm" b then
+                ( { model | state = ElmServe.Model.NeedsRecompile }
+                , Cmd.none
+                )
 
---
+            else
+                Platform.Extra.noOperation model
+
+        Err _ ->
+            Platform.Extra.noOperation model
 
 
 requestReceived : Result Json.Decode.Error HttpServer.Request -> ElmServe.Model.Model -> ( ElmServe.Model.Model, Cmd ElmServe.Msg.Msg )
