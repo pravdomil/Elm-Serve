@@ -6,6 +6,7 @@
     "send": "^0.17.1"
   },
   "devDependencies": {
+    "elm": "^0.19.1-6",
     "elm-ffi": "github:pravdomil/elm-ffi",
     "elm-ffi-node": "github:pravdomil/elm-ffi-node",
     "elm-minify": "github:pravdomil/elm-minify",
